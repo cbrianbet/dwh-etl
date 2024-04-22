@@ -11,6 +11,7 @@ WITH ModulesUptake AS (
         isEMRSite,
         PartnerName,
         AgencyName,
+        isCT,
         modules.isHTS,
         isHTSML,
         isIITML,
