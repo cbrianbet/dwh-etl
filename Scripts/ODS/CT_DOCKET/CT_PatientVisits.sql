@@ -1,4 +1,3 @@
-
 BEGIN
 		;with cte AS ( Select      distinct      
 			P.PatientPID,            
@@ -28,22 +27,15 @@ BEGIN
 				@VisitDate				DATETIME,
 				@MaxCreatedDate			DATETIME
 				
-		SELECT @MaxVisitDate_Hist	= MAX(MaxVisitDate) FROM [ODS].[dbo].[CT_Visit_Log]  (NoLock);
+		SELECT @MaxVisitDate_Hist	= MAX(MaxVisitDate) FROM [ODS_Logs].[dbo].[CT_Visit_Log]  (NoLock);
 		SELECT @VisitDate			= MAX(VisitDate)	FROM [DWAPICentral].[dbo].[PatientVisitExtract] WITH (NOLOCK) ;
-		SELECT @MaxCreatedDate		= MAX(CreatedDate)	FROM [ODS].[dbo].[CT_VisitCount_Log] WITH (NOLOCK) ;
+		SELECT @MaxCreatedDate		= MAX(CreatedDate)	FROM [ODS_logs].[dbo].[CT_VisitCount_Log] WITH (NOLOCK) ;
 				
-		--insert into  [ODS].[dbo].[CT_VisitCount_Log](CreatedDate)
-		--values(dateadd(year,-1,getdate()))
-
-		
-				
-		INSERT INTO  [ODS].[dbo].[CT_Visit_Log](MaxVisitDate,LoadStartDateTime)
+		INSERT INTO  [ODS_Logs].[dbo].[CT_Visit_Log](MaxVisitDate,LoadStartDateTime)
 		VALUES(@VisitDate,GETDATE());
 
-	       ---- Refresh [ODS].[dbo].[CT_PatientVisits]
-		   --truncate table [ODS].[dbo].[CT_PatientVisits]
 			MERGE [ODS].[dbo].[CT_PatientVisits] AS a
-				USING(SELECT distinct  P.[PatientCccNumber] AS PatientID, P.[PatientPID] AS PatientPK,F.[Name] AS FacilityName, F.Code AS SiteCode,PV.[VisitId] VisitID,PV.[VisitDate] VisitDate
+				USING(SELECT distinct   P.[PatientCccNumber] AS PatientID, P.[PatientPID] AS PatientPK,F.[Name] AS FacilityName, F.Code AS SiteCode,PV.[VisitId] VisitID,PV.[VisitDate] VisitDate
 						  ,PV.[Service] [SERVICE],PV.[VisitType] VisitType,PV.[WHOStage] WHOStage,PV.[WABStage] WABStage,PV.[Pregnant] Pregnant,PV.[LMP] LMP,PV.[EDD] EDD,PV.[Height] [Height],PV.[Weight] [Weight],PV.[BP] [BP],PV.[OI] [OI],PV.[OIDate] [OIDate]
 						  ,PV.[SubstitutionFirstlineRegimenDate] SubstitutionFirstlineRegimenDate,PV.[SubstitutionFirstlineRegimenReason] SubstitutionFirstlineRegimenReason,PV.[SubstitutionSecondlineRegimenDate] SubstitutionSecondlineRegimenDate,PV.[SubstitutionSecondlineRegimenReason] SubstitutionSecondlineRegimenReason
 						  ,PV.[SecondlineRegimenChangeDate] SecondlineRegimenChangeDate,PV.[SecondlineRegimenChangeReason] SecondlineRegimenChangeReason,PV.[Adherence] Adherence,PV.[AdherenceCategory] AdherenceCategory,PV.[FamilyPlanningMethod] FamilyPlanningMethod
@@ -67,11 +59,12 @@ BEGIN
 							,RefillDate
 							,PaedsDisclosure,PV.[Date_Created],PV.[Date_Last_Modified]
 							,PV.RecordUUID
+							,[WHOStagingOI]
 						FROM [DWAPICentral].[dbo].[PatientExtract] P WITH (NoLock)  
 						INNER JOIN [DWAPICentral].[dbo].[PatientVisitExtract] PV WITH(NoLock)  ON PV.[PatientId]= P.ID 						
 						INNER JOIN [DWAPICentral].[dbo].[Facility] F WITH(NoLock)  ON P.[FacilityId] = F.Id AND F.Voided=0
 						INNER JOIN (
-								SELECT F.code as SiteCode,p.[PatientPID] as PatientPK,[VisitId],visitDate,InnerPV.voided, MAX(InnerPV.created) AS Maxdatecreated
+								SELECT F.code as SiteCode,p.[PatientPID] as PatientPK,[VisitId],visitDate,InnerPV.voided,max(InnerPV.ID) maxID, MAX(InnerPV.created) AS Maxdatecreated
 								FROM [DWAPICentral].[dbo].[PatientExtract] P WITH (NoLock)  						
 									INNER JOIN [DWAPICentral].[dbo].[PatientVisitExtract] InnerPV WITH(NoLock)  ON InnerPV.[PatientId]= P.ID 
 									INNER JOIN [DWAPICentral].[dbo].[Facility] F WITH(NoLock)  ON P.[FacilityId] = F.Id AND F.Voided=0
@@ -79,7 +72,8 @@ BEGIN
 							) tm 
 							ON f.code = tm.[SiteCode] and p.PatientPID=tm.PatientPK and 
 							pv.[VisitId] = tm.[VisitId] and pv.visitDate = tm.visitDate and pv.voided = tm.voided and 
-							pv.created = tm.Maxdatecreated
+							pv.created = tm.Maxdatecreated and
+							PV.ID =tm. maxID
 						WHERE p.gender!='Unknown' AND F.code >0) AS b 
 						ON(
 							 a.PatientPK  = b.PatientPK 
@@ -89,8 +83,8 @@ BEGIN
 							and a.voided   = b.voided				
 							)
 					WHEN NOT MATCHED THEN 
-							INSERT(PatientID,FacilityName,SiteCode,PatientPK,VisitID,VisitDate,[SERVICE],VisitType,WHOStage,WABStage,Pregnant,LMP,EDD,Height,[Weight],BP,OI,OIDate,Adherence,AdherenceCategory,FamilyPlanningMethod,PwP,GestationAge,NextAppointmentDate,Emr,Project,DifferentiatedCare,StabilityAssessment,KeyPopulationType,PopulationType,VisitBy,Temp,PulseRate,RespiratoryRate,OxygenSaturation,Muac,NutritionalStatus,EverHadMenses,Breastfeeding,Menopausal,NoFPReason,ProphylaxisUsed,CTXAdherence,CurrentRegimen,HCWConcern,TCAReason,ClinicalNotes,[ZScore],[ZScoreAbsolute],RefillDate,PaedsDisclosure,[Date_Created],[Date_Last_Modified],RecordUUID,voided,LoadDate)  
-							VALUES(PatientID,FacilityName,SiteCode,PatientPK,VisitID,VisitDate,[SERVICE],VisitType,WHOStage,WABStage,Pregnant,LMP,EDD,Height,[Weight],BP,OI,OIDate,Adherence,AdherenceCategory,FamilyPlanningMethod,PwP,GestationAge,NextAppointmentDate,Emr,Project,DifferentiatedCare,StabilityAssessment,KeyPopulationType,PopulationType,VisitBy,Temp,PulseRate,RespiratoryRate,OxygenSaturation,Muac,NutritionalStatus,EverHadMenses,Breastfeeding,Menopausal,NoFPReason,ProphylaxisUsed,CTXAdherence,CurrentRegimen,HCWConcern,TCAReason,ClinicalNotes,[ZScore],[ZScoreAbsolute],RefillDate,PaedsDisclosure,[Date_Created],[Date_Last_Modified],RecordUUID,voided,Getdate())
+							INSERT(PatientID,FacilityName,SiteCode,PatientPK,VisitID,VisitDate,[SERVICE],VisitType,WHOStage,WABStage,Pregnant,LMP,EDD,Height,[Weight],BP,OI,OIDate,Adherence,AdherenceCategory,FamilyPlanningMethod,PwP,GestationAge,NextAppointmentDate,Emr,Project,DifferentiatedCare,StabilityAssessment,KeyPopulationType,PopulationType,VisitBy,Temp,PulseRate,RespiratoryRate,OxygenSaturation,Muac,NutritionalStatus,EverHadMenses,Breastfeeding,Menopausal,NoFPReason,ProphylaxisUsed,CTXAdherence,CurrentRegimen,HCWConcern,TCAReason,ClinicalNotes,[ZScore],[ZScoreAbsolute],RefillDate,PaedsDisclosure,[Date_Created],[Date_Last_Modified],RecordUUID,voided,[WHOStagingOI],LoadDate)  
+							VALUES(PatientID,FacilityName,SiteCode,PatientPK,VisitID,VisitDate,[SERVICE],VisitType,WHOStage,WABStage,Pregnant,LMP,EDD,Height,[Weight],BP,OI,OIDate,Adherence,AdherenceCategory,FamilyPlanningMethod,PwP,GestationAge,NextAppointmentDate,Emr,Project,DifferentiatedCare,StabilityAssessment,KeyPopulationType,PopulationType,VisitBy,Temp,PulseRate,RespiratoryRate,OxygenSaturation,Muac,NutritionalStatus,EverHadMenses,Breastfeeding,Menopausal,NoFPReason,ProphylaxisUsed,CTXAdherence,CurrentRegimen,HCWConcern,TCAReason,ClinicalNotes,[ZScore],[ZScoreAbsolute],RefillDate,PaedsDisclosure,[Date_Created],[Date_Last_Modified],RecordUUID,voided,[WHOStagingOI],Getdate())
 			
 					WHEN MATCHED THEN
 						UPDATE SET 	
@@ -148,20 +142,12 @@ BEGIN
 						a.PaedsDisclosure			=b.PaedsDisclosure,
 						a.[Date_Created]			=b.[Date_Created],
 						a.[Date_Last_Modified]		=b.[Date_Last_Modified],
-						 a.RecordUUID			=b.RecordUUID,
-						a.voided		=b.voided;
+						a.RecordUUID			    =b.RecordUUID,
+						a.voided		            =b.voided,
+						a.[WHOStagingOI]            =b.[WHOStagingOI];
 
-			UPDATE [ODS].[dbo].[CT_Visit_Log]
+			UPDATE [ODS_Logs].[dbo].[CT_Visit_Log]
 				  SET LoadEndDateTime = GETDATE()
-				  WHERE MaxVisitDate = @VisitDate;
-
-				  --truncate table [CT_VisitCount_Log]
-			INSERT INTO [ODS].[dbo].[CT_VisitCount_Log]([SiteCode],[CreatedDate],[VisitCount])
-			SELECT SiteCode,GETDATE(),COUNT(concat(Sitecode,PatientPK)) AS VisitCount 
-			FROM [ODS].[dbo].[CT_PatientVisits] 
-			---WHERE @MaxCreatedDate  > @MaxCreatedDate
-			GROUP BY SiteCode;
+				  WHERE MaxVisitDate = @VisitDate;			
 			
 END
-
-

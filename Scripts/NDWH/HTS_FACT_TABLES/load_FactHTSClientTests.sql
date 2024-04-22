@@ -43,6 +43,7 @@ select
     hts_encounter.CoupleDiscordant,
     hts_encounter.Consent,
     hts_encounter.EncounterId,
+    hts_encounter.ReferredServices,
     case when hts_encounter.FinalTestResult is not null then 1 else 0 end as Tested,
     case when hts_encounter.FinalTestResult = 'Positive' then 1 else 0 end as Positive,
     case when (hts_encounter.FinalTestResult = 'Positive' and client_linkage_data.ReportedCCCNumber is not null) then 1 else 0 end as Linked,

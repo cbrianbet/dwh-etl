@@ -50,8 +50,8 @@ Patient As (
       ART.PreviousARTRegimen,
       ART.StartARTDate,
       LastARTDate,
-      CASE WHEN [DateConfirmedHIVPositive] IS NOT NULL AND ART.StartARTDate IS NOT NULL
-				 THEN CASE WHEN DateConfirmedHIVPositive<= ART.StartARTDate THEN DATEDIFF(DAY,DateConfirmedHIVPositive,ART.StartARTDate)
+      CASE WHEN [Patient].DateConfirmedHIVPositive IS NOT NULL AND ART.StartARTDate IS NOT NULL
+				 THEN CASE WHEN Patient.DateConfirmedHIVPositive<= ART.StartARTDate THEN DATEDIFF(DAY,Patient.DateConfirmedHIVPositive,ART.StartARTDate)
 					ELSE NULL END
 				ELSE NULL END AS TimetoARTDiagnosis,
       CASE WHEN Patient.RegistrationAtCCC IS NOT NULL AND ART.StartARTDate IS NOT NULL
@@ -69,7 +69,14 @@ Patient As (
         StartRegimenline,
         obs.WHOStage,
         Patient.DateConfirmedHIVPositive,
-        outcome.ARTOutcome
+        outcome.ARTOutcome,
+        Case When DATEDIFF(DAY, las.LastEncounterDate,las.NextAppointmentDate) <=89 THEN '<3 Months'
+    when DATEDIFF(DAY, las.LastEncounterDate,las.NextAppointmentDate) >=90 and DATEDIFF(DAY, las.LastEncounterDate,las.NextAppointmentDate) <=150 THEN '<3-5 Months'
+    When DATEDIFF(DAY, las.LastEncounterDate,las.NextAppointmentDate) >151 THEN '>6+ Months'
+    Else 'Unclassified'
+    END As AppointmentsCategory,
+    pbfw.Pregnant,
+    pbfw.Breastfeeding
         from 
 ODS.dbo.CT_Patient Patient
 inner join ODS.dbo.CT_ARTPatients ART on ART.PatientPK=Patient.Patientpk and ART.SiteCode=Patient.SiteCode
@@ -77,11 +84,14 @@ left join ODS.dbo.Intermediate_PregnancyAsATInitiation   Pre on Pre.Patientpk= P
 left join ODS.dbo.Intermediate_LastPatientEncounter las on las.PatientPK =Patient.PatientPK  and las.SiteCode =Patient.SiteCode 
 left join ODS.dbo.Intermediate_ARTOutcomes  outcome on outcome.PatientPK=Patient.PatientPK and outcome.SiteCode=Patient.SiteCode
 left join ODS.dbo.intermediate_LatestObs obs on obs.PatientPK=Patient.PatientPK and obs.SiteCode=Patient.SiteCode
+left join ODS.dbo.Intermediate_Pbfw pbfw on pbfw.PatientPK=Patient.PatientPK and pbfw.SiteCode=Patient.SiteCode
+
 ),
 
    DepressionScreening as (Select 
    PatientPkHash,
    sitecode,
+   VisitDate,
  ROW_NUMBER()OVER (PARTITION by SiteCode,PatientPK  ORDER BY VisitDate Desc ) As NUM,
    PHQ_9_rating
    from ODS.dbo.CT_DepressionScreening
@@ -89,6 +99,7 @@ left join ODS.dbo.intermediate_LatestObs obs on obs.PatientPK=Patient.PatientPK 
    LatestDepressionScreening As (Select
     PatientPkHash,
     Sitecode,
+	visitdate as ScreenedDepressionDate,
     PHQ_9_rating
     from DepressionScreening
     where Num=1
@@ -105,6 +116,12 @@ ncd_screening as (
         and latest_diabetes_test.SiteCode = Patient.SiteCode
     left join ODS.dbo.Intermediate_LastVisitDate as visit on visit.PatientPK = Patient.PatientPK
         and visit.SiteCode = Patient.SiteCode
+),
+rtt_within_last_12_months as (
+  select 
+    distinct PatientPKHash,
+    MFLCode
+  from ODS.dbo.Intermediate_RTTLast12MonthsAfter3monthsIIT
 )
    Select 
             Factkey = IDENTITY(INT, 1, 1),
@@ -134,7 +151,7 @@ ncd_screening as (
             TimetoARTEnrollment,
             PregnantARTStart,
             PregnantAtEnrol,
-            LastVisitDate,
+            Patient.LastVisitDate,
             Patient.NextAppointmentDate,
             StartARTAtThisfacility,
             PreviousARTStartDate,
@@ -144,6 +161,15 @@ ncd_screening as (
             case when LatestDepressionScreening.Patientpkhash is not null then 1 else 0 End as ScreenedForDepression,
             coalesce(ncd_screening.ScreenedBPLastVisit, 0) as ScreenedBPLastVisit,
             coalesce(ncd_screening.ScreenedDiabetes, 0) as ScreenedDiabetes,
+			ScreenedDepressionDate,
+            AppointmentsCategory,
+
+            Pregnant,
+            Breastfeeding,
+            case 
+              when rtt_within_last_12_months.PatientPkHash is not null then 1 
+              else 0 
+            end as IsRTTLast12MonthsAfter3monthsIIT,
             end_month.DateKey as AsOfDateKey,
             cast(getdate() as date) as LoadDate
 INTO NDWH.dbo.FACTART 
@@ -163,6 +189,8 @@ left join NDWH.dbo.DimARTOutcome ARTOutcome on ARTOutcome.ARTOutcome=IOutcomes.A
 left join ncd_screening on ncd_screening.PatientPKHash = patient.PatientPKHash
   and ncd_screening.SiteCode = patient.SiteCode
 left join NDWH.dbo.DimDate as end_month on end_month.Date = eomonth(dateadd(mm,-1,getdate()))
+left join rtt_within_last_12_months on rtt_within_last_12_months.PatientPKHash = Patient.PatientPKHash
+  and rtt_within_last_12_months.MFLCode = Patient.SiteCode
 WHERE pat.voided =0;
 alter table NDWH.dbo.FactART add primary key(FactKey)
 

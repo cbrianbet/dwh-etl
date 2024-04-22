@@ -11,3 +11,8 @@ with cte AS (
 							
 							delete from cte 
 								Where Row_Num >1 ;
+
+				INSERT INTO [ODS_Logs].[dbo].[CT_DefaulterTracingCount_Log]([SiteCode],[CreatedDate],[DefaulterTracingCount])
+				SELECT SiteCode,GETDATE(),COUNT(concat(Sitecode,PatientPK)) AS DefaulterTracingCount 
+				FROM [ODS].[dbo].CT_DefaulterTracing
+				GROUP BY SiteCode;

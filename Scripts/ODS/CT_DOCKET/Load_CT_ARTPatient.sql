@@ -81,26 +81,4 @@ BEGIN
 								a.RecordUUID				=b.RecordUUID,
 								a.voided					=b.voided;
 
-								with cte AS (
-								Select
-								PatientPK,
-								sitecode,
-								lastvisit,
-								 ROW_NUMBER() OVER (PARTITION BY PatientPK,sitecode ORDER BY
-								lastvisit desc) Row_Num
-								FROM [ODS].[dbo].[CT_ARTPatients](NoLock)
-								)
-							delete from cte 
-								Where Row_Num >1;
-
-
-					--UPDATE CT_ARTPatient_Log
-					--SET LoadEndDateTime = GETDATE()
-					--WHERE MaxVisitDate = @MaxVisitDate_Hist;
-
-					INSERT INTO  [ODS].[dbo].[CT_ARTPatientsCount_Log]([SiteCode],[CreatedDate],ARTPatientsCount)
-					SELECT SiteCode,GETDATE(),COUNT(concat(Sitecode,PatientPK)) AS PatientStatusCount 
-					FROM [ODS].[dbo].[CT_ARTPatients]
-					group by SiteCode
-
 	END

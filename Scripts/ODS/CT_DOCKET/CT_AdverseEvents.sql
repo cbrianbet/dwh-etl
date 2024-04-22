@@ -37,24 +37,20 @@ BEGIN ;
             @MaxCreatedDate           DATETIME
 
     SELECT @MaxAdverseEventStartDate = Max(maxadverseeventstartdate)
-    FROM   [ODS].[dbo].[ct_adverseevent_log] (nolock);
+    FROM  [ODS_logs].[dbo].[CT_AdverseEvent_Log] (nolock);
 
     SELECT @AdverseEventStartDate = Max(adverseeventstartdate)
     FROM   [DWAPICentral].[dbo].[patientadverseeventextract] WITH (nolock);
 
     SELECT @MaxCreatedDate = Max(createddate)
-    FROM   [ODS].[dbo].[ct_adverseeventcount_log] WITH (nolock);
+    FROM   [ODS_Logs].[dbo].[ct_adverseeventcount_log] WITH (nolock);
 
-    --insert into  [ODS].[dbo].[CT_AdverseEventCount_Log](CreatedDate)
-    --values(dateadd(year,-1,getdate()))
-    INSERT INTO [ODS].[dbo].[ct_adverseevent_log]
+    INSERT INTO[ODS_logs].[dbo].[CT_AdverseEvent_Log]
                 (maxadverseeventstartdate,
                  loadstartdatetime)
     VALUES     (@AdverseEventStartDate,
                 Getdate());
 
-    --CREATE INDEX CT_AdverseEvents  ON [ODS].[dbo].[CT_AdverseEvents] (sitecode,PatientPK);
-    ---- Refresh [ODS].[dbo].[CT_AdverseEvents]
     MERGE [ODS].[dbo].[ct_adverseevents] AS a
     using(SELECT DISTINCT P.[patientcccnumber] AS PatientID,
                           P.[patientpid]       AS PatientPK,
@@ -157,19 +153,8 @@ BEGIN ;
                  a.[voided] = b.[voided];
 
     --------------------------------------------------------End
-    UPDATE [ODS].[dbo].[ct_adverseevent_log]
+    UPDATE[ODS_logs].[dbo].[CT_AdverseEvent_Log]
     SET    loadenddatetime = Getdate()
     WHERE  maxadverseeventstartdate = @AdverseEventStartDate;
-
-    --truncate table [ODS].[dbo].[CT_AdverseEventCount_Log]
-    INSERT INTO [ODS].[dbo].[ct_adverseeventcount_log]
-                ([sitecode],
-                 [createddate],
-                 [adverseeventcount])
-    SELECT sitecode,
-           Getdate(),
-           Count(Concat(sitecode, patientpk)) AS AdverseEventCount
-    FROM   [ODS].[dbo].[ct_adverseevents]
-    --WHERE @MaxCreatedDate  > @MaxCreatedDate
-    GROUP  BY sitecode;
+	
 END 

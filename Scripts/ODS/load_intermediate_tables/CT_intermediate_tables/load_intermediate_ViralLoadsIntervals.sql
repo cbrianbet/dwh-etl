@@ -9,7 +9,6 @@ with source_viral_loads as (
 		labs.SiteCode,
 		labs.PatientPK,
 		cast( '' as nvarchar(100)) PatientPKHash,
-		cast( '' as nvarchar(100)) PatientIDHash,
 		VisitID,
 		[OrderedbyDate],
 		[ReportedbyDate],
@@ -88,8 +87,7 @@ distinct_viral_load_clients as (
 		distinct Sitecode,
 		PatientPK,
 		PatientID,
-		PatientPKHash,
-		PatientIDHash
+		PatientPKHash
 	from source_viral_loads
 )
 select 
@@ -101,7 +99,6 @@ select
 	distinct_viral_load_clients.PatientID,
 	distinct_viral_load_clients.SiteCode,
 	distinct_viral_load_clients.PatientPKHash,
-	distinct_viral_load_clients.PatientIDHash,
 	_6monthVL_data._6monthVL,
 	_6monthVL_data._6monthVLDate,
 	_6monthVL_data._6MonthVLSup,

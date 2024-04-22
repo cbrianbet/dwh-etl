@@ -3,10 +3,10 @@ BEGIN
 		DECLARE		@MaxDateCreated_Hist			DATETIME,
 				   @DateCreated					DATETIME
 				
-		SELECT @MaxDateCreated_Hist =  MAX(MaxDateCreated) FROM [ODS].[dbo].[CT_ContactListing_Log]  (NoLock)
+		SELECT @MaxDateCreated_Hist =  MAX(MaxDateCreated) FROM [ODS_Logs].[dbo].[CT_ContactListing_Log]   (NoLock)
 		SELECT @MaxDateCreated_Hist = MAX(Created) FROM [DWAPICentral].[dbo].[ContactListingExtract](NoLock)
 							
-		INSERT INTO  [ODS].[dbo].[CT_ContactListing_Log](MaxDateCreated,LoadStartDateTime)
+		INSERT INTO  [ODS_Logs].[dbo].[CT_ContactListing_Log] (MaxDateCreated,LoadStartDateTime)
 		VALUES(@MaxDateCreated_Hist,GETDATE())
 	       ---- Refresh [ODS].[dbo].[CT_ContactListing]
 			MERGE [ODS].[dbo].[CT_ContactListing] AS a
@@ -72,12 +72,9 @@ BEGIN
 						a.[Date_Created]				=b.[Date_Created],
 						a.[Date_Last_Modified]			=b.[Date_Last_Modified],
 						a.RecordUUID					=b.RecordUUID,
-						a.voided						=b.voided;
+						a.voided						=b.voided;					
 
-						
-						
-
-				UPDATE [ODS].[dbo].[CT_ContactListing_Log]
+				UPDATE [ODS_Logs].[dbo].[CT_ContactListing_Log] 
 					SET LoadEndDateTime = GETDATE()
 				WHERE MaxDateCreated = @MaxDateCreated_Hist;
 

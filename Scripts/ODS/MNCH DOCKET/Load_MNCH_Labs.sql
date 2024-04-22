@@ -5,11 +5,11 @@ BEGIN
 			USING(
 					SELECT  distinct P.[PatientPk],P.[SiteCode],P.[Emr],P.[Project],P.[Processed],P.[QueueId],P.[Status],P.[StatusDate]
 						  ,[PatientMNCH_ID],P.[FacilityName],[SatelliteName],[VisitID],P.[OrderedbyDate],[ReportedbyDate],[TestName],[TestResult]
-						  ,[LabReason],P.[Date_Last_Modified]
+						  ,[LabReason],P.[Date_Last_Modified],RecordUUID
 					  FROM [MNCHCentral].[dbo].[MnchLabs] P(NoLock)
-					  inner join (select tn.PatientPK,tn.SiteCode,tn.[OrderedbyDate],max(tn.DateExtracted)MaxDateExtracted FROM [MNCHCentral].[dbo].[MnchLabs] (NoLock)tn
+					  inner join (select tn.PatientPK,tn.SiteCode,tn.[OrderedbyDate],Max(ID) As MaxID,max(tn.DateExtracted)MaxDateExtracted FROM [MNCHCentral].[dbo].[MnchLabs] (NoLock)tn
 					group by tn.PatientPK,tn.SiteCode,tn.[OrderedbyDate])tm
-					on P.PatientPk = tm.PatientPk and p.SiteCode = tm.SiteCode and P.[OrderedbyDate] =tm.[OrderedbyDate] and p.DateExtracted = tm.MaxDateExtracted
+					on P.PatientPk = tm.PatientPk and p.SiteCode = tm.SiteCode and P.[OrderedbyDate] =tm.[OrderedbyDate] and p.DateExtracted = tm.MaxDateExtracted and p.ID = tm.MaxID
 					    INNER JOIN [MNCHCentral].[dbo].[Facilities] F ON P.[FacilityId] = F.Id ) AS b 
 						ON(
 
@@ -18,13 +18,14 @@ BEGIN
 						and a.[OrderedbyDate] = b.[OrderedbyDate]
 						and a.[PatientMNCH_ID] = b.[PatientMNCH_ID]
 						and a.visitID = b.visitID
+						and a.RecordUUID  = b.RecordUUID
 						--and a.[TestName] = b.[TestName]
 						--and a.[TestResult] = b.[TestResult]
 	
 							)
 					WHEN NOT MATCHED THEN 
-						INSERT(PatientPk,SiteCode,Emr,Project,Processed,QueueId,Status,StatusDate,PatientMNCH_ID,FacilityName,SatelliteName,VisitID,OrderedbyDate,ReportedbyDate,TestName,TestResult,LabReason,Date_Last_Modified,LoadDate)  
-						VALUES(PatientPk,SiteCode,Emr,Project,Processed,QueueId,Status,StatusDate,PatientMNCH_ID,FacilityName,SatelliteName,VisitID,OrderedbyDate,ReportedbyDate,TestName,TestResult,LabReason,Date_Last_Modified,Getdate())
+						INSERT(PatientPk,SiteCode,Emr,Project,Processed,QueueId,Status,StatusDate,PatientMNCH_ID,FacilityName,SatelliteName,VisitID,OrderedbyDate,ReportedbyDate,TestName,TestResult,LabReason,Date_Last_Modified,LoadDate,RecordUUID)  
+						VALUES(PatientPk,SiteCode,Emr,Project,Processed,QueueId,Status,StatusDate,PatientMNCH_ID,FacilityName,SatelliteName,VisitID,OrderedbyDate,ReportedbyDate,TestName,TestResult,LabReason,Date_Last_Modified,Getdate(),RecordUUID)
 				
 					WHEN MATCHED THEN
 						UPDATE SET 
@@ -32,7 +33,8 @@ BEGIN
 							a.TestName = b.TestName,
 							a.TestResult = b.TestResult,
 							a.LabReason = b.LabReason,
-							a.visitID	= b.visitID;
+							a.visitID	= b.visitID,
+							a.RecordUUID  =b.RecordUUID;
 
 				with cte AS (
 						Select

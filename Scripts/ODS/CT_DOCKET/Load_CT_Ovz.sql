@@ -27,11 +27,11 @@ BEGIN
 			DECLARE @MaxVisitDate_Hist			DATETIME,
 				   @VisitDate					DATETIME
 				
-		SELECT @MaxVisitDate_Hist =  MAX(MaxVisitDate) FROM [ODS].[dbo].[CT_Ovc_Log]  (NoLock)
+		SELECT @MaxVisitDate_Hist =  MAX(MaxVisitDate) FROM [ODS_logs].[dbo].[CT_Ovc_Log]  (NoLock)
 		SELECT @VisitDate = MAX(VisitDate) FROM [DWAPICentral].[dbo].[OvcExtract](NoLock)
 
 					
-					INSERT INTO  [ODS].[dbo].[CT_Ovc_Log](MaxVisitDate,LoadStartDateTime)
+					INSERT INTO  [ODS_logs].[dbo].[CT_Ovc_Log](MaxVisitDate,LoadStartDateTime)
 					VALUES(@MaxVisitDate_Hist,GETDATE())
 
 	       ---- Refresh [ODS].[dbo].[CT_Ovc]
@@ -64,40 +64,25 @@ BEGIN
 						)
 
 					WHEN NOT MATCHED THEN 
-
 						INSERT(ID,PatientID,PatientPK,SiteCode,FacilityName,VisitID,VisitDate,Emr,Project,OVCEnrollmentDate,RelationshipToClient,EnrolledinCPIMS,CPIMSUniqueIdentifier,PartnerOfferingOVCServices,OVCExitReason,ExitDate,[Date_Created],[Date_Last_Modified],RecordUUID,voided,LoadDate)  
 						VALUES(ID,PatientID,PatientPK,SiteCode,FacilityName,VisitID,VisitDate,Emr,Project,OVCEnrollmentDate,RelationshipToClient,EnrolledinCPIMS,CPIMSUniqueIdentifier,PartnerOfferingOVCServices,OVCExitReason,ExitDate,[Date_Created],[Date_Last_Modified],RecordUUID,voided,Getdate())
-
 				
 					WHEN MATCHED THEN
 						UPDATE SET 
-						a.[PatientID]					=	b.[PatientID],
-						a.[FacilityName]				=	b.[FacilityName],
-						a.[VisitID]						=	b.[VisitID],
-						a.[VisitDate]					=	b.[VisitDate],
-						a.[Emr]							=	b.[Emr],
-						a.[Project]						=	b.[Project],
-						a.[OVCEnrollmentDate]			=	b.[OVCEnrollmentDate],
-						a.[RelationshipToClient]		=	b.[RelationshipToClient],
-						a.[EnrolledinCPIMS]				=	b.[EnrolledinCPIMS],
-						a.[CPIMSUniqueIdentifier]		=	b.[CPIMSUniqueIdentifier],
-						a.[PartnerOfferingOVCServices]	=	b.[PartnerOfferingOVCServices],
-						a.[OVCExitReason]				=	b.[OVCExitReason],
-						a.[ExitDate]					=	b.[ExitDate],
-						a.[Date_Last_Modified]			=	b.[Date_Last_Modified],
-						a.[Date_Created]				=	b.[Date_Created],
-						a.[RecordUUID]					=	b.[RecordUUID],
-						a.[voided]						=	b.[voided];
+						a.PatientID					=b.PatientID,
+						a.FacilityName				=b.FacilityName,						
+						a.RelationshipToClient		=b.RelationshipToClient,
+						a.EnrolledinCPIMS			=b.EnrolledinCPIMS,
+						a.CPIMSUniqueIdentifier		=b.CPIMSUniqueIdentifier,
+						a.PartnerOfferingOVCServices=b.PartnerOfferingOVCServices,
+						a.OVCExitReason				=b.OVCExitReason,
+						a.[Date_Created]			=b.[Date_Created],
+						a.[Date_Last_Modified]		=b.[Date_Last_Modified];
 					
 
-				UPDATE [ODS].[dbo].[CT_Ovc_Log]
+				UPDATE [ODS_logs].[dbo].[CT_Ovc_Log]
 					SET LoadEndDateTime = GETDATE()
 					WHERE MaxVisitDate = @MaxVisitDate_Hist;
 
-				INSERT INTO [ODS].[dbo].[CT_OvcCount_Log]([SiteCode],[CreatedDate],[OvcCount])
-				SELECT SiteCode,GETDATE(),COUNT(concat(Sitecode,PatientPK)) AS OVCCount 
-				FROM [ODS].[dbo].[CT_Ovc] 
-				--WHERE @MaxCreatedDate  > @MaxCreatedDate
-				GROUP BY SiteCode;
 
 	END

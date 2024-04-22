@@ -15,6 +15,7 @@ BEGIN
     dates_check as (
 		SELECT 
             Patients.PatientPK,
+            Patients.PatientID,
             Patients.SiteCode,
             CASE WHEN VisitDate > ART.StartARTDate THEN 1 ELSE 0 END AS PregnantDuringART,
 			cast(getdate() as date) as LoadDate
@@ -28,6 +29,7 @@ BEGIN
 	)
 	select 
 			dates_check.PatientPK ,
+            dates_check.PatientID,
 			cast( '' as nvarchar(100)) PatientPKHash,
 			cast( '' as nvarchar(100)) PatientIDHash,
 			dates_check.SiteCode,

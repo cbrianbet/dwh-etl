@@ -38,14 +38,14 @@ BEGIN
 						  ,[OtherReferredServices]
 						  ,[ReferredForServices]
 						  ,[ReferredServices]
-							  
+							,a.RecordUUID  
 					 FROM [HTSCentral].[dbo].[HtsClientTests](NoLock) a					  
 					 LEFT JOIN ods.dbo.lkp_patient_source mm
 						on a.entryPoint =mm.source_name
 					 LEFT JOIN ods.dbo.lkp_htsStrategy mp
 						on a.TestStrategy = mp.Source_htsStrategy
 					 INNER JOIN ( select  ct.sitecode,ct.patientPK,ct.FinalTestResult,ct.TestDate,ct.EncounterId
-										  ,max(cast(DateExtracted as date))MaxDateExtracted  
+										  ,max(ID) As MaxID,max(cast(DateExtracted as date))MaxDateExtracted  
 									from [HTSCentral].[dbo].[HtsClientTests] ct								  
 									LEFT JOIN ods.dbo.lkp_patient_source mn
 										on ct.entryPoint = mn.source_name
@@ -60,6 +60,7 @@ BEGIN
 									and a.FinalTestResult = tn.FinalTestResult
 									and a.TestDate = tn.TestDate									
 									and coalesce(a.EncounterId,-1) = coalesce(tn.EncounterId,-1)
+									and a.ID  = tn.MaxID
 					INNER JOIN  [HTSCentral].[dbo].Clients(NoLock) c								
 						ON a.[SiteCode] = c.[SiteCode] and a.PatientPK=c.PatientPK 			
 				
@@ -72,12 +73,13 @@ BEGIN
 					and a.FinalTestResult = b.FinalTestResult
 					and a.TestDate = b.TestDate
 					and a.EncounterId = b.EncounterId
+					and a.RecordUUID  = b.RecordUUID
 
 					)	
 					
 		WHEN NOT MATCHED THEN 
-			INSERT(FacilityName,SiteCode,PatientPk,Emr,Project,EncounterId,TestDate,EverTestedForHiv,MonthsSinceLastTest,ClientTestedAs,EntryPoint,TestStrategy,TestResult1,TestResult2,FinalTestResult,PatientGivenResult,TbScreening,ClientSelfTested,CoupleDiscordant,TestType,Consent,Setting,Approach,HtsRiskCategory,HtsRiskScore,[OtherReferredServices],[ReferredForServices],[ReferredServices],LoadDate)  
-			VALUES(FacilityName,SiteCode,PatientPk,Emr,Project,EncounterId,TestDate,EverTestedForHiv,MonthsSinceLastTest,ClientTestedAs,EntryPoint,TestStrategy,TestResult1,TestResult2,FinalTestResult,PatientGivenResult,TbScreening,ClientSelfTested,CoupleDiscordant,TestType,Consent,Setting,Approach,HtsRiskCategory,HtsRiskScore,[OtherReferredServices],[ReferredForServices],[ReferredServices],Getdate())
+			INSERT(FacilityName,SiteCode,PatientPk,Emr,Project,EncounterId,TestDate,EverTestedForHiv,MonthsSinceLastTest,ClientTestedAs,EntryPoint,TestStrategy,TestResult1,TestResult2,FinalTestResult,PatientGivenResult,TbScreening,ClientSelfTested,CoupleDiscordant,TestType,Consent,Setting,Approach,HtsRiskCategory,HtsRiskScore,[OtherReferredServices],[ReferredForServices],[ReferredServices],LoadDate,RecordUUID)  
+			VALUES(FacilityName,SiteCode,PatientPk,Emr,Project,EncounterId,TestDate,EverTestedForHiv,MonthsSinceLastTest,ClientTestedAs,EntryPoint,TestStrategy,TestResult1,TestResult2,FinalTestResult,PatientGivenResult,TbScreening,ClientSelfTested,CoupleDiscordant,TestType,Consent,Setting,Approach,HtsRiskCategory,HtsRiskScore,[OtherReferredServices],[ReferredForServices],[ReferredServices],Getdate(),RecordUUID)
 
 	   WHEN MATCHED THEN
 			UPDATE SET 
@@ -94,7 +96,8 @@ BEGIN
 					a.HtsRiskScore			= b.HtsRiskScore,
 					a.[OtherReferredServices] =b.[OtherReferredServices],
 					a.[ReferredForServices]  =b.[ReferredForServices],
-					a.[ReferredServices]  = b.[ReferredServices];
+					a.[ReferredServices]  = b.[ReferredServices],
+					a.RecordUUID    = b.RecordUUID;
 
 
 END

@@ -50,7 +50,7 @@ with cleaned_up_dates as (
 dd_mm_yyyy_data as (
     select 
         TestKitExpiry1,
-        convert(datetime, TestKitExpiry1, 103) as TestKitExpiryCleanedVersion2
+        try_convert(datetime, TestKitExpiry1, 103) as TestKitExpiryCleanedVersion2
     from cleaned_up_dates
     where TestKitExpiryCleanedVersion1 is null  
         and TestKitExpiry1 is not null 

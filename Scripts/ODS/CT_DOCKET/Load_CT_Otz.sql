@@ -28,10 +28,10 @@ BEGIN
 			DECLARE @MaxVisitDate_Hist			DATETIME,
 				   @VisitDate					DATETIME
 				
-		SELECT @MaxVisitDate_Hist =  MAX(MaxVisitDate) FROM [ODS].[dbo].[CT_Otz_Log]  (NoLock)
+		SELECT @MaxVisitDate_Hist =  MAX(MaxVisitDate) FROM [ODS_Logs].[dbo].[CT_Otz_Log]  (NoLock)
 		SELECT @VisitDate = MAX(VisitDate) FROM [DWAPICentral].[dbo].[OtzExtract](NoLock)
 					
-			INSERT INTO  [ODS].[dbo].[CT_Otz_Log](MaxVisitDate,LoadStartDateTime)
+			INSERT INTO  [ODS_Logs].[dbo].[CT_Otz_Log](MaxVisitDate,LoadStartDateTime)
 			VALUES(@MaxVisitDate_Hist,GETDATE())
 
 			MERGE [ODS].[dbo].[CT_Otz] AS a
@@ -63,43 +63,29 @@ BEGIN
 						)
 					
 					WHEN NOT MATCHED THEN 
-
 						INSERT(ID,PatientID,PatientPK,SiteCode,FacilityName,VisitID,VisitDate,Emr,Project,OTZEnrollmentDate,TransferInStatus,ModulesPreviouslyCovered,ModulesCompletedToday,SupportGroupInvolvement,Remarks,TransitionAttritionReason,OutcomeDate,[Date_Created],[Date_Last_Modified],RecordUUID,voided,LoadDate) 
 						VALUES(ID,PatientID,PatientPK,SiteCode,FacilityName,VisitID,VisitDate,Emr,Project,OTZEnrollmentDate,TransferInStatus,ModulesPreviouslyCovered,ModulesCompletedToday,SupportGroupInvolvement,Remarks,TransitionAttritionReason,OutcomeDate,[Date_Created],[Date_Last_Modified],RecordUUID,voided,Getdate())
-
 				
 					WHEN MATCHED THEN
 						UPDATE SET 						
-						a.[PatientID]					= b.[PatientID],
-						a.[FacilityName]				= b.[FacilityName],
-						a.[VisitID]						= b.[VisitID],
-						a.[VisitDate]					= b.[VisitDate],
-						a.[Emr]							= b.[Emr],
-						a.[Project]						= b.[Project],
-						a.[OTZEnrollmentDate]			= b.[OTZEnrollmentDate],
-						a.[TransferInStatus]			= b.[TransferInStatus],
-						a.[ModulesPreviouslyCovered]	= b.[ModulesPreviouslyCovered],
-						a.[ModulesCompletedToday]		= b.[ModulesCompletedToday],
-						a.[SupportGroupInvolvement]		= b.[SupportGroupInvolvement],
-						a.[Remarks]						= b.[Remarks],
-						a.[TransitionAttritionReason]	= b.[TransitionAttritionReason],
-						a.[OutcomeDate]					= b.[OutcomeDate],
-						a.[Date_Last_Modified]			= b.[Date_Last_Modified],
-						a.[Date_Created]				=	b.[Date_Created],
-						a.[RecordUUID]					=b.[RecordUUID],
-						a.[voided]						=	b.[voided];
-
+						a.PatientID						=b.PatientID,						
+						a.TransferInStatus				=b.TransferInStatus,
+						a.ModulesPreviouslyCovered		=b.ModulesPreviouslyCovered,
+						a.ModulesCompletedToday			=b.ModulesCompletedToday,
+						a.SupportGroupInvolvement		=b.SupportGroupInvolvement,
+						a.Remarks						=b.Remarks,
+						a.TransitionAttritionReason		=b.TransitionAttritionReason,
+						a.[Date_Created]				=b.[Date_Created],
+						a.[Date_Last_Modified]			=b.[Date_Last_Modified],
+						 a.RecordUUID					=b.RecordUUID,
+						 a.OTZEnrollmentDate			=b.OTZEnrollmentDate,
+						a.voided						=b.voided
+						;
 						
 
-					UPDATE [ODS].[dbo].[CT_Otz_Log]
+					UPDATE [ODS_Logs].[dbo].[CT_Otz_Log]
 					SET LoadEndDateTime = GETDATE()
 					WHERE MaxVisitDate = @MaxVisitDate_Hist;
-
-					INSERT INTO [ODS].[dbo].[CT_OtzCount_Log]([SiteCode],[CreatedDate],[OtzCount])
-					SELECT SiteCode,GETDATE(),COUNT(concat(Sitecode,PatientPK)) AS OtzCount 
-					FROM [ODS].[dbo].[CT_Otz]
-					--WHERE @MaxCreatedDate  > @MaxCreatedDate
-					GROUP BY SiteCode;
 
 			
 	END

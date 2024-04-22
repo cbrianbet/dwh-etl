@@ -102,25 +102,8 @@ UPDATE [ODS].[DBO].[CT_Patient] SET Inschool = CASE
             END
 			where Inschool in ('New', 'New client','Re-enroll','Transfer in','Transfer-In','Transit','')
 Go
--------------------Update PopulationType-------------------------------------------------------------
-UPDATE [ODS].[DBO].[CT_Patient] SET PopulationType = CASE
-                WHEN  PopulationType in ('General Population', 'General Population','GeneralPopulation') THEN  ' General Population'
-				WHEN PopulationType in  ('FSW','Female Having Sex With Female',' Key Population','Key population') THEN ' Key Population'			
-            END
-			where PopulationType in ('General Population', 'General Population','GeneralPopulation','FSW','Female Having Sex With Female',' Key Population','Key population','')
-Go
-UPDATE [ODS].[DBO].[CT_Patient] SET KeyPopulationType = CASE
-                WHEN  KeyPopulationType in ('MSM', 'MSW') THEN  'MSM'
-				WHEN KeyPopulationType ='FSW' THEN 'FSW'
-				WHEN KeyPopulationType='PWID' THEN 'PWID'
-				WHEN KeyPopulationType='Transgender' THEN 'Transgender'	
-            END
-			where KeyPopulationType in ('MSM','MSW','FSW','PWID','N/A','Transgender','')
-GO
+
 -------------------Update PatientResidentCounty-------------------------------------------------------------
-Go
-UPDATE   [ODS].[DBO].[CT_Patient]  SET  [ODS].[DBO].[CT_Patient].PatientResidentCounty=NULL
-Go 
 
 ---------------------------------UpdatePatientSource--------------------------------------------------
 UPDATE M  SET  M.PatientSource= T.target_name  

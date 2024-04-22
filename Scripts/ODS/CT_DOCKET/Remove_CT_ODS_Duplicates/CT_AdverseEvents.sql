@@ -10,3 +10,13 @@ with cte AS (
 						)
 						delete from cte 
 						Where Row_Num >1 ;
+
+ INSERT INTO [ODS_Logs].[dbo].[ct_adverseeventcount_log]
+                ([sitecode],
+                 [createddate],
+                 [adverseeventcount])
+    SELECT sitecode,
+           Getdate(),
+           Count(Concat(sitecode, patientpk)) AS AdverseEventCount
+    FROM   [ODS].[dbo].[ct_adverseevents]
+    GROUP  BY sitecode;

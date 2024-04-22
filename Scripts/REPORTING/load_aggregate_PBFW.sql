@@ -1,4 +1,4 @@
-IF OBJECT_ID(N'[REPORTING].[dbo].[AggregatePBFW]', N'U') IS NOT NULL 
+  IF OBJECT_ID(N'[REPORTING].[dbo].[AggregatePBFW]', N'U') IS NOT NULL 
     DROP TABLE [REPORTING].[dbo].[AggregatePBFW];
 GO
 
@@ -15,16 +15,16 @@ SELECT
     Sum(Newpositives) AS NewPositives,
     SUM (case when Recieivedart=1 Then 1 Else 0 End ) As  PBFWOnART,
     SUM (Case When  Recieivedart=1  and EligibleVL=1 Then  1 Else 0 end) AS PBFWEligiblevl,
-    SUM (CASE WHEN try_cast (PBFW_ValidVLResultCategory as float ) is not null Then 1   ELSE 0 END) AS PBFWValidVl,
-    SUM (Case When HasValidVL=1 and PBFW_ValidVLSup=1 Then 1 else 0 End) AS PBFWSuppressed,
-    SUM (Case When HasValidVL=1 and PBFW_ValidVLSup=0 Then 1 Else 0 End ) AS PBFWUnsuppressed,
+    SUM (CASE WHEN PBFW_ValidVLResultCategory  is not null Then 1   ELSE 0 END) AS PBFWValidVl,
+    SUM (Case When PBFW_ValidVLResultCategory is not null and PBFW_ValidVLSup=1 Then 1 else 0 End) AS PBFWSuppressed,
+    SUM(CASE  WHEN PBFW_ValidVLResultCategory is not null  AND ISNUMERIC(PBFW_ValidVLSup) = 1  AND CAST(PBFW_ValidVLSup AS INT) = 0   THEN 1   ELSE 0 END) AS PBFWUnsuppressed,
     Sum (Case When RepeatVls=1 Then 1 Else 0 End) As PBFWRepeatVl,
-     Sum (Case When RepeatSuppressed=1 Then 1 Else 0 End) As PBFWRepeatVlSuppressed,
+    Sum (Case When RepeatVls=1 and RepeatSuppressed= 1 Then 1 Else 0 End) As PBFWRepeatVlSuppressed,
     Sum (Case When RepeatUnsuppressed=1 Then 1 Else 0 End) As PBFWRepeatVlUnSuppressed,
     Sum (Case When RepeatUnsuppressed=1 and ReceivedEAC1=1 Then 1 else 0 End) As PBFWUnsupReceivedEAC1,
     Sum (Case When RepeatUnsuppressed=1 and ReceivedEAC2=1 Then 1 Else 0 End) As PBFWUnsupReceivedEAC2,
-    Sum(Case when RepeatUnsuppressed=1 and ReceivedEAC3=1 Then 1 Else 0 End) As PBFWUnsupReceivedEAC3,
-    Sum (Case when PBFWRegLineSwitch=1 Then 1 Else 0 End) As PBFWRegLineSwitch
+    Sum(Case when  RepeatUnsuppressed=1 and ReceivedEAC3=1 Then 1 Else 0 End) As PBFWUnsupReceivedEAC3,
+    Sum (Case when RepeatUnsuppressed=1 and PBFWRegLineSwitch=1 Then 1 Else 0 End) As PBFWRegLineSwitch
  
 INTO REPORTING.dbo.AggregatePBFW
 FROM NDWH.dbo.FactPBFW AS PBFW

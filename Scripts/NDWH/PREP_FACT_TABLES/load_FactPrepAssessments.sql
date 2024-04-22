@@ -69,6 +69,7 @@ select
     NumberofchildrenWithPartner,
     ClientRisk,
     assessment_date.DateKey As AssessmentVisitDateKey,
+    patient.PrepEnrollmentDateKey,
     EligiblePrep,
     ScreenedPrep,
     cast(getdate() as date) as LoadDate

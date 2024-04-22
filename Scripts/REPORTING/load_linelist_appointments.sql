@@ -1,57 +1,47 @@
-TRUNCATE TABLE [REPORTING].[dbo].linelistappointments;
+IF OBJECT_ID(N'[REPORTING].[dbo].LinelistAppointments', N'U') IS NOT NULL 		
+drop table [REPORTING].[dbo].LinelistAppointments
 
-INSERT INTO [REPORTING].[dbo].linelistappointments
-            (patientidhash,
-             patientpkhash,
-             nupi,
-             dob,
-             maritalstatus,
-             mflcode,
-             facilityname,
-             subcounty,
-             county,
-             partnername,
-             agencyname,
-             gender,
-             expectednextappointmentdate,
-             lastencounterdate,
-             diffexpectedtcadatelastencounter,
-             appointmentstatus,
-             asofdate,
-             datimagegroup,
-             latestdsdmodel,
-             loaddate)
-SELECT Patient.patientidhash,
-       Patient.patientpkhash,
-       Patient.nupi,
-       Patient.dob,
-       Patient.maritalstatus,
-       facility.mflcode,
-       facility.facilityname,
-       facility.subcounty,
-       facility.county,
-       partner.partnername,
-       agency.agencyname,
-       patient.gender,
-       expectednextappointmentdate,
-       lastencounterdate,
-       diffexpectedtcadatelastencounter,
-       apt.appointmentstatus,
-       apt.asofdate,
-       age_group.datimagegroup,
-       NULL                    LatestDSDModel,
-       --dsd_models.DifferentiatedCare as LatestDSDModel,
-       Cast(Getdate() AS DATE) AS LoadDate
-FROM   ndwh.dbo.factappointments(nolock) AS apt
-       LEFT JOIN ndwh.dbo.dimfacility(nolock) AS facility
-              ON facility.facilitykey = apt.facilitykey
-       LEFT JOIN ndwh.dbo.dimpartner(nolock) AS partner
-              ON partner.partnerkey = apt.partnerkey
-       LEFT JOIN ndwh.dbo.dimpatient(nolock) AS patient
-              ON patient.patientkey = apt.patientkey
-       LEFT JOIN ndwh.dbo.dimagency(nolock) AS agency
-              ON agency.agencykey = apt.agencykey
-       LEFT JOIN ndwh.dbo.dimagegroup(nolock) AS age_group
-              ON age_group.agegroupkey = Datediff(yy, patient.dob, apt.asofdate)
---left join dsd_models on dsd_models.PatientKey = apt.PatientKey
-WHERE  asofdate >= '2017-01-31' 
+GO
+
+with dsd_models_as_of as (
+	select 
+		PatientKey,
+		DifferentiatedCare,
+    AsofDateKey
+	from NDWH.dbo.FactARTHistory
+	where DifferentiatedCare is not null and DifferentiatedCare <> ''
+)
+select 
+  Patient.PatientIDHash,
+  Patient.PatientPKHash,
+  Patient.NUPI,
+  Patient.DOB,
+  Patient.MaritalStatus,
+  facility.MFLCode,
+  facility.FacilityName,
+  facility.SubCounty,
+  facility.County,
+  partner.PartnerName,
+  agency.AgencyName,
+  patient.Gender,
+  ExpectedNextAppointmentDate,
+  LastEncounterDate,
+  DiffExpectedTCADateLastEncounter,
+  apt.AppointmentStatus,
+  apt.AsOfDate,
+  RegimenAsof,
+	StartARTDate,
+  Patienttype,
+  NoOfUnscheduledVisitsAsOf,
+  age_group.DATIMAgeGroup,
+  dsd_models_as_of.DifferentiatedCare as DSDModelAsOf,
+  CAST(GETDATE() AS DATE) AS LoadDate 
+into [REPORTING].[dbo].LinelistAppointments
+from NDWH.dbo.FACTAppointments as apt
+left join NDWH.dbo.DimFacility as facility on facility.FacilityKey = apt.FacilityKey
+left join NDWH.dbo.DimPartner as partner on partner.PartnerKey = apt.PartnerKey
+left join NDWH.dbo.DimPatient as patient on patient.PatientKey = apt.PatientKey
+left join NDWH.dbo.DimAgency as agency on agency.AgencyKey = apt.AgencyKey
+left join NDWH.dbo.DimAgeGroup as age_group on age_group.age = DATEDIFF(YY,patient.DOB,apt.AsOfDate)
+left join dsd_models_as_of on dsd_models_as_of.PatientKey = apt.PatientKey
+  and dsd_models_as_of.AsofDateKey = apt.AsOfDateKey

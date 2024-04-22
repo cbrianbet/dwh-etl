@@ -32,7 +32,8 @@ BEGIN
 		left join ODS.dbo.CT_ARTPatients as art_patient on art_patient.PatientPK = viral_loads.PatientPK
 			and art_patient.SiteCode = viral_loads.SiteCode
 		where datediff(month, OrderedbyDate, eomonth(dateadd(mm,-1,getdate()))) <= 6
-		and art_patient.AgeLastVisit <= 24
+		and coalesce(art_patient.AgeLastVisit,
+                      datediff(Year, art_patient.DOB, art_patient.LastVisit)) <= 24
 		union 
 			/*clients who are above 24 years have a valid VL that is within the last 12 months from reporting period*/
 		select 
@@ -45,25 +46,23 @@ BEGIN
 		left join ODS.dbo.CT_ARTPatients as art_patient on art_patient.PatientPK = viral_loads.PatientPK
 			and art_patient.SiteCode = viral_loads.SiteCode
 		where datediff(month, OrderedbyDate, eomonth(dateadd(mm,-1,getdate()))) <= 12
-		and art_patient.AgeLastVisit > 24 
+		and coalesce(art_patient.AgeLastVisit,
+                      datediff(Year, art_patient.DOB, art_patient.LastVisit)) > 24 
         
 	 ),
      /*Pregnant & Breastfeeding mothers  who  have a valid VL that is within the last 6 months from reporting period**/
      PBFW_valid_vl AS (
 		select 
-	 		distinct viral_loads.PatientID,
-			 viral_loads.SiteCode,
-			 viral_loads.PatientPK,
-			 OrderedbyDate,
-			 Replace(TestResult ,',','') as TestResult	 
-		from ODS.dbo.Intermediate_LatestViralLoads as viral_loads
-		left join ODS.dbo.CT_ARTPatients as art_patient on art_patient.PatientPK = viral_loads.PatientPK
-			and art_patient.SiteCode = viral_loads.SiteCode
-          inner join ODS.dbo.intermediate_LatestObs as obs on obs.PatientPK=viral_loads.PatientPK and obs.SiteCode=viral_loads.SiteCode
+	 		distinct pbfw.SiteCode,
+			 pbfw.PatientPK,
+			 viral_loads.OrderedbyDate,
+			 Replace(viral_loads.TestResult ,',','') as TestResult	 
+		from ODS.dbo.Intermediate_Pbfw as pbfw
+		left join ODS.dbo.Intermediate_LatestViralLoads as viral_loads on viral_loads.PatientPK = pbfw.PatientPK
+			and viral_loads.SiteCode = pbfw.SiteCode
+		left join ODS.dbo.CT_ARTPatients as art_patient on art_patient.PatientPK = pbfw.PatientPK
+			and art_patient.SiteCode = pbfw.SiteCode
 		where datediff(month, OrderedbyDate, eomonth(dateadd(mm,-1,getdate()))) <= 6
-		and Pregnant='Yes'OR breastfeeding='Yes' and Gender='Female'
-         /*Check if period of gestation is within  9 months +6 for BF =15 */
-         and  DATEDIFF(DAY, DATEADD(DAY, -(CAST(FLOOR(CONVERT(FLOAT, GestationAge)) * 7 AS INT)), CAST(LMP AS DATE)), GETDATE()) <= 450
      ),
 	 PBFW_valid_vl_indicators as (
 		select 
@@ -275,7 +274,12 @@ RepeatVlUnSupp as (Select
     from  RepeatVL 
     where  try_Cast(Replace(TestResult,',','') AS FLOAT) >= 200.00 
  ),
-
+ pbfw_clients as (
+		select 
+	 		pbfw.SiteCode,
+			pbfw.PatientPK
+		from ODS.dbo.Intermediate_Pbfw as pbfw
+ ),
 	combined_viral_load_dataset as (
 		select
 			patient.PatientPK,
@@ -283,11 +287,12 @@ RepeatVlUnSupp as (Select
 			patient.SiteCode,
 			eligible_for_VL.EligibleVL,
 			valid_VL_indicators.ValidVLResult,
-			case when valid_VL_indicators.ValidVLResult is not null then 1 else 0 end as HasValidVL,
+			case when valid_VL_indicators.PatientPK is not null then 1 else 0 end as HasValidVL,
             case when PBFW_valid_vl_indicators.PatientPK is not null then 1 else 0 end as PBFW_ValidVL,
 			PBFW_valid_vl_indicators.ValidVLResultCategory as PBFW_ValidVLResultCategory,
 			case when PBFW_valid_vl_indicators.ValidVLSup is not null then PBFW_valid_vl_indicators.ValidVLSup else 0 end as PBFW_ValidVLSup,
 			PBFW_valid_vl_indicators.ValidVLDate as PBFW_ValidVLDate,
+			case when pbfw_clients.PatientPK is not null then 1 else 0 end as IsPBFW,
             valid_VL_indicators.ValidVLResultCategory1,
 			valid_VL_indicators.ValidVLResultCategory2,
 			case when valid_VL_indicators.ValidVLSup is not null then valid_VL_indicators.ValidVLSup else 0 end as ValidVLSup,
@@ -358,6 +363,8 @@ RepeatVlUnSupp as (Select
         Left join RepeatVlUnSupp on Patient.patientpk=RepeatVlUnSupp.patientpk and Patient.Sitecode=RepeatVlUnSupp.Sitecode
 		left join PBFW_valid_vl_indicators on patient.PatientPK = PBFW_valid_vl_indicators.PatientPk 
 			and patient.SiteCode = PBFW_valid_vl_indicators.SiteCode
+		left join pbfw_clients on patient.PatientPK = pbfw_clients.PatientPK
+			and patient.SiteCode = pbfw_clients.SiteCode
 	)
 	select
 		Factkey = IDENTITY(INT, 1, 1),
@@ -381,7 +388,11 @@ RepeatVlUnSupp as (Select
 		combined_viral_load_dataset.LatestVL3,
 		combined_viral_load_dataset.EligibleVL,
 		combined_viral_load_dataset.ValidVLResult,
-		combined_viral_load_dataset.HasValidVL,
+		case 
+			when combined_viral_load_dataset.HasValidVL = 1 and IsPBFW = 1 and PBFW_ValidVL = 0 then 0 
+			else combined_viral_load_dataset.HasValidVL 
+		end as HasValidVL,
+		combined_viral_load_dataset.IsPBFW,
 		combined_viral_load_dataset.PBFW_ValidVL,
 		combined_viral_load_dataset.PBFW_ValidVLResultCategory,
 		combined_viral_load_dataset.PBFW_ValidVLSup,

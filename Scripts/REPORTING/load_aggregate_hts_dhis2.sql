@@ -1,18 +1,11 @@
 IF OBJECT_ID(N'[REPORTING].[dbo].[AggregateFACT_HTS_DHIS2]', N'U') IS NOT NULL 
 	DROP TABLE [REPORTING].[dbo].[AggregateFACT_HTS_DHIS2];
-BEGIN
-	SELECT 
-		Y.* 
-	INTO REPORTING.dbo.AggregateFACT_HTS_DHIS2
-	FROM ( 
-		SELECT
-			[id]
-			,[DHISOrgId]
-			,[SiteCode]
-			,[FacilityName]
-			,CT.County
-			,CT.SubCounty
-			,[Ward]
+Begin
+	SELECT 	
+			[MFLCode]
+			,[facility].FacilityName
+			,facility.County
+			,facility.SubCounty
 			,[ReportMonth_Year]
 			,[Tested_Total]
 			,[Positive_Total]
@@ -36,12 +29,16 @@ BEGIN
 			,[Positive_20_24_F]
 			,[Positive_25_Plus_M]
 			,[Positive_25_Plus_F]
-			,Sites.SDP PartnerName
-			,Sites.SDP_Agency AgencyName
+			, partner.PartnerName
+			,Agency as AgencyName
 			,CAST(GETDATE() AS DATE) AS LoadDate
-		FROM NDWH.dbo.FACT_HTS_DHIS2 CT
-		LEFT JOIN ODS.dbo.ALL_EMRSites Sites on CT.SiteCode=Sites.MFL_Code
-	)Y 
-	WHERE PartnerName IS NOT NULL
+	INTO REPORTING.dbo.AggregateFACT_HTS_DHIS2
+		FROM NDWH.dbo.FACT_HTS_DHIS2 CT  
+		LEFT join NDWH.dbo.DimFacility facility on facility.FacilityKey=CT.facilitykey 
+        left join NDWH.dbo.DimPartner partner on partner.PartnerKey=CT.PartnerKey
+        left join NDWH.dbo.DimAgency agency on agency.AgencyKey=CT.Agencykey
+        WHERE MFLCode IS NOT NULL
+	
+End
 
-END
+

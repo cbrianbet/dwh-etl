@@ -11,3 +11,8 @@
 						)
 					delete from cte 
 						Where Row_Num >1 ;
+
+				INSERT INTO [ODS_logs].[dbo].[CT_OvcCount_Log]([SiteCode],[CreatedDate],[OvcCount])
+				SELECT SiteCode,GETDATE(),COUNT(concat(Sitecode,PatientPK)) AS OVCCount 
+				FROM [ODS].[dbo].[CT_Ovc] 
+				GROUP BY SiteCode;

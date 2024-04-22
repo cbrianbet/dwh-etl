@@ -122,7 +122,7 @@ BEGIN
     select 117 as Age,  '25+' as MOHAgeGroup,   '65+' as DATIMAgeGroup  union all 
     select 118 as Age,  '25+' as MOHAgeGroup,   '65+' as DATIMAgeGroup  union all 
     select 119 as Age,  '25+' as MOHAgeGroup,   '65+' as DATIMAgeGroup  union all 
-    select 120 as Age,  '25+' as MOHAgeGroup,   '65+' as DATIMAgeGroup  
+    select 120 as Age,  '25+' as MOHAgeGroup,   '65+' as DATIMAgeGroup
 )
 select 
     AgeGroupKey = IDENTITY(INT, 1, 1),
@@ -132,4 +132,15 @@ into NDWH.dbo.DimAgeGroup
 from source_agegroup;
 
 alter table NDWH.dbo.DimAgeGroup add primary key(AgeGroupKey);
+
+--Set Idenitiy insert on
+set identity_insert NDWH.dbo.DimAgeGroup on;
+
+-- Insert a row with a specific identity value
+insert into NDWH.dbo.DimAgeGroup(AgeGroupKey, Age, MOHAgeGroup, DATIMAgeGroup, LoadDate )
+values (-999, -999, 'Missing', 'Missing', cast(getdate() as date));
+
+-- Disable explicit identity value insertion after the operation
+set identity_insert NDWH.dbo.DimAgeGroup off;
+
 END

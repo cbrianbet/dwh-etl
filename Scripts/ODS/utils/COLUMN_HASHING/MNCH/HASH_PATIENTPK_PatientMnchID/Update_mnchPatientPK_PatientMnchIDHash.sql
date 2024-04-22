@@ -82,3 +82,6 @@ UPDATE Arts
   join ODS.dbo.MNCH_Patient p  on PncVisits.SiteCode = P.SiteCode and PncVisits.PatientPk = p.PatientPk
   where PncVisits.PatientPKHash is null or PncVisits.PatientMnchIDHash is null;
 
+
+  
+

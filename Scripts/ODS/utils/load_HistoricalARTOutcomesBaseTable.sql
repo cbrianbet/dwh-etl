@@ -1,16 +1,14 @@
-use tmp_and_adhoc;
+use Historical;
 
---truncate the table
-truncate table tmp_and_adhoc.dbo.HistoricalARTOutcomesBaseTable;
+-- NB:first you need to create the table that everything will go into: dbo.HistoricalARTOutcomesBaseTable
+--truncate the table if you need to load afresh 
+truncate table Historical.dbo.HistoricalARTOutcomesBaseTable;
 
--- first you need to create the table that everything will go into: dbo.HistoricalARTOutcomesBaseTable
 
+-- declare your start and end dates.
 declare 
 @start_date date = <>,
 @end_date date = <>;
--- declare your start and end dates.
-
-
 
 ---creating a temporary table with end of day dates for each month between start and end
 with dates as (
@@ -245,7 +243,7 @@ ARTOutcomesCompuation as (
         and patient_art_and_enrollment_info.PatientPKHash = last_encounter.PatientPKHash
     where patient_art_and_enrollment_info.startARTDate is not null
 )
-insert into tmp_and_adhoc.dbo.HistoricalARTOutcomesBaseTable
+insert into Historical.dbo.HistoricalARTOutcomesBaseTable
 select 
     ARTOutcomesCompuation.PatientIDHash as PatientIDHash,
     ARTOutcomesCompuation.PatientPKHash as PatientPKHash,

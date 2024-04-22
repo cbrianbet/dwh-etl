@@ -2,10 +2,10 @@ BEGIN
 		DECLARE		@MaxVisitDate_Hist			DATETIME,
 					@VisitDate					DATETIME
 				
-		SELECT @MaxVisitDate_Hist =  MAX(MaxVisitDate) FROM [ODS].[dbo].[CT_DrugAlcoholScreening_Log]  (NoLock)
+		SELECT @MaxVisitDate_Hist =  MAX(MaxVisitDate) FROM [ODS_logs].[dbo].[CT_DrugAlcoholScreening_Log]  (NoLock)
 		SELECT @VisitDate = MAX(VisitDate) FROM [DWAPICentral].[dbo].[DrugAlcoholScreeningExtract] WITH (NOLOCK) 		
 					
-		INSERT INTO  [ODS].[dbo].[CT_DrugAlcoholScreening_Log](MaxVisitDate,LoadStartDateTime)
+		INSERT INTO  [ODS_logs].[dbo].[CT_DrugAlcoholScreening_Log](MaxVisitDate,LoadStartDateTime)
 		VALUES(@VisitDate,GETDATE())
 
 	       ---- Refresh [ODS].[dbo].[CT_DrugAlcoholScreening]
@@ -52,14 +52,9 @@ BEGIN
 						a.voided		=b.voided;
 											
 					
-					UPDATE [ODS].[dbo].[CT_DrugAlcoholScreening_Log]
+					UPDATE [ODS_logs].[dbo].[CT_DrugAlcoholScreening_Log]
 						SET LoadEndDateTime = GETDATE()
 					WHERE MaxVisitDate = @VisitDate;
-
-				INSERT INTO [ODS].[dbo].[CT_DrugAlcoholScreeningCount_Log]([SiteCode],[CreatedDate],[DrugAlcoholScreeningCount])
-				SELECT SiteCode,GETDATE(),COUNT(concat(Sitecode,PatientPK)) AS DrugAlcoholScreeningCount 
-				FROM [ODS].[dbo].[CT_DrugAlcoholScreening] 
-				GROUP BY [SiteCode];
 
 
 	END

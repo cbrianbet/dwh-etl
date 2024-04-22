@@ -1,6 +1,7 @@
 MERGE [NDWH].[dbo].[DimPartner] AS a
 		USING	(	SELECT DISTINCT SDP as PartnerName
 					FROM [ODS].[dbo].[All_EMRSites](NoLock)
+					WHERE SDP IS NOT NULL
 				) AS b 
 						ON(
 							a.PartnerName = b.PartnerName

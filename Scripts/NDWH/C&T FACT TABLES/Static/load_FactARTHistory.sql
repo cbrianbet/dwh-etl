@@ -24,7 +24,7 @@ BEGIN
 		art_outcome.ARTOutcomeKey,
 		cast(getdate() as date) as LoadDate
 	into NDWH.dbo.FactARTHistory
-	from tmp_and_adhoc.dbo.HistoricalARTOutcomesBaseTable as txcurr_report
+	from Historical.dbo.HistoricalARTOutcomesBaseTable as txcurr_report
 	left join NDWH.dbo.DimDate as as_of on as_of.Date = txcurr_report.AsOfDate
 	left join NDWH.dbo.DimFacility as facility on facility.MFLCode = txcurr_report.MFLCode
 	left join NDWH.dbo.DimPatient as patient on patient.PatientPKHash =  txcurr_report.PatientPKHash         

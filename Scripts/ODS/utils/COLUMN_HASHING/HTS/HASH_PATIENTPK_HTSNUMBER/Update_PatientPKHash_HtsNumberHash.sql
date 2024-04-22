@@ -35,6 +35,10 @@
 		on n.SiteCode = c.SiteCode and n.PatientPK = c.PatientPK
 		WHERE  n.PatientPKHash IS NULL OR n.HTSNumberHash IS NULL;
 
+	  	update [ODS].[dbo].[Hts_PartnerNotificationServices] 
+		set IndexPatientPkHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(IndexPatientPk  as nvarchar(36))), 2)			
+			WHERE  IndexPatientPkHash IS NULL ;
+
 	update PT
 	set PatientPKHash = c.PatientPKHash,
 		PT.HTSNumberHash = C.HTSNumberHash
@@ -43,12 +47,6 @@
 	on PT.SiteCode = c.SiteCode and PT.PatientPK = c.PatientPK
 	WHERE  PT.PatientPKHash IS NULL OR PT.HTSNumberHash IS NULL;
 
-	update PT
-		set PatientPKHash = c.PatientPKHash
-	from ODS.dbo.HTS_PositivePatients   PT
-		JOIN ODS.dbo.HTS_clients  c
-		on PT.SiteCode = c.SiteCode and PT.PatientPK = c.PatientPK
-		WHERE  PT.PatientPKHash IS NULL;
 
 	update tk
 		set PatientPKHash = c.PatientPKHash,
@@ -66,9 +64,3 @@
 		on Elg.SiteCode = c.SiteCode and Elg.PatientPK = c.PatientPK
 		WHERE  Elg.PatientPKHash IS NULL OR Elg.HTSNumberHash IS NULL;
 
-	--update PPNew
-	--	set PatientPKHash = c.PatientPKHash
-	--from ODS.dbo.HTS_PositivePatients_new      PPNew
-	--	JOIN ODS.dbo.HTS_clients  c
-	--	on PPNew.SiteCode = c.SiteCode and PPNew.PatientPK = c.PatientPK
-	--	WHERE  PPNew.PatientPKHash IS NULL;

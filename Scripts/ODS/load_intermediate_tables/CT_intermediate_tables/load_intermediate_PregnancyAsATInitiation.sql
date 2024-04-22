@@ -5,6 +5,7 @@ BEGIN
     with visit_dates_ordering as (
         select 
            PatientPK,
+		   PatientID,
            SiteCode,
            VisitDate,
            row_number() over(partition by PatientPK, SiteCode order by VisitDate asc) as rnk
@@ -15,6 +16,7 @@ BEGIN
     dates_check as (
 		SELECT 
             Patients.PatientPK,
+		    Patients.PatientID,
             Patients.SiteCode,
 		    CASE WHEN YEAR(ART.StartARTDate) = YEAR(VisitDate) THEN 1 ELSE 0 END as PregnantARTStart, 
 		    CASE WHEN YEAR(Patients.RegistrationAtCCC) = YEAR(VisitDate) THEN 1 ELSE 0 END as PregnantAtEnrol,
@@ -29,6 +31,7 @@ BEGIN
 	)
 	select 
 			dates_check.PatientPK ,
+			dates_check.PatientID,
 			cast( '' as nvarchar(100)) PatientPKHash,
 			cast( '' as nvarchar(100)) PatientIDHash,
 			dates_check.SiteCode,

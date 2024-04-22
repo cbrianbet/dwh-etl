@@ -25,10 +25,10 @@ BEGIN
 		  DECLARE	@MaxVisitDate_Hist			DATETIME,
 					@VisitDate					DATETIME
 				
-		SELECT @MaxVisitDate_Hist =  MAX(MaxVisitDate) FROM [ODS].[dbo].[CT_EnhancedAdherenceCounselling_Log]  (NoLock)
+		SELECT @MaxVisitDate_Hist =  MAX(MaxVisitDate) FROM [ODS_logs].[dbo].[CT_EnhancedAdherenceCounselling_Log]  (NoLock)
 		SELECT @VisitDate = MAX(VisitDate) FROM [DWAPICentral].[dbo].[EnhancedAdherenceCounsellingExtract](NoLock)
 							
-		INSERT INTO  [ODS].[dbo].[CT_EnhancedAdherenceCounselling_Log](MaxVisitDate,LoadStartDateTime)
+		INSERT INTO  [ODS_logs].[dbo].[CT_EnhancedAdherenceCounselling_Log](MaxVisitDate,LoadStartDateTime)
 		VALUES(@MaxVisitDate_Hist,GETDATE())
 
 	       ---- Refresh [ODS].[dbo].[CT_EnhancedAdherenceCounselling]
@@ -120,15 +120,10 @@ BEGIN
 						a.voided					=b.voided
 						;
 						
-					UPDATE [ODS].[dbo].[CT_EnhancedAdherenceCounselling_Log]
+					UPDATE [ODS_logs].[dbo].[CT_EnhancedAdherenceCounselling_Log]
 						SET LoadEndDateTime = GETDATE()
 					WHERE MaxVisitDate = @MaxVisitDate_Hist;
 
-					INSERT INTO [ODS].[dbo].[CT_EnhancedAdherenceCounsellingCount_Log]([SiteCode],[CreatedDate],[EnhancedAdherenceCounsellingCount])
-					SELECT SiteCode,GETDATE(),COUNT(concat(Sitecode,PatientPK)) AS EnhancedAdherenceCounsellingCount 
-					FROM [ODS].[dbo].[CT_EnhancedAdherenceCounselling] 
-					--WHERE @MaxCreatedDate  > @MaxCreatedDate
-					GROUP BY SiteCode;
 
 	END
  

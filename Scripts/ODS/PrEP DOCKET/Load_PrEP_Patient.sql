@@ -43,21 +43,24 @@ MERGE [ODS].[dbo].[PrEP_Patient] AS a
 				  ,[DateLastUsedPrev]
 				  ,[Date_Created]
 				  ,[Date_Last_Modified]
+				  ,RecordUUID
  	 FROM [PREPCentral].[dbo].[PrepPatients](NoLock) c
 	 INNER JOIN 
-		(SELECT patientPK,sitecode,max(cast(created as date))as Maxcreated from [PREPCentral].[dbo].[PrepPatients](NoLock) group by patientPK,sitecode)tn
+		(SELECT patientPK,sitecode,Max(ID)As MaxID,max(cast(created as date))as Maxcreated from [PREPCentral].[dbo].[PrepPatients](NoLock) group by patientPK,sitecode)tn
 		on c.patientPK = tn.patientPK 
-			and c.sitecode =tn.sitecode and cast(c.created as date) = tn.Maxcreated) AS b 
+			and c.sitecode =tn.sitecode and cast(c.created as date) = tn.Maxcreated and C.ID = tn.MaxID
+			) AS b 
 	 
 	ON(
 			a.PatientPK  = b.PatientPK						
 		and a.SiteCode = b.SiteCode
+		and a.RecordUUID = b.RecordUUID
 		) 
 	 WHEN NOT MATCHED THEN 
 		  INSERT(ID,RefId,Created,PatientPk,SiteCode,Emr,Project,Processed,QueueId,[Status],StatusDate,DateExtracted,FacilityId,FacilityName,PrepNumber,HtsNumber,PrepEnrollmentDate,Sex,DateofBirth,CountyofBirth,County,SubCounty,[Location],LandMark,Ward,ClientType,ReferralPoint,MaritalStatus,Inschool,PopulationType,KeyPopulationType,Refferedfrom,TransferIn,TransferInDate,TransferFromFacility,DatefirstinitiatedinPrepCare,DateStartedPrEPattransferringfacility,ClientPreviouslyonPrep,PrevPrepReg,DateLastUsedPrev,Date_Created
-			  ,Date_Last_Modified,LoadDate)
+			  ,Date_Last_Modified,LoadDate,RecordUUID)
 		  VALUES(ID,RefId,Created,PatientPk,SiteCode,Emr,Project,Processed,QueueId,[Status],StatusDate,DateExtracted,FacilityId,FacilityName,PrepNumber,HtsNumber,PrepEnrollmentDate,Sex,DateofBirth,CountyofBirth,County,SubCounty,[Location],LandMark,Ward,ClientType,ReferralPoint,MaritalStatus,Inschool,PopulationType,KeyPopulationType,Refferedfrom,TransferIn,TransferInDate,TransferFromFacility,DatefirstinitiatedinPrepCare,DateStartedPrEPattransferringfacility,ClientPreviouslyonPrep,PrevPrepReg,DateLastUsedPrev,Date_Created
-				,Date_Last_Modified,Getdate())
+				,Date_Last_Modified,Getdate(),RecordUUID)
 
 	  WHEN MATCHED THEN
 				UPDATE SET 													
@@ -82,7 +85,20 @@ MERGE [ODS].[dbo].[PrEP_Patient] AS a
 					a.DatefirstinitiatedinPrepCare=b.DatefirstinitiatedinPrepCare,
 					a.DateStartedPrEPattransferringfacility=b.DateStartedPrEPattransferringfacility,
 					a.ClientPreviouslyonPrep=b.ClientPreviouslyonPrep,
-					a.PrevPrepReg=b.PrevPrepReg;										
+					a.PrevPrepReg=b.PrevPrepReg,
+					a.RecordUUID = b.RecordUUID;
+
+			with cte AS (
+				Select
+				PatientPK,
+				sitecode,
+
+				 ROW_NUMBER() OVER (PARTITION BY PatientPK,sitecode ORDER BY
+				PatientPK,sitecode) Row_Num
+				FROM [ODS].[dbo].[PrEP_Patient](NoLock)
+				)
+			delete   from cte 
+				Where Row_Num >1;										
 
 	END
 

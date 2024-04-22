@@ -186,12 +186,14 @@ WITH NDW_CurTx AS (
             DiffKHISEMR,
             Percent_variance_EMR_DWH as Proportion_variance_EMR_DWH,
             Percent_variance_KHIS_DWH as Proportion_variance_KHIS_DWH ,
-            Percent_variance_KHIS_EMR as Proportion_variance_KHIS_EMR
+            Percent_variance_KHIS_EMR as Proportion_variance_KHIS_EMR,
+            dwapi.DwapiVersion
             into [NDWH].[dbo].FactTxCurrConcordance
             from Summary
 left join NDWH.dbo.DimFacility as facility on facility.MFLCode = Summary.MFLCode
 left join Facilityinfo on Facilityinfo.MFL_Code=Summary.MFLCode
 left join NDWH.dbo.DimPartner as partner on partner.PartnerName = Facilityinfo.PartnerName
 left join NDWH.dbo.DimAgency as agency on agency.AgencyName = Facilityinfo.Agency
+left join DWAPI on DWAPI.SiteCode=Summary.MFLCode
 alter table NDWH.dbo.FactTxCurrConcordance add primary key(FactKey);
 

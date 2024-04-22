@@ -1,7 +1,7 @@
 -- clean ChronicOnsetDate
 UPDATE [ODS].[DBO].[CT_AllergiesChronicIllness] 
     SET ChronicOnsetDate = NULL
-WHERE ChronicOnsetDate < CAST('1900-01-01' AS DATE) OR ChronicOnsetDate > GETDATE()
+WHERE ChronicOnsetDate < CAST('1900-01-01' AS nvarchar(50)) --ChronicOnsetDate is not longer a date column
 
 GO
 

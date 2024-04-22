@@ -9,20 +9,21 @@ BEGIN
 						  ,[DangerSigns],[Milestones],[VitaminA],[Disability],[ReceivedMosquitoNet],[Dewormed],[ReferredFrom],[ReferredTo],[ReferralReasons]
 						  ,[FollowUP],cast([NextAppointment] as date)[NextAppointment],p.[Date_Last_Modified]
 							,ZScore,ZScoreAbsolute
-							,HeightLength,Refferred,RevisitThisYear
+							,HeightLength,Refferred,RevisitThisYear,RecordUUID
 					  FROM [MNCHCentral].[dbo].[CwcVisits] P (Nolock)
-					  inner join (select tn.PatientPK,tn.SiteCode,tn.[VisitDate],max(cast(tn.DateExtracted as date))MaxDateExtracted FROM [MNCHCentral].[dbo].[CwcVisits] (NoLock)tn
+					  inner join (select tn.PatientPK,tn.SiteCode,tn.[VisitDate],Max(ID) As MaxID,max(cast(tn.DateExtracted as date))MaxDateExtracted FROM [MNCHCentral].[dbo].[CwcVisits] (NoLock)tn
 						group by tn.PatientPK,tn.SiteCode,tn.[VisitDate])tm
-					on P.PatientPk = tm.PatientPk and p.SiteCode = tm.SiteCode and cast(p.DateExtracted as date) = tm.MaxDateExtracted
+					on P.PatientPk = tm.PatientPk and p.SiteCode = tm.SiteCode and cast(p.DateExtracted as date) = tm.MaxDateExtracted and p.ID = tm.MaxID
 					  INNER JOIN [MNCHCentral].[dbo].[Facilities] F ON P.[FacilityId] = F.Id ) AS b 
 						ON(
 						 a.PatientPK  = b.PatientPK 
 						and a.SiteCode = b.SiteCode
 						and a.[VisitDate] = b.[VisitDate]
+						and a.RecordUUID = b.RecordUUID
 							)
 					WHEN NOT MATCHED THEN 
-						INSERT(PatientMnchID,PatientPk,SiteCode,FacilityName,EMR,Project,DateExtracted,VisitDate,VisitID,Height,Weight,Temp,PulseRate,RespiratoryRate,OxygenSaturation,MUAC,WeightCategory,Stunted,InfantFeeding,MedicationGiven,TBAssessment,MNPsSupplementation,Immunization,DangerSigns,Milestones,VitaminA,Disability,ReceivedMosquitoNet,Dewormed,ReferredFrom,ReferredTo,ReferralReasons,FollowUP,NextAppointment,Date_Last_Modified,ZScore,ZScoreAbsolute,HeightLength,Refferred,RevisitThisYear,LoadDate)  
-						VALUES(PatientMnchID,PatientPk,SiteCode,FacilityName,EMR,Project,DateExtracted,VisitDate,VisitID,Height,Weight,Temp,PulseRate,RespiratoryRate,OxygenSaturation,MUAC,WeightCategory,Stunted,InfantFeeding,MedicationGiven,TBAssessment,MNPsSupplementation,Immunization,DangerSigns,Milestones,VitaminA,Disability,ReceivedMosquitoNet,Dewormed,ReferredFrom,ReferredTo,ReferralReasons,FollowUP,NextAppointment,Date_Last_Modified,ZScore,ZScoreAbsolute,HeightLength,Refferred,RevisitThisYear,Getdate())
+						INSERT(PatientMnchID,PatientPk,SiteCode,FacilityName,EMR,Project,DateExtracted,VisitDate,VisitID,Height,Weight,Temp,PulseRate,RespiratoryRate,OxygenSaturation,MUAC,WeightCategory,Stunted,InfantFeeding,MedicationGiven,TBAssessment,MNPsSupplementation,Immunization,DangerSigns,Milestones,VitaminA,Disability,ReceivedMosquitoNet,Dewormed,ReferredFrom,ReferredTo,ReferralReasons,FollowUP,NextAppointment,Date_Last_Modified,ZScore,ZScoreAbsolute,HeightLength,Refferred,RevisitThisYear,LoadDate,RecordUUID)  
+						VALUES(PatientMnchID,PatientPk,SiteCode,FacilityName,EMR,Project,DateExtracted,VisitDate,VisitID,Height,Weight,Temp,PulseRate,RespiratoryRate,OxygenSaturation,MUAC,WeightCategory,Stunted,InfantFeeding,MedicationGiven,TBAssessment,MNPsSupplementation,Immunization,DangerSigns,Milestones,VitaminA,Disability,ReceivedMosquitoNet,Dewormed,ReferredFrom,ReferredTo,ReferralReasons,FollowUP,NextAppointment,Date_Last_Modified,ZScore,ZScoreAbsolute,HeightLength,Refferred,RevisitThisYear,Getdate(),RecordUUID)
 				
 					WHEN MATCHED THEN
 						UPDATE SET 
@@ -52,7 +53,8 @@ BEGIN
 							a.FollowUP				=b.FollowUP,
 							a.HeightLength			=b.HeightLength,
 							a.Refferred				=b.Refferred,
-							a.RevisitThisYear		=b.RevisitThisYear;
+							a.RevisitThisYear		=b.RevisitThisYear,
+							a.RecordUUID             =b.RecordUUID;
 
 				with cte AS (
 						Select

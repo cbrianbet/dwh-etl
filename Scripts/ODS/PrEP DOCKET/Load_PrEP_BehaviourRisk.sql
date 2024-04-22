@@ -1,6 +1,5 @@
 
 BEGIN
-
 --truncate table [ODS].[dbo].[PrEP_BehaviourRisk]
 MERGE [ODS].[dbo].[PrEP_BehaviourRisk] AS a
 	USING(SELECT distinct
@@ -41,15 +40,17 @@ MERGE [ODS].[dbo].[PrEP_BehaviourRisk] AS a
       ,[NumberofchildrenWithPartner]
       ,a.[Date_Created]
       ,a.[Date_Last_Modified]
+	  ,a.RecordUUID
 
   FROM [PREPCentral].[dbo].[PrepBehaviourRisks](NoLock)a
   inner join    [PREPCentral].[dbo].[PrepPatients](NoLock) b
 
 on a.SiteCode = b.SiteCode and a.PatientPk =  b.PatientPk 
 
-INNER JOIN (SELECT PatientPk, SiteCode, max(cast(Created as date)) AS maxCreated from [PREPCentral].[dbo].[PrepBehaviourRisks]
+INNER JOIN (SELECT PatientPk, SiteCode,max(ID) MaxID, max(cast(Created as date)) AS maxCreated from [PREPCentral].[dbo].[PrepBehaviourRisks]
               group by PatientPk,SiteCode) tn
 ON a.PatientPk = tn.PatientPk and a.SiteCode = tn.SiteCode and cast(a.Created as date) = tn.maxCreated
+and a.ID = tn.MaxID
 
 INNER JOIN (SELECT PatientPk, SiteCode, max(cast(DateExtracted as date)) AS maxDateExtracted from [PREPCentral].[dbo].[PrepBehaviourRisks]
               group by PatientPk,SiteCode) tm
@@ -61,6 +62,7 @@ AS b    			ON(
 						and a.SiteCode = b.SiteCode
 						and a.visitID  = b.visitID
 						and a.VisitDate = b.Visitdate
+						and a.RecordUUID = b.RecordUUID
 						) 
 
 
@@ -70,14 +72,15 @@ AS b    			ON(
 		  ,VisitDate,VisitID,SexPartnerHIVStatus,IsHIVPositivePartnerCurrentonART,IsPartnerHighrisk,
 		  PartnerARTRisk,ClientAssessments,ClientRisk,ClientWillingToTakePrep,PrEPDeclineReason,
 		  RiskReductionEducationOffered,ReferralToOtherPrevServices,FirstEstablishPartnerStatus,PartnerEnrolledtoCCC,HIVPartnerCCCnumber,
-		  HIVPartnerARTStartDate,MonthsknownHIVSerodiscordant,SexWithoutCondom,NumberofchildrenWithPartner,Date_Created,Date_Last_Modified,LoadDate) 
+		  HIVPartnerARTStartDate,MonthsknownHIVSerodiscordant,SexWithoutCondom,NumberofchildrenWithPartner,Date_Created,Date_Last_Modified,LoadDate,
+		  RecordUUID) 
 		  
 
 		  VALUES(RefId,Created,PatientPk,SiteCode,Emr,Project,Processed,QueueId,[Status],StatusDate,DateExtracted,FacilityId,FacilityName,PrepNumber,HtsNumber,
           VisitDate,VisitID,SexPartnerHIVStatus,IsHIVPositivePartnerCurrentonART,IsPartnerHighrisk,
 		  PartnerARTRisk,ClientAssessments,ClientRisk,ClientWillingToTakePrep,PrEPDeclineReason,
 		  RiskReductionEducationOffered,ReferralToOtherPrevServices,FirstEstablishPartnerStatus,PartnerEnrolledtoCCC,HIVPartnerCCCnumber,
-		  HIVPartnerARTStartDate,MonthsknownHIVSerodiscordant,SexWithoutCondom,NumberofchildrenWithPartner,Date_Created,Date_Last_Modified,Getdate()) 
+		  HIVPartnerARTStartDate,MonthsknownHIVSerodiscordant,SexWithoutCondom,NumberofchildrenWithPartner,Date_Created,Date_Last_Modified,Getdate(),RecordUUID) 
 
 	  WHEN MATCHED THEN
 						UPDATE SET 
@@ -97,7 +100,8 @@ AS b    			ON(
 							a.Status=b.Status,
 							a.SexPartnerHIVStatus=b.SexPartnerHIVStatus,
 							a.IsHIVPositivePartnerCurrentonART=b.IsHIVPositivePartnerCurrentonART,						
-							a.Date_Last_Modified=b.Date_Last_Modified;						
+							a.Date_Last_Modified=b.Date_Last_Modified,
+							a.RecordUUID   = b.RecordUUID;						
 
 END
 

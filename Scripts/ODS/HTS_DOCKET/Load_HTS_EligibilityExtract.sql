@@ -19,21 +19,23 @@ BEGIN
 							,ReasonRefferredForTesting
 							,ReasonNotReffered
 							,[HtsRiskScore]
-							
+							,a.RecordUUID
 						FROM [HTSCentral].[dbo].[HtsEligibilityExtract] (NoLock)a
-						Inner join ( select ct.sitecode,ct.patientPK,ct.encounterID,ct.visitID,max(DateCreated)MaxDateCreated  from [HTSCentral].[dbo].[HtsEligibilityExtract] ct
+						Inner join ( select ct.sitecode,ct.patientPK,ct.encounterID,ct.visitID,max(ID)As MaxID,max(DateCreated)MaxDateCreated  from [HTSCentral].[dbo].[HtsEligibilityExtract] ct
 									group by ct.sitecode,ct.patientPK,ct.encounterID,ct.visitID)tn
 									on a.sitecode = tn.sitecode and a.patientPK = tn.patientPK
 									and a.DateCreated = tn.MaxDateCreated
 									and a.encounterID = tn.encounterID
 									and a.visitID = tn.visitID
+									and a.ID = tn.MaxID
 									
-						Inner join ( select ct1.sitecode,ct1.patientPK,ct1.encounterID,ct1.visitID,max(cast(ct1.DateExtracted as date))MaxDateExtracted  from [HTSCentral].[dbo].[HtsEligibilityExtract] ct1
+						Inner join ( select ct1.sitecode,ct1.patientPK,ct1.encounterID,ct1.visitID,Max(ID)As MaxID,max(cast(ct1.DateExtracted as date))MaxDateExtracted  from [HTSCentral].[dbo].[HtsEligibilityExtract] ct1
 									group by ct1.sitecode,ct1.patientPK,ct1.encounterID,ct1.visitID)tn1
 									on a.sitecode = tn1.sitecode and a.patientPK = tn1.patientPK
 									and cast(a.DateExtracted as date) = tn1.MaxDateExtracted
 									and a.encounterID = tn1.encounterID
 									and a.visitID = tn1.visitID
+									and a.ID  = tn1.MaxID
 
 						INNER JOIN [HTSCentral].[dbo].Clients (NoLock) Cl
 						on a.PatientPk = Cl.PatientPk and a.SiteCode = Cl.SiteCode				
@@ -49,8 +51,8 @@ BEGIN
 
 				)
 		WHEN NOT MATCHED THEN 
-			INSERT(ID,FacilityName,SiteCode,PatientPk,HtsNumber,Emr,Project,Processed,QueueId,Status,StatusDate,EncounterId,VisitID,VisitDate,PopulationType,KeyPopulation,PriorityPopulation,Department,PatientType,IsHealthWorker,RelationshipWithContact,TestedHIVBefore,WhoPerformedTest,ResultOfHIV,DateTestedSelf,StartedOnART,CCCNumber,EverHadSex,SexuallyActive,NewPartner,PartnerHIVStatus,CoupleDiscordant,MultiplePartners,NumberOfPartners,AlcoholSex,MoneySex,CondomBurst,UnknownStatusPartner,KnownStatusPartner,Pregnant,BreastfeedingMother,ExperiencedGBV,ContactWithTBCase,Lethargy,EverOnPrep,CurrentlyOnPrep,EverOnPep,CurrentlyOnPep,EverHadSTI,CurrentlyHasSTI,EverHadTB,SharedNeedle,NeedleStickInjuries,TraditionalProcedures,ChildReasonsForIneligibility,EligibleForTest,ReasonsForIneligibility,SpecificReasonForIneligibility,Cough,DateTestedProvider,Fever,MothersStatus,NightSweats,ReferredForTesting,ResultOfHIVSelf,ScreenedTB,TBStatus,WeightLoss,AssessmentOutcome,ForcedSex,ReceivedServices,TypeGBV,Disability,DisabilityType,HTSStrategy,HTSEntryPoint,HIVRiskCategory,ReasonRefferredForTesting,ReasonNotReffered,[HtsRiskScore],LoadDate)  
-			VALUES(ID,FacilityName,SiteCode,PatientPk,HtsNumber,Emr,Project,Processed,QueueId,Status,StatusDate,EncounterId,VisitID,VisitDate,PopulationType,KeyPopulation,PriorityPopulation,Department,PatientType,IsHealthWorker,RelationshipWithContact,TestedHIVBefore,WhoPerformedTest,ResultOfHIV,DateTestedSelf,StartedOnART,CCCNumber,EverHadSex,SexuallyActive,NewPartner,PartnerHIVStatus,CoupleDiscordant,MultiplePartners,NumberOfPartners,AlcoholSex,MoneySex,CondomBurst,UnknownStatusPartner,KnownStatusPartner,Pregnant,BreastfeedingMother,ExperiencedGBV,ContactWithTBCase,Lethargy,EverOnPrep,CurrentlyOnPrep,EverOnPep,CurrentlyOnPep,EverHadSTI,CurrentlyHasSTI,EverHadTB,SharedNeedle,NeedleStickInjuries,TraditionalProcedures,ChildReasonsForIneligibility,EligibleForTest,ReasonsForIneligibility,SpecificReasonForIneligibility,Cough,DateTestedProvider,Fever,MothersStatus,NightSweats,ReferredForTesting,ResultOfHIVSelf,ScreenedTB,TBStatus,WeightLoss,AssessmentOutcome,ForcedSex,ReceivedServices,TypeGBV,Disability,DisabilityType,HTSStrategy,HTSEntryPoint,HIVRiskCategory,ReasonRefferredForTesting,ReasonNotReffered,[HtsRiskScore],Getdate())
+			INSERT(ID,FacilityName,SiteCode,PatientPk,HtsNumber,Emr,Project,Processed,QueueId,Status,StatusDate,EncounterId,VisitID,VisitDate,PopulationType,KeyPopulation,PriorityPopulation,Department,PatientType,IsHealthWorker,RelationshipWithContact,TestedHIVBefore,WhoPerformedTest,ResultOfHIV,DateTestedSelf,StartedOnART,CCCNumber,EverHadSex,SexuallyActive,NewPartner,PartnerHIVStatus,CoupleDiscordant,MultiplePartners,NumberOfPartners,AlcoholSex,MoneySex,CondomBurst,UnknownStatusPartner,KnownStatusPartner,Pregnant,BreastfeedingMother,ExperiencedGBV,ContactWithTBCase,Lethargy,EverOnPrep,CurrentlyOnPrep,EverOnPep,CurrentlyOnPep,EverHadSTI,CurrentlyHasSTI,EverHadTB,SharedNeedle,NeedleStickInjuries,TraditionalProcedures,ChildReasonsForIneligibility,EligibleForTest,ReasonsForIneligibility,SpecificReasonForIneligibility,Cough,DateTestedProvider,Fever,MothersStatus,NightSweats,ReferredForTesting,ResultOfHIVSelf,ScreenedTB,TBStatus,WeightLoss,AssessmentOutcome,ForcedSex,ReceivedServices,TypeGBV,Disability,DisabilityType,HTSStrategy,HTSEntryPoint,HIVRiskCategory,ReasonRefferredForTesting,ReasonNotReffered,[HtsRiskScore],RecordUUID,LoadDate)  
+			VALUES(ID,FacilityName,SiteCode,PatientPk,HtsNumber,Emr,Project,Processed,QueueId,Status,StatusDate,EncounterId,VisitID,VisitDate,PopulationType,KeyPopulation,PriorityPopulation,Department,PatientType,IsHealthWorker,RelationshipWithContact,TestedHIVBefore,WhoPerformedTest,ResultOfHIV,DateTestedSelf,StartedOnART,CCCNumber,EverHadSex,SexuallyActive,NewPartner,PartnerHIVStatus,CoupleDiscordant,MultiplePartners,NumberOfPartners,AlcoholSex,MoneySex,CondomBurst,UnknownStatusPartner,KnownStatusPartner,Pregnant,BreastfeedingMother,ExperiencedGBV,ContactWithTBCase,Lethargy,EverOnPrep,CurrentlyOnPrep,EverOnPep,CurrentlyOnPep,EverHadSTI,CurrentlyHasSTI,EverHadTB,SharedNeedle,NeedleStickInjuries,TraditionalProcedures,ChildReasonsForIneligibility,EligibleForTest,ReasonsForIneligibility,SpecificReasonForIneligibility,Cough,DateTestedProvider,Fever,MothersStatus,NightSweats,ReferredForTesting,ResultOfHIVSelf,ScreenedTB,TBStatus,WeightLoss,AssessmentOutcome,ForcedSex,ReceivedServices,TypeGBV,Disability,DisabilityType,HTSStrategy,HTSEntryPoint,HIVRiskCategory,ReasonRefferredForTesting,ReasonNotReffered,[HtsRiskScore],RecordUUID,Getdate())
 		
 		WHEN MATCHED THEN
 			UPDATE SET 
@@ -120,7 +122,8 @@ BEGIN
 					a.HTSEntryPoint						=b.HTSEntryPoint,
 					a.ReasonRefferredForTesting         =b.ReasonRefferredForTesting,
 					a.ReasonNotReffered                 =b.ReasonNotReffered,
-					a.[HtsRiskScore]					=b.[HtsRiskScore];
+					a.[HtsRiskScore]					=b.[HtsRiskScore],
+					a.RecordUUID                          =b.RecordUUID;
 
 			
 END

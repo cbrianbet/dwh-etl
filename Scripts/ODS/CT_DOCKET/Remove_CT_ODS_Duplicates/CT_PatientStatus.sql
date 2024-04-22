@@ -9,4 +9,14 @@ with cte AS (
 									FROM [ODS].[dbo].[CT_PatientStatus]PS WITH (NoLock)
 									)
 								delete  from cte 
-									Where Row_Num >1
+									Where Row_Num >1;
+									
+ INSERT INTO [ODS_logs].[dbo].[CT_PatientStatusCount_Log]
+                ([sitecode],
+                 [createddate],
+                 [patientstatuscount])
+    SELECT sitecode,
+           Getdate(),
+           Count(Concat(sitecode, patientpk)) AS PatientStatusCount
+    FROM   [ODS].[dbo].[ct_patientstatus]
+    GROUP  BY sitecode;

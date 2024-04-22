@@ -2,11 +2,11 @@ BEGIN
 		 DECLARE	@MaxVisitDate_Hist			DATETIME,
 					@VisitDate					DATETIME
 				
-		SELECT @MaxVisitDate_Hist =  MAX(MaxVisitDate) FROM [ODS].[dbo].[CT_GbvScreening_Log]  (NoLock)
+		SELECT @MaxVisitDate_Hist =  MAX(MaxVisitDate) FROM [ODS_logs].[dbo].[CT_GbvScreening_Log]  (NoLock)
 		SELECT @VisitDate = MAX(VisitDate) FROM [DWAPICentral].[dbo].[GbvScreeningExtract](NoLock)
 		
 					
-		INSERT INTO  [ODS].[dbo].[CT_GbvScreening_Log](MaxVisitDate,LoadStartDateTime)
+		INSERT INTO  [ODS_logs].[dbo].[CT_GbvScreening_Log](MaxVisitDate,LoadStartDateTime)
 		VALUES(@MaxVisitDate_Hist,GETDATE())
 	       ---- Refresh [ODS].[dbo].[CT_GbvScreening]
 			MERGE [ODS].[dbo].[CT_GbvScreening] AS a
@@ -53,15 +53,9 @@ BEGIN
 						;
 					
 					
-					UPDATE [ODS].[dbo].[CT_GbvScreening_Log]
+					UPDATE [ODS_logs].[dbo].[CT_GbvScreening_Log]
 						SET LoadEndDateTime = GETDATE()
 					WHERE MaxVisitDate = @MaxVisitDate_Hist;
-
-					INSERT INTO [ODS].[dbo].[CT_GbvScreeningCount_Log]([SiteCode],[CreatedDate],[GbvScreeningCount])
-					SELECT SiteCode,GETDATE(),COUNT(concat(Sitecode,PatientPK)) AS GbvScreeningCount 
-					FROM [ODS].[dbo].[CT_GbvScreening] 
-					--WHERE @MaxCreatedDate  > @MaxCreatedDate
-					GROUP BY SiteCode;
 
 
 	END

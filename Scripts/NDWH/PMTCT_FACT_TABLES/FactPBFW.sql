@@ -6,43 +6,10 @@ BEGIN
          AS (SELECT DISTINCT Mfl_code,
                              Sdp,
                              Sdp_agency AS Agency
-             FROM   Ods.Dbo.All_emrsites),
-         Pbfw_patient_ordering
-         AS (SELECT Row_number()
-                      OVER (
-                        Partition BY Visits.Sitecode, Visits.Patientpk
-                        ORDER BY Visits.Visitdate ASC ) AS NUM,
-                    Visits.Patientpkhash,
-                    Visits.Patientpk,
-                    Visits.Sitecode,
-                    Patient.Dob,
-                    Patient.Gender,
-                    Pregnant,
-                    Breastfeeding,
-                    Visits.Visitdate,
-                    Dateconfirmedhivpositive,
-                    Startartdate
-             FROM   Ods.Dbo.Ct_patient AS Patient
-                    INNER JOIN Ods.Dbo.Ct_patientvisits AS Visits
-                            ON Visits.Patientpk = Patient.Patientpk
-                               AND Visits.Sitecode = Patient.Sitecode
-                    LEFT JOIN Ods.Dbo.Ct_artpatients Art
-                           ON Patient.Patientpk = Art.Patientpk
-                              AND Patient.Sitecode = Art.Sitecode
-                    LEFT JOIN Ods.Dbo.Intermediate_latestviralloads Vl
-                           ON Patient.Patientpk = Vl.Patientpk
-                              AND Patient.Sitecode = Vl.Sitecode
-             WHERE  Visits.Pregnant = 'Yes'
-                 AND Visits.Lmp > '1900-01-01'
-                     OR Breastfeeding = 'Yes'
-                        AND Datediff(Year, Patient.Dob, Getdate()) > 10
-                        AND Patient.Voided = 0),
-         Pbfw_earliestpatient
-         AS (SELECT *
-             FROM   Pbfw_patient_ordering
-             WHERE  Num = 1),
-         Anc
-         AS (SELECT Row_number()
+             FROM   Ods.Dbo.All_emrsites
+       ),
+       Anc_from_mnch AS (
+              SELECT Row_number()
                       OVER (
                         Partition BY Patientpk, Sitecode
                         ORDER BY Visitdate ASC ) AS NUM,
@@ -52,96 +19,43 @@ BEGIN
                     Visitdate
              FROM   Ods.Dbo.Mnch_ancvisits
              WHERE  Hivstatusbeforeanc = 'KP'
-                     OR Hivtestfinalresult = 'Positive'),
-         Earliestanc
-         AS (SELECT *
-             FROM   Anc
-             WHERE  Num = 1),
-         Pnc
-         AS (SELECT Row_number()
-                      OVER (
-                        Partition BY Patientpk, Sitecode
-                        ORDER BY Visitdate ASC )AS Num,
-                    Patientpk,
-                    Patientpkhash,
-                    Sitecode,
-                    Visitdate
-             FROM   Ods.Dbo.Mnch_pncvisits
-             WHERE  Priorhivstatus = 'Positive'
                      OR Hivtestfinalresult = 'Positive'
-                     AND Babyfeeding IN ( 'Breastfed exclusively',
-                                         'Exclusive breastfeeding',
-                                         'mixed feeding' )),
-         Earliestpnc
-         AS (SELECT *
-             FROM   Pnc
-             WHERE  Num = 1),
-         Matvisits
-         AS (SELECT Row_number()
-                      OVER (
-                        Partition BY Patientpk, Sitecode
-                        ORDER BY Visitdate ASC )AS Num,
-                    Patientpk,
-                    Patientpkhash,
-                    Sitecode,
-                    Visitdate
-             FROM   Ods.Dbo.Mnch_matvisits
-             WHERE  Hivtestfinalresult = 'Positive'
-                     OR Onartanc = 'Yes'
-                     AND Initiatedbf = 'Yes'),
-         earliestmat
-         AS (SELECT *
-             FROM   Matvisits
-             WHERE  Num = 1),
-         Pbfw_patient
-         AS (SELECT Pbfw_earliestpatient .Patientpkhash,
-                    Pbfw_earliestpatient .Patientpk,
-                    Pbfw_earliestpatient .Sitecode,
-                    Dob,
-                    Gender,
-                    Pregnant,
-                    Breastfeeding,
-                    Pbfw_earliestpatient .Visitdate,
-                    Dateconfirmedhivpositive,
-                    Startartdate
-             FROM   Pbfw_earliestpatient
-                    FULL JOIN Earliestanc
-                           ON Pbfw_earliestpatient .Patientpk =
-                              Earliestanc.Patientpk
-                              AND Pbfw_earliestpatient .Sitecode =
-                                  Earliestanc.Sitecode
-                    FULL JOIN Earliestpnc
-                           ON Earliestpnc.Patientpk =
-                              Pbfw_earliestpatient.Patientpk
-                              AND Earliestpnc.Sitecode =
-                                  Pbfw_earliestpatient.Sitecode
-                    FULL JOIN Earliestmat
-                           ON earliestmat.Patientpk =
-                              Pbfw_earliestpatient.Patientpk
-                              AND Pbfw_earliestpatient.Sitecode =
-                                  earliestmat.Sitecode
-            ),
+		),
+       Pbfw_patient AS (
+              select * from ODS.dbo.Intermediate_Pbfw
+       ),
+       Ancdate1 as (
+              SELECT Anc.Patientpkhash,
+                    Anc.Sitecode,
+                    Anc.Patientpk,
+                    Anc.Visitdate AS ANCDate1
+             FROM   Anc_from_mnch as anc
+             WHERE  Num = 1                   
+       ),
          Ancdate2
          AS (SELECT Anc.Patientpkhash,
                     Anc.Sitecode,
                     Anc.Patientpk,
                     Anc.Visitdate AS ANCDate2
-             FROM   Anc
-             WHERE  Num = 2),
+             FROM   Anc_from_mnch as anc
+             WHERE  Num = 2
+       ),
          Ancdate3
          AS (SELECT Anc.Patientpkhash,
                     Anc.Sitecode,
                     Anc.Patientpk,
                     Anc.Visitdate AS ANCDate3
-             FROM   Anc
-             WHERE  Num = 3),
+             FROM   Anc_from_mnch as anc
+             WHERE  Num = 3
+       ),
          Ancdate4
          AS (SELECT Anc.Patientpkhash,
                     Anc.Sitecode,
                     Anc.Patientpk,
                     Anc.Visitdate AS ANCDate4
-             FROM   Anc
-             WHERE  Num = 4),
+             FROM   Anc_from_mnch as anc
+             WHERE  Num = 4
+       ),
          Testsatanc
          AS (SELECT Row_number()
                       OVER (
@@ -151,13 +65,15 @@ BEGIN
                     Tests.Sitecode,
                     Tests.Patientpk
              FROM   Ods.Dbo.Hts_clienttests Tests
-             WHERE  Entrypoint IN ( 'PMTCT ANC', 'MCH' )),
+             WHERE  Entrypoint IN ( 'PMTCT ANC', 'MCH' )
+       ),
          Testedatanc
          AS (SELECT Pat.Patientpkhash,
                     Pat.Sitecode,
                     Pat.Patientpk
              FROM   Testsatanc Pat
-             WHERE  Num = 1),
+             WHERE  Num = 1
+       ),
          Testsatlandd
          AS (SELECT Row_number()
                       OVER (
@@ -237,14 +153,14 @@ BEGIN
              FROM   Switches
              WHERE  Num = 1),
          Summary
-         AS (SELECT Patient.Patientpkhash,
+         AS (SELECT Patient.PatientPKHash,
                     Patient.Sitecode,
                     Dob,
                     Gender,
-                    Visitdate AS ANCDate1,
-                    Ancdate2,
-                    Ancdate3,
-                    Ancdate4,
+                    coalesce(GreenCardAncDate1, Ancdate1.ANCDate1) AS ANCDate1,
+                    ANCDate2.Ancdate2,
+                    ANCDate3.Ancdate3,
+                    ANCDate4.Ancdate4,
                     CASE
                       WHEN Testedatlandd.Patientpkhash IS NOT NULL THEN 1
                       ELSE 0
@@ -258,18 +174,18 @@ BEGIN
                       ELSE 0
                     END       AS TestedatPNC,
                     CASE
-                      WHEN Datediff(Year, Dob, Getdate()) BETWEEN 10 AND 19 THEN
+                      WHEN Datediff(Year, Dob,  EOMONTH(DATEADD(mm,-1,GETDATE()))) BETWEEN 10 AND 19 THEN
                       1
                       ELSE 0
                     END       AS PositiveAdolescent,
                     CASE
-                      WHEN Dateconfirmedhivpositive = Visitdate THEN 1
+                      WHEN PBFWCategory = 'New Positive'  THEN 1
                       ELSE 0
                     END       AS NewPositives,
                     CASE
-                      WHEN Dateconfirmedhivpositive < Visitdate THEN 1
+                      WHEN PBFWCategory = 'Known Positive'  THEN 1
                       ELSE 0
-                    END       AS KnownPositive,
+                    END      AS KnownPositive,
                     CASE
                       WHEN Startartdate IS NOT NULL THEN 1
                       ELSE 0
@@ -286,8 +202,13 @@ BEGIN
                       WHEN Receivedeac3.Patientpk IS NOT NULL THEN 1
                       ELSE 0
                     END       AS ReceivedEAC3,
-                    Pbfwreglineswitch
+                    Pbfwreglineswitch,
+                    Pregnant,
+                    Breastfeeding
              FROM   Pbfw_patient AS Patient
+                     LEFT JOIN Ancdate1
+                           ON Patient.Patientpk = Ancdate1.Patientpk
+                              AND Patient.Sitecode = Ancdate1.Sitecode
                     LEFT JOIN Ancdate2
                            ON Patient.Patientpk = Ancdate2.Patientpk
                               AND Patient.Sitecode = Ancdate2.Sitecode
@@ -342,7 +263,9 @@ BEGIN
            Receivedeac1,
            Receivedeac2,
            Receivedeac3,
-           Pbfwreglineswitch
+           Pbfwreglineswitch,
+           Pregnant,
+           Breastfeeding
     INTO   Ndwh.Dbo.Factpbfw
     FROM   Summary
            LEFT JOIN Ndwh.Dbo.Dimfacility AS Facility

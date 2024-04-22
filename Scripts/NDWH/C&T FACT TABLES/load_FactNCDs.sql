@@ -38,6 +38,7 @@ with ncd_source_data as (
                     "Cystic Fibrosis",
                     "Deafness and Hearing Impairment",
                     "Diabetes",
+                    "Dyslipidemia",
                     "Endometriosis",
                     "Epilepsy",
                     "Glaucoma",
@@ -108,6 +109,18 @@ diabetes_ordering as (
     where chronic.voided = 0 
         and ChronicIllness like '%Diabetes%' 
 ),
+dyslipidemia_ordering as (
+    select 
+        PatientPKHash,
+        PatientPK,               
+        SiteCode,
+        VisitDate,
+        ChronicIllness,
+        row_number() over (partition by PatientPK, Sitecode order by VisitDate asc) as rank
+    from ODS.dbo.CT_AllergiesChronicIllness as chronic
+    where chronic.voided = 0 
+        and ChronicIllness like '%Dyslipidemia%' 
+),
 earliest_hpertension_recorded as (
     select 
         *
@@ -118,6 +131,12 @@ earliest_diabetes_recorded as (
     select 
         *
     from diabetes_ordering
+    where rank = 1
+),
+earliest_dyslipidemia_recorded as (
+    select 
+        *
+    from dyslipidemia_ordering
     where rank = 1
 ),
 with_underlying_ncd_condition_indicators as (
@@ -155,6 +174,7 @@ select
     ncd_source_data."Cystic Fibrosis",
     ncd_source_data."Deafness and Hearing Impairment",
     ncd_source_data."Diabetes",
+    ncd_source_data."Dyslipidemia",
     ncd_source_data."Endometriosis",
     ncd_source_data."Epilepsy",
     ncd_source_data."Glaucoma",
@@ -173,7 +193,8 @@ select
     with_underlying_ncd_condition_indicators.IsHyperTensiveAndScreenedBPLastVisit,
     with_underlying_ncd_condition_indicators.IsHyperTensiveAndBPControlledAtLastVisit,
     first_hypertension.DateKey as FirstHypertensionRecoredeDateKey,
-    first_diabetes.DateKey as FirstDiabetesRecordedDateKey
+    first_diabetes.DateKey as FirstDiabetesRecordedDateKey,
+    first_dyslipidemia.DateKey as FirstDyslipidemiaRecordedDateKey
 into NDWH.dbo.FactNCD
 from ncd_source_data
 left join with_underlying_ncd_condition_indicators on with_underlying_ncd_condition_indicators.PatientPKHash = ncd_source_data.PatientPKHash
@@ -191,8 +212,12 @@ left join earliest_hpertension_recorded on earliest_hpertension_recorded.Patient
     and earliest_hpertension_recorded.SiteCode = ncd_source_data.Sitecode
 left join earliest_diabetes_recorded on earliest_diabetes_recorded.PatientPKHash = ncd_source_data.PatientPKHash
     and earliest_diabetes_recorded.SiteCode = ncd_source_data.SiteCode
+left join earliest_dyslipidemia_recorded on earliest_dyslipidemia_recorded.PatientPKHash = ncd_source_data.PatientPKHash
+    and earliest_dyslipidemia_recorded.SiteCode = ncd_source_data.SiteCode
 left join NDWH.dbo.DimDate as first_hypertension on first_hypertension.Date = cast(earliest_hpertension_recorded.VisitDate as date)
 left join NDWH.dbo.DimDate as first_diabetes on first_diabetes.Date = cast(earliest_diabetes_recorded.VisitDate as date)
+left join NDWH.dbo.DimDate as first_dyslipidemia on first_dyslipidemia.Date = cast(earliest_dyslipidemia_recorded.VisitDate as date)
+
 ;
 
 

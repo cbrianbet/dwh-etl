@@ -27,15 +27,14 @@ BEGIN
 				  @DispenseDate					DATETIME,
 				  @MaxCreatedDate				DATETIME
 
-			SELECT @MaxDispenseDate_Hist =  MAX(MaxDispenseDate) FROM [ODS].[dbo].[CT_PharmacyVisit_Log]  (NoLock)
+			SELECT @MaxDispenseDate_Hist =  MAX(MaxDispenseDate) FROM [ODS_logs].[dbo].[CT_PharmacyVisit_Log]  (NoLock)
 			SELECT @DispenseDate = MAX(DispenseDate) FROM [DWAPICentral].[dbo].[PatientPharmacyExtract] WITH (NOLOCK) 
-			SELECT @MaxCreatedDate		= MAX(CreatedDate)	FROM [ODS].[dbo].[CT_VisitCount_Log] WITH (NOLOCK) 
 							
-			INSERT INTO  [ODS].[dbo].[CT_PharmacyVisit_Log](MaxDispenseDate,LoadStartDateTime)
+			INSERT INTO  [ODS_logs].[dbo].[CT_PharmacyVisit_Log](MaxDispenseDate,LoadStartDateTime)
 			VALUES(@DispenseDate,GETDATE())
 
 			MERGE [ODS].[dbo].[CT_PatientPharmacy] AS a
-				USING(SELECT Distinct
+				USING(SELECT Distinct 
 					  P.[PatientCccNumber] AS PatientID, P.[PatientPID] AS PatientPK,F.[Name] AS FacilityName, F.Code AS SiteCode,PP.[VisitID] VisitID,PP.[Drug] Drug
 					  ,PP.[DispenseDate] DispenseDate,PP.[Duration] Duration,PP.[ExpectedReturn] ExpectedReturn,PP.[TreatmentType] TreatmentType
 					  ,PP.[PeriodTaken] PeriodTaken,PP.[ProphylaxisType] ProphylaxisType,P.[Emr] Emr
@@ -70,46 +69,29 @@ BEGIN
 						)
 
 				WHEN NOT MATCHED THEN 
-
 					INSERT(ID,PatientID,SiteCode,FacilityName,PatientPK,VisitID,Drug,DispenseDate,Duration,ExpectedReturn,TreatmentType,PeriodTaken,ProphylaxisType,Emr,Project,RegimenLine,RegimenChangedSwitched,RegimenChangeSwitchReason,StopRegimenReason,StopRegimenDate, [Date_Created],[Date_Last_Modified],RecordUUID,voided,LoadDate) 
 					VALUES(ID,PatientID,SiteCode,FacilityName,PatientPK,VisitID,Drug,DispenseDate,Duration,ExpectedReturn,TreatmentType,PeriodTaken,ProphylaxisType,Emr,Project,RegimenLine,RegimenChangedSwitched,RegimenChangeSwitchReason,StopRegimenReason,StopRegimenDate, [Date_Created],[Date_Last_Modified],RecordUUID,voided,Getdate())
-
 			
 				WHEN MATCHED THEN
 					UPDATE SET 
-						a.[PatientID]					= b.[PatientID],
-						a.[FacilityName]				= b.[FacilityName],
-						a.[VisitID]						= b.[VisitID],
-						a.[Drug]						= b.[Drug],
-						a.[DispenseDate]				= b.[DispenseDate],
-						a.[Duration]					= b.[Duration],
-						a.[ExpectedReturn]				= b.[ExpectedReturn],
-						a.[TreatmentType]				= b.[TreatmentType],
-						a.[PeriodTaken]					= b.[PeriodTaken],
-						a.[ProphylaxisType]				= b.[ProphylaxisType],
-						a.[Emr]							= b.[Emr],
-						a.[RegimenLine]					= b.[RegimenLine],
-						a.[RegimenChangedSwitched]		= b.[RegimenChangedSwitched],
-						a.[RegimenChangeSwitchReason]	= b.[RegimenChangeSwitchReason],
-						a.[StopRegimenReason]			= b.[StopRegimenReason],
-						a.[StopRegimenDate]				= b.[StopRegimenDate],
-						a.[Date_Last_Modified]			= b.[Date_Last_Modified],
-						a.[Date_Created]				= b.[Date_Created],
-						a.[RecordUUID]					= b.[RecordUUID],
-						a.[voided]						= b.[voided];
+						a.PatientID					=b.PatientID,
+						a.FacilityName				=b.FacilityName,
+						a.PeriodTaken				=b.PeriodTaken,
+						a.ProphylaxisType			=b.ProphylaxisType,
+						a.RegimenLine				=b.RegimenLine,
+						a.RegimenChangedSwitched	=b.RegimenChangedSwitched,
+						a.RegimenChangeSwitchReason	=b.RegimenChangeSwitchReason,
+						a.StopRegimenReason			=b.StopRegimenReason,
+						 a.[Date_Created]			=b.[Date_Created],
+						 a.[Date_Last_Modified]		=b.[Date_Last_Modified],
+						  a.RecordUUID			=b.RecordUUID,
+						a.voided		=b.voided
+						 ;
 
-
-				
-			
-				UPDATE [ODS].[dbo].[CT_PharmacyVisit_Log]
+						
+				UPDATE [ODS_logs].[dbo].[CT_PharmacyVisit_Log]
 					SET LoadEndDateTime = GETDATE()
 					WHERE MaxDispenseDate = @DispenseDate;
 
-			--truncate table [ODS].[dbo].[CT_PatientPharmacyCount_Log]
-			INSERT INTO [ODS].[dbo].[CT_PatientPharmacyCount_Log]([SiteCode],[CreatedDate],[PatientPharmacyCount])
-			SELECT SiteCode,GETDATE(),COUNT(concat(Sitecode,PatientPK)) AS PatientPharmacyCount 
-			FROM [ODS].[dbo].[CT_PatientPharmacy] 
-			--WHERE @MaxCreatedDate  > @MaxCreatedDate
-			GROUP BY SiteCode;
  
 	END

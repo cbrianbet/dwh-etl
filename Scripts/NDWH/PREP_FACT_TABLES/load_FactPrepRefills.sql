@@ -44,7 +44,7 @@ PrepRefil1stMonth as (
     left join ODS.dbo.PrEP_Patient Patients on Refil.PrepNumber=Patients.PrepNumber and Refil.PatientPk=Patients.PatientPk 
         and Refil.SiteCode=Patients.SiteCode
     where Refil.PrepNumber is not null 
-        and DATEDIFF(dd, Patients.PrepEnrollmentDate, Refil.DispenseDate) between 30 and 37 --- giving 7 day window period
+        and DATEDIFF(dd, Patients.PrepEnrollmentDate, Refil.DispenseDate) between 23 and 37 --- giving 7 day window period
         and Refil.RowNumber = 1
 ),
 PrepRefil3rdMonth as (
@@ -61,7 +61,7 @@ PrepRefil3rdMonth as (
     left join ODS.dbo.PrEP_Patient Patients on Refil.PrepNumber=Patients.PrepNumber 
         and Refil.PatientPk=Patients.PatientPk and Refil.SiteCode=Patients.SiteCode
     where Refil.PrepNumber is not null 
-        and datediff(dd, Patients.PrepEnrollmentDate, Refil.DispenseDate) between 90 and 97 --- giving 7 day window period
+        and datediff(dd, Patients.PrepEnrollmentDate, Refil.DispenseDate) between 83 and 97 --- giving 7 day window period
 ),
 tests as (
     select 

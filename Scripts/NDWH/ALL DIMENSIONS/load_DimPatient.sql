@@ -1,4 +1,6 @@
+
 BEGIN
+
     WITH ct_patient_source
          AS (SELECT DISTINCT patients.patientidhash,
                              patients.patientpkhash,
@@ -39,8 +41,9 @@ BEGIN
                     LEFT JOIN ods.dbo.intermediate_artoutcomes AS outcomes
                            ON outcomes.patientpkhash = patients.patientpkhash
                               AND outcomes.sitecode = patients.sitecode
-
             ),
+
+			
          hts_patient_source
          AS (SELECT DISTINCT htsnumberhash,
                              patientpkhash,
@@ -66,6 +69,7 @@ BEGIN
                              maritalstatus
 							 ,voided
              FROM   ods.dbo.prep_patient),
+			 
          pmtct_patient_source
          AS (SELECT DISTINCT patientpkhash,
                              patientpk,
@@ -118,6 +122,8 @@ BEGIN
                               ct_patient_source.patientpkhash
                               AND ct_patient_source.sitecode =
                                   hts_patient_source.sitecode),
+
+			
          combined_data_ct_hts_prep
          AS (SELECT COALESCE(combined_data_ct_hts.patientpkhash,
                     prep_patient_source.patientpkhash)
@@ -162,6 +168,8 @@ BEGIN
                               prep_patient_source.patientpkhash
                               AND prep_patient_source.sitecode =
                                   combined_data_ct_hts.sitecode),
+
+			 
          combined_data_ct_hts_prep_pmtct
          AS (SELECT COALESCE(combined_data_ct_hts_prep.patientpkhash,
                                pmtct_patient_source.patientpkhash)
@@ -204,40 +212,99 @@ BEGIN
                               pmtct_patient_source.patientpkhash
                               AND combined_data_ct_hts_prep.sitecode =
                                   pmtct_patient_source.sitecode),
-        combined_matched_all_programs AS (
-            SELECT combined_data_ct_hts_prep_pmtct.*, golden_id as GoldenId
-            FROM combined_data_ct_hts_prep_pmtct LEFT JOIN ODS.dbo.MPI_MatchingOutput mmo ON mmo.site_code = combined_data_ct_hts_prep_pmtct.sitecode
-            AND mmo.patient_pk_hash = combined_data_ct_hts_prep_pmtct.patientpkhash
-        )
+
+		
+
+		--						  -------------------
+	 ushauri_patient_source_nonEMR
+         AS (SELECT DISTINCT 
+                             ushauri.UshauriPatientPkHash,
+                             ushauri.PatientIDHash,
+                             ushauri.patientpk,
+                             ushauri.sitecode,
+                             ushauri.patienttype,
+                             ushauri.patientsource,
+                             Try_convert(date,ushauri.DOB) AS DOB,
+                             ushauri.gender,
+                             ushauri.maritalstatus,
+                             ushauri.nupihash,
+                             ushauri.SiteType
+             FROM   ods.dbo.Ushauri_Patient AS ushauri
+                where ushauri.PatientPKHash is null 
+             
+              ),
+
+  combined_data_ct_hts_prep_pmtct_Ushauri
+  as(
+  SELECT COALESCE(combined_data_ct_hts_prep_pmtct.patientpkhash
+                    ,ushauri_patient_source_nonEMR.UshauriPatientPKHash) AS
+                    PatientPKHash,
+                    COALESCE(combined_data_ct_hts_prep_pmtct.sitecode
+                    ,ushauri_patient_source_nonEMR.sitecode )
+                       AS SiteCode,
+                    COALESCE(combined_data_ct_hts_prep_pmtct.nupi,ushauri_patient_source_nonEMR.nupihash )
+                       AS NUPI,
+                    COALESCE(combined_data_ct_hts_prep_pmtct.dob ,ushauri_patient_source_nonEMR.dob)
+                       AS DOB,
+                    COALESCE(combined_data_ct_hts_prep_pmtct.maritalstatus,ushauri_patient_source_nonEMR.maritalstatus ) AS
+                    MaritalStatus,
+                    COALESCE(combined_data_ct_hts_prep_pmtct.gender,ushauri_patient_source_nonEMR.gender )
+                       AS Gender,
+                    COALESCE (combined_data_ct_hts_prep_pmtct.patientidhash ,ushauri_patient_source_nonEMR.patientidhash) As PatientIdhash,
+				   COALESCE (combined_data_ct_hts_prep_pmtct.clienttype,ushauri_patient_source_nonEMR.patienttype) AS ClientType,
+                    COALESCE(combined_data_ct_hts_prep_pmtct.patientsource,ushauri_patient_source_nonEMR.patientsource) As Patientsource,
+                    combined_data_ct_hts_prep_pmtct.enrollmentwhokey As enrollmentwhokey,
+                    combined_data_ct_hts_prep_pmtct.dateenrollmentwhokey As dateenrollmentwhokey,
+                    combined_data_ct_hts_prep_pmtct.baselinewhokey As baselinewhokey,
+                    combined_data_ct_hts_prep_pmtct.datebaselinewhokey As datebaselinewhokey,
+                    combined_data_ct_hts_prep_pmtct.istxcurr As istxcurr,
+                    combined_data_ct_hts_prep_pmtct.htsnumberhash,
+                    sitetype,
+                    Cast(Getdate() AS DATE)
+                       AS LoadDate
+					   ,combined_data_ct_hts_prep_pmtct.Voided
+					   ,combined_data_ct_hts_prep_pmtct.PrepNumber
+					   ,combined_data_ct_hts_prep_pmtct.PrepEnrollmentDateKey
+					   ,combined_data_ct_hts_prep_pmtct.PatientMnchIDHash
+					   ,combined_data_ct_hts_prep_pmtct.FirstEnrollmentAtMnchDateKey
+             FROM   combined_data_ct_hts_prep_pmtct
+                   
+                    FULL JOIN ushauri_patient_source_nonEMR
+                    ON combined_data_ct_hts_prep_pmtct.PatientPkHash=ushauri_patient_source_nonEMR.UshauriPatientPkHash
+                    AND ushauri_patient_source_nonEMR.SiteCode=ushauri_patient_source_nonEMR.SiteCode
+  
+  
+  
+  )
+
     MERGE [NDWH].[DBO].[dimpatient] AS a
-    using (SELECT combined_matched_all_programs.patientidhash,
-                  combined_matched_all_programs.patientpkhash,
-                  combined_matched_all_programs.htsnumberhash,
-                  combined_matched_all_programs.prepnumber,
-                  combined_matched_all_programs.sitecode,
-                  combined_matched_all_programs.nupi,
-                  combined_matched_all_programs.goldenid,
-                  combined_matched_all_programs.dob,
-                  combined_matched_all_programs.maritalstatus,
+    using (SELECT combined_data_ct_hts_prep_pmtct_Ushauri.patientidhash,
+                  combined_data_ct_hts_prep_pmtct_Ushauri.patientpkhash,
+                  combined_data_ct_hts_prep_pmtct_Ushauri.htsnumberhash,
+                  combined_data_ct_hts_prep_pmtct_Ushauri.prepnumber,
+                  combined_data_ct_hts_prep_pmtct_Ushauri.sitecode,
+                  combined_data_ct_hts_prep_pmtct_Ushauri.nupi,
+                  combined_data_ct_hts_prep_pmtct_Ushauri.dob,
+                  combined_data_ct_hts_prep_pmtct_Ushauri.maritalstatus,
                   CASE
-                    WHEN combined_matched_all_programs.gender = 'M' THEN
+                    WHEN combined_data_ct_hts_prep_pmtct_Ushauri.gender = 'M' THEN
                     'Male'
-                    WHEN combined_matched_all_programs.gender = 'F' THEN
+                    WHEN combined_data_ct_hts_prep_pmtct_Ushauri.gender = 'F' THEN
                     'Female'
-                    ELSE combined_matched_all_programs.gender
+                    ELSE combined_data_ct_hts_prep_pmtct_Ushauri.gender
                   END AS Gender,
-                  combined_matched_all_programs.clienttype,
-                  combined_matched_all_programs.patientsource,
-                  combined_matched_all_programs.enrollmentwhokey,
-                  combined_matched_all_programs.datebaselinewhokey,
-                  combined_matched_all_programs.baselinewhokey,
-                  combined_matched_all_programs.prepenrollmentdatekey,
-                  combined_matched_all_programs.istxcurr,
-                  combined_matched_all_programs.patientmnchidhash,
-                  combined_matched_all_programs.firstenrollmentatmnchdatekey,
-                  combined_matched_all_programs.loaddate,
-				  combined_matched_all_programs.voided
-           FROM   combined_matched_all_programs) AS b
+                  combined_data_ct_hts_prep_pmtct_Ushauri.clienttype,
+                  combined_data_ct_hts_prep_pmtct_Ushauri.patientsource,
+                  combined_data_ct_hts_prep_pmtct_Ushauri.enrollmentwhokey,
+                  combined_data_ct_hts_prep_pmtct_Ushauri.datebaselinewhokey,
+                  combined_data_ct_hts_prep_pmtct_Ushauri.baselinewhokey,
+                  combined_data_ct_hts_prep_pmtct_Ushauri.prepenrollmentdatekey,
+                  combined_data_ct_hts_prep_pmtct_Ushauri.istxcurr,
+                  combined_data_ct_hts_prep_pmtct_Ushauri.patientmnchidhash,
+                  combined_data_ct_hts_prep_pmtct_Ushauri.firstenrollmentatmnchdatekey,
+                  combined_data_ct_hts_prep_pmtct_Ushauri.loaddate,
+				  combined_data_ct_hts_prep_pmtct_Ushauri.voided
+           FROM   combined_data_ct_hts_prep_pmtct_Ushauri) AS b
     ON ( a.sitecode = b.sitecode
          AND a.patientpkhash = b.patientpkhash
 		
@@ -249,7 +316,6 @@ BEGIN
              prepnumber,
              sitecode,
              nupi,
-             goldenid,
              dob,
              maritalstatus,
              gender,
@@ -267,7 +333,6 @@ BEGIN
              prepnumber,
              sitecode,
              nupi,
-             goldenid,
              dob,
              maritalstatus,
              gender,
@@ -286,7 +351,6 @@ BEGIN
                  a.patientsource	= b.patientsource,
 				 a.patientidhash   = b.patientidhash,
                  a.nupi				= b.nupi,
-                 a.goldenid      = b.goldenid,
                  a.dob				= b.dob,
                  a.gender			= b.gender,
                  a.prepnumber		= b.prepnumber,

@@ -28,7 +28,8 @@ BEGIN
             CoupleDiscordant,
             TestType,
             Setting,
-            Consent  
+            Consent,
+            ReferredServices
         from ODS.dbo.HTS_ClientTests
         where FinalTestResult is not null and TestDate is not null and EncounterId is not null
             and  TestDate >= cast('2015-01-01' as date) and TestDate <= getdate()

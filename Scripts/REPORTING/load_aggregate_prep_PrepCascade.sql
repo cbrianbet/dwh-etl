@@ -57,8 +57,8 @@ prepStart AS (
 	LEFT JOIN NDWH.dbo.DimPatient pat on pat.PatientKey = prep.PatientKey
 	LEFT JOIN NDWH.dbo.DimAgeGroup age on age.AgeGroupKey=prep.AgeGroupKey
 	LEFT JOIN NDWH.dbo.DimPartner p on p.PartnerKey = prep.PartnerKey
-	LEFT JOIN NDWH.dbo.DimDate enrol ON enrol.DateKey = PrepEnrollmentDateKey	
-	WHERE PrepEnrollmentDateKey IS NOT NULL
+	LEFT JOIN NDWH.dbo.DimDate enrol ON enrol.DateKey = prep.PrepEnrollmentDateKey	
+	WHERE prep.PrepEnrollmentDateKey IS NOT NULL
 	GROUP BY MFLCode,
 			f.FacilityName,
 			County,

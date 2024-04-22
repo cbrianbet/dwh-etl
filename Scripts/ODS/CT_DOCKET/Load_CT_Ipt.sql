@@ -25,11 +25,11 @@ BEGIN
 			DECLARE @MaxVisitDate_Hist			DATETIME,
 				   @VisitDate					DATETIME
 				
-		SELECT @MaxVisitDate_Hist =  MAX(MaxVisitDate) FROM [ODS].[dbo].[CT_Ipt_Log]  (NoLock);
+		SELECT @MaxVisitDate_Hist =  MAX(MaxVisitDate) FROM [ODS_logs].[dbo].[CT_Ipt_Log]  (NoLock);
 		SELECT @VisitDate = MAX(VisitDate) FROM [DWAPICentral].[dbo].[IptExtract](NoLock);
 	
 					
-		INSERT INTO  [ODS].[dbo].[CT_Ipt_Log](MaxVisitDate,LoadStartDateTime)
+		INSERT INTO  [ODS_logs].[dbo].[CT_Ipt_Log](MaxVisitDate,LoadStartDateTime)
 		VALUES(@VisitDate,GETDATE());
 
 	       ---- Refresh [ODS].[dbo].[CT_Ipt]
@@ -56,14 +56,32 @@ BEGIN
 					FROM [DWAPICentral].[dbo].[PatientExtract](NoLock) P
 					INNER JOIN [DWAPICentral].[dbo].[IptExtract](NoLock) IE ON IE.[PatientId] = P.ID 
 					INNER JOIN [DWAPICentral].[dbo].[Facility](NoLock) F ON P.[FacilityId] = F.Id AND F.Voided = 0 
+
+					INNER JOIN (
+								SELECT F.code as SiteCode,p.[PatientPID] as PatientPK,
+								visitID,VisitDate,InnerIE.voided,
+								max(InnerIE.ID) As Max_ID,
+								MAX(cast(InnerIE.created as date)) AS Maxdatecreated
+								FROM [DWAPICentral].[dbo].[PatientExtract](NoLock) P
+								INNER JOIN [DWAPICentral].[dbo].[IptExtract](NoLock) InnerIE ON InnerIE.[PatientId] = P.ID 
+								INNER JOIN [DWAPICentral].[dbo].[Facility](NoLock) F ON P.[FacilityId] = F.Id AND F.Voided = 0 
+								GROUP BY F.code,p.[PatientPID],visitID,VisitDate,InnerIE.voided
+							) tm 
+							ON f.code = tm.[SiteCode] and p.PatientPID=tm.PatientPK and 
+							IE.visitID = tm.visitID and IE.VisitDate = tm.VisitDate and
+							cast(IE.created as date) = tm.Maxdatecreated
+							and IE.ID = tm.Max_ID
 					WHERE P.gender != 'Unknown'  AND F.code >0) AS b 
 						ON(
-						 a.PatientPK  = b.PatientPK 
-						and a.SiteCode = b.SiteCode
+						 a.PatientPK	= b.PatientPK 
+						and a.SiteCode	= b.SiteCode
 						and a.VisitID	=b.VisitID
 						and a.VisitDate	=b.VisitDate
-						and a.voided   = b.voided
-						and a.ID =b.ID)
+						and a.voided	= b.voided
+						and a.ID		=b.ID
+						and a.RecordUUID  = b.RecordUUID
+						and a.[Date_Created] = b.[Date_Created]
+						and a.[Date_Last_Modified] = b.[Date_Last_Modified])
 					
 					WHEN NOT MATCHED THEN 
 						INSERT(ID,PatientID,PatientPK,SiteCode,FacilityName,VisitID,VisitDate,Emr,Project,OnTBDrugs,OnIPT,EverOnIPT,Cough,Fever,NoticeableWeightLoss,NightSweats,Lethargy,ICFActionTaken,TestResult,TBClinicalDiagnosis,ContactsInvited,EvaluatedForIPT,StartAntiTBs,TBRxStartDate,TBScreening,IPTClientWorkUp,StartIPT,IndicationForIPT,[Date_Created],[Date_Last_Modified],[TPTInitiationDate],IPTDiscontinuation,DateOfDiscontinuation,RecordUUID,voided,LoadDate)  
@@ -100,15 +118,8 @@ BEGIN
 						a.voided				= b.voided;
 						
 
-					UPDATE [ODS].[dbo].[CT_Ipt_Log]
+					UPDATE [ODS_logs].[dbo].[CT_Ipt_Log]
 						SET LoadEndDateTime = GETDATE()
 					WHERE MaxVisitDate = @VisitDate;
-
-					INSERT INTO [ODS].[dbo].[CT_IptCount_Log]([SiteCode],[CreatedDate],[IptCount])
-					SELECT SiteCode,GETDATE(),COUNT(concat(Sitecode,PatientPK)) AS IptCount 
-					FROM [ODS].[dbo].[CT_Ipt] 
-					--WHERE @MaxCreatedDate  > @MaxCreatedDate
-					GROUP BY SiteCode;
-
-					
+				
 END

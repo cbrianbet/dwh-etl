@@ -5,6 +5,7 @@ GO
 With cte1 as (
     SELECT distinct 
 		a.PartnerPatientPk,
+        a.IndexPatientPkHash,
 		fac.[MFLCODE] SiteCode,
 		fac.County,
 		fac.SubCounty,
@@ -22,6 +23,7 @@ With cte1 as (
 ), cte2 as (
     SELECT distinct 
 		a.PartnerPatientPk,
+        a.IndexPatientPkHash,
 		fac.MFLCode SiteCode,
 		fac.County,
 		fac.SubCounty,
@@ -47,6 +49,7 @@ With cte1 as (
         PartnerName,
         AgencyName,
         pat.PatientPkHash,
+        b.IndexPatientPkHash,
         j.Date HIVDiagnosisDate,
         PartnerPersonID,
         b.PartnerPatientPk,
@@ -98,6 +101,7 @@ SELECT
     HIVDiagnosisDate,
     PartnerPersonID,
     PartnerPatientPk,
+    IndexPatientPkHash,
     Gender, 
     Age,
     Agegroup,

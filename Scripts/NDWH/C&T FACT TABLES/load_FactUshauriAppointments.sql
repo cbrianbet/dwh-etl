@@ -1,5 +1,5 @@
-IF Object_id(N'[NDWH].[dbo].[FactUshauriSmsReminders]', N'U') IS NOT NULL
-  DROP TABLE [Ndwh].[Dbo].[FactUshauriSmsReminders];
+IF Object_id(N'[NDWH].[dbo].[FactUshauriAppointments]', N'U') IS NOT NULL
+  DROP TABLE [Ndwh].[Dbo].[FactUshauriAppointments];
 
 BEGIN
     WITH Mfl_partner_agency_combination
@@ -13,7 +13,7 @@ BEGIN
            Partner.Partnerkey,
            Patient.Patientkey,
            Agency.Agencykey,
-           Age_group.Agegroupkey,
+           coalesce(Age_group.Agegroupkey, -999) as Agegroupkey,
            Appointment.Datekey           AS AppointmentDateKey,
            Appointmenttype,
            Appointmentstatus,
@@ -56,7 +56,7 @@ BEGIN
            Datereturnedtocare.Datekey    AS DateReturnedToCareDateKey,
            Daysdefaulted,
            Nupihash
-    INTO   Ndwh.Dbo.FactUshauriSmsReminders
+    INTO   NDWH.dbo.FactUshauriAppointments
     FROM   Ods.Dbo.Ushauri_patientappointments AS Apt
            LEFT JOIN Ndwh.Dbo.Dimfacility AS Facility
                   ON Facility.Mflcode = Apt.Sitecode
@@ -70,38 +70,37 @@ BEGIN
            LEFT JOIN Ndwh.Dbo.Dimagency AS Agency
                   ON Agency.Agencyname = Mfl_partner_agency_combination.Agency
            LEFT JOIN Ndwh.Dbo.Dimagegroup AS Age_group
-                  ON Age_group.Agegroupkey = DATEDIFF(YEAR, TRY_CONVERT(DATE, Apt.Dob), TRY_CONVERT(DATE, Appointmentdate))
+                  ON Age_group.Agegroupkey = DATEDIFF(YEAR, Apt.Dob, Appointmentdate)
            LEFT JOIN Ndwh.Dbo.Dimdate AS As_of
-                  ON As_of.Date = Try_convert(Date, Apt.Appointmentdate)
+                  ON As_of.Date = Apt.Appointmentdate
            LEFT JOIN Ndwh.Dbo.Dimdate AS Appointment
-                  ON Appointment.Date = Try_convert(Date, Apt.Appointmentdate)
+                  ON Appointment.Date = Apt.Appointmentdate
            LEFT JOIN Ndwh.Dbo.Dimdate AS Attended
-                  ON Attended.Date = Try_convert(Date, Apt.Dateattended)
+                  ON Attended.Date = Apt.Dateattended
            LEFT JOIN Ndwh.Dbo.Dimdate AS Fourweeksdate
                   ON Fourweeksdate.Date =
-                     Try_convert(Date, Apt.Fourweeksmssenddate)
+                     Fourweeksmssenddate
            LEFT JOIN Ndwh.Dbo.Dimdate AS Threeweeksdate
                   ON Threeweeksdate.Date =
-                     Try_convert(Date, Apt.Threeweeksmssenddate)
+                     Threeweeksmssenddate
            LEFT JOIN Ndwh.Dbo.Dimdate AS Twoweeksdate
                   ON Twoweeksdate.Date =
-                     Try_convert(Date, Apt.Twoweeksmssenddate)
+                     Twoweeksmssenddate
            LEFT JOIN Ndwh.Dbo.Dimdate AS Oneweeksdate
                   ON Oneweeksdate.Date =
-                     Try_convert(Date, Apt.Oneweeksmssenddate)
+                    Apt.Oneweeksmssenddate
            LEFT JOIN Ndwh.Dbo.Dimdate AS Onedaydate
-                  ON Onedaydate.Date = Try_convert(Date, Apt.Onedaysmssenddate)
+                  ON Onedaydate.Date = Apt.Onedaysmssenddate
            LEFT JOIN Ndwh.Dbo.Dimdate AS Missedappointmentdate
                   ON Missedappointmentdate.Date =
-                     Try_convert(Date, Apt.Missedappointmentsmssenddate)
+                    Apt.Missedappointmentsmssenddate
            LEFT JOIN Ndwh.Dbo.Dimdate AS Tracingdate
                   ON Tracingdate.Date =
-                     Try_convert(Date, Apt.Tracingoutcomedate)
+                    Apt.Tracingoutcomedate
            LEFT JOIN Ndwh.Dbo.Dimdate AS Datereturnedtocare
                   ON Datereturnedtocare.Date =
-                     Try_convert(Date, Apt.Datereturnedtocare)
+                     Apt.Datereturnedtocare
 
-    ALTER TABLE Ndwh.Dbo.Factushaurismsreminders
+    ALTER TABLE Ndwh.Dbo.FactUshauriAppointments
       ADD PRIMARY KEY(Factkey);
-END 
-
+END

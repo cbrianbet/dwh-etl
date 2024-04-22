@@ -13,6 +13,7 @@ SELECT DISTINCT
     Gender,
     age.DATIMAgeGroup as AgeGroup,
     PatientPKHash,
+    IndexPatientPkHash,
     d.Date TestDate,
     CAST(DOB as DATE) DOB,
     AgeAtTesting,
@@ -51,6 +52,7 @@ LEFT JOIN NDWH.dbo.DimPartner p on p.PartnerKey = hts.PartnerKey
 LEFT JOIN NDWH.dbo.FactHTSClientLinkages link on link.PatientKey = hts.PatientKey
 LEFT JOIN NDWH.dbo.DimDate e on e.DateKey = DateEnrolledKey
 LEFT JOIN NDWH.dbo.DimDate d on d.DateKey = hts.DateTestedKey
+left join NDWH.dbo.FactHTSPartnerNotificationServices pns on pns.PatientKey=hts.PatientKey
 WHERE  ( DATEDIFF ( MONTH, DOB, d.Date ) > 18 AND DATEDIFF ( MONTH, DOB, d.Date ) <= 1500 )
 AND FinalTestResult IS NOT NULL 
 AND d.[Date] >= CAST ( '2015-01-01' AS DATE )

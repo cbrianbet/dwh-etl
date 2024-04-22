@@ -1,141 +1,252 @@
-IF OBJECT_ID(N'REPORTING.dbo.AggregateLDLDurable', N'U') IS NOT NULL 
-	DROP TABLE REPORTING.dbo.AggregateLDLDurable;
+IF Object_id(N'REPORTING.dbo.AggregateLDLDurable', N'U') IS NOT NULL
+  DROP TABLE Reporting.Dbo.Aggregateldldurable;
 
-with pbfw_patient as (
-	select 
-		distinct PatientKey
-	from NDWH.dbo.factpbfw
-),
-base_data as (
-select
-	ART.FacilityKey,
-	ART.PartnerKey,
-	ART.AgencyKey,
-	ART.PatientKey,
-	ART.AgeGroupKey,
-	'Non PBFW' as PBFWCategory,
-	vl.ValidVLResultCategory1 as ValidVLResultCategory,
-	IsTXCurr  AS IsTXCurr,
-	EligibleVL,
-	HasValidVL AS HasValidVL
-from NDWH.dbo.FactART  ART 
-left join NDWH.dbo.FactViralLoads vl on vl.patientkey=ART.Patientkey
-left join NDWH.dbo.DimPatient pat ON pat.PatientKey = vl.PatientKey
-where IsTXCurr = 1 
-	and vl.PatientKey not in (select PatientKey from pbfw_patient)  /*ommit pbfw patients */
-union
-select
-	pbfw.FacilityKey,
-	pbfw.PartnerKey,
-	pbfw.AgencyKey,
-	pbfw.PatientKey,
-	pbfw.AgeGroupKey,
-	case 
-		when Newpositives = 1 then 'New Positives'
-		else 'Known Positives'
-	end as PBFWCategory,
-	vl.PBFW_ValidVLResultCategory as ValidVLResultCategory,
-	patient.IsTXCurr  AS IsTXCurr,
-	EligibleVL,
-	PBFW_ValidVL as HasValidVL
-from NDWH.dbo.factpbfw as pbfw
-left join NDWH.dbo.FactViralLoads as vl on vl.PatientKey = pbfw.Patientkey
-left join NDWH.dbo.DimPatient as patient on patient.PatientKey = pbfw.PatientKey
-where IsTXCurr = 1
-),
-eligible_for_two_vl_tests as (
-		/*less than 25 years and not part of pbfw */
-		select 
-			art.PatientKey
-		from NDWH.dbo.FACTART as art
-		left join NDWH.dbo.DimAgeGroup as agegroup on agegroup.AgeGroupKey = art.AgeGroupKey
-		left join NDWH.dbo.DimDate as start_date on start_date.DateKey = art.StartARTDateKey
-		where agegroup.Age < 25 
-			and datediff(month, start_date.Date, eomonth(dateadd(mm,-1,getdate()))) >= 9
-			and art.PatientKey not in (select PatientKey from pbfw_patient)  /*ommit pbfw patients */
-	union 
-		/* 25 and above years and not part of pbfw */ 
-		select 
-			art.PatientKey
-		from NDWH.dbo.FACTART as art
-		left join NDWH.dbo.DimAgeGroup as agegroup on agegroup.AgeGroupKey = art.AgeGroupKey
-		left join NDWH.dbo.DimDate as start_date on start_date.DateKey = art.StartARTDateKey
-		where agegroup.Age >= 25 
-			and datediff(month, start_date.Date, eomonth(dateadd(mm,-1,getdate()))) >= 12
-		and art.PatientKey not in (select PatientKey from pbfw_patient)  /*ommit pbfw patients */
-	union
-		/*pbfw */
-		select 
-			art.PatientKey
-		from NDWH.dbo.FACTART as art
-		inner join pbfw_patient as pbfw on pbfw.patientkey = art.PatientKey
-		left join NDWH.dbo.DimDate as start_date on start_date.DateKey = art.StartARTDateKey
-			and datediff(month, start_date.Date, eomonth(dateadd(mm,-1,getdate()))) >= 9
-),
-two_consecutive_tests_within_the_year as (
-	select
-		eligible_for_two_vl_tests.PatientKey,
-		vl.LatestVL1,
-		vl1Date.Date as LatestVLDate1,
-		vl.LatestVL2,
-		vl2Date.Date as LatestVLDate2
-	from eligible_for_two_vl_tests
-	inner join NDWH.dbo.FactViralLoads as vl on vl.PatientKey =eligible_for_two_vl_tests.PatientKey
-	inner join NDWH.dbo.DimDate as vl2Date on vl2Date.DateKey = vl.LatestVLDate2Key
-	inner join NDWH.dbo.DimDate as vl1Date on vl1Date.DateKey = vl.LatestVLDate1Key
-	where datediff(month, vl2Date.Date, eomonth(dateadd(mm,-1,getdate()))) <= 12  /* make sure the second last vl is within 12 months */
-		and concat(LatestVL1,LatestVLDate1Key) <> concat(LatestVL2,LatestVLDate2Key) /* clean up to ommit duplicate entries on same day */
-),
-durable_LDL as (
-	select 
-		Patientkey,
-		LatestVL1,
-		LatestVL2
-	from two_consecutive_tests_within_the_year
-	where (isnumeric(LatestVL2) = 1 and  cast(replace(LatestVL2, ',', '') as  float) < 50.00  or
-		LatestVL2 in ('undetectable','NOT DETECTED','0 copies/ml','LDL','Less than Low Detectable Level'))
-	and 
-		(isnumeric(LatestVL1) = 1 and  cast(replace(LatestVL1, ',', '') as  float) < 50.00  or
-		LatestVL1 in ('undetectable','NOT DETECTED','0 copies/ml','LDL','Less than Low Detectable Level'))
-)
-select 
-	MFLCode,
-	f.FacilityName,
-	County,
-	SubCounty,
-	p.PartnerName,
-	a.AgencyName,
-	pat.Gender,
-	g.DATIMAgeGroup as AgeGroup,
-	PBFWCategory,
-	ValidVLResultCategory,
-	sum(base_data.IsTXCurr) as TXCurr,
-	sum(EligibleVL) as EligibleVL,
-	sum(HasValidVL) as HasValidVL,
-	sum(case when eligible_for_two_vl_tests.PatientKey is not null then 1 else 0 end) as CountEligibleForTwoVLTests,
-	sum(case when two_consecutive_tests_within_the_year.PatientKey is not null then 1 else 0 end) as CountTwoConsecutiveTestsWithinTheYear,
-    sum(
-        case when (isnumeric(two_consecutive_tests_within_the_year.LatestVL1) = 1 and cast(replace(two_consecutive_tests_within_the_year.LatestVL1, ',', '') as  float) < 50.00 ) or
-		    (two_consecutive_tests_within_the_year.LatestVL1 in ('undetectable','NOT DETECTED','0 copies/ml','LDL','Less than Low Detectable Level')) then 1 else 0 end) as CountLDLLastOneTest,
-    sum(case when durable_LDL.PatientKey is not null then 1 else 0 end) as CountDurableLDL
-into REPORTING.dbo.AggregateLDLDurable
-from base_data
-left join eligible_for_two_vl_tests on eligible_for_two_vl_tests.PatientKey = base_data.PatientKey
-left join two_consecutive_tests_within_the_year on two_consecutive_tests_within_the_year.PatientKey = base_data.PatientKey
-left join durable_LDL on durable_LDL.PatientKey = base_data.PatientKey
-left join NDWH.dbo.DimAgeGroup g ON g.AgeGroupKey= base_data.AgeGroupKey
-left join NDWH.dbo.DimFacility f ON f.FacilityKey = base_data.FacilityKey
-left join NDWH.dbo.DimAgency a ON a.AgencyKey = base_data.AgencyKey
-left join NDWH.dbo.DimPatient pat ON pat.PatientKey = base_data.PatientKey
-left join NDWH.dbo.DimPartner p ON p.PartnerKey = base_data.PartnerKey
-group by  
-	MFLCode,
-	f.FacilityName,
-	County,
-	SubCounty,
-	p.PartnerName,
-	a.AgencyName,
-	pat.Gender,
-	g.DATIMAgeGroup,
-	PBFWCategory,
-	ValidVLResultCategory
+WITH Pbfw_patient
+     AS (SELECT DISTINCT Patientkey
+         FROM   Ndwh.Dbo.Factpbfw),
+     Base_data
+     AS (SELECT Art.Facilitykey,
+                Art.Partnerkey,
+                Art.Agencykey,
+                Art.Patientkey,
+                Art.Agegroupkey,
+                'Non PBFW'                AS PBFWCategory,
+                Vl.Validvlresultcategory1 AS ValidVLResultCategory,
+                Istxcurr                  AS IsTXCurr,
+                Eligiblevl,
+                Hasvalidvl                AS HasValidVL
+         FROM   Ndwh.Dbo.Factart Art
+                LEFT JOIN Ndwh.Dbo.Factviralloads Vl
+                       ON Vl.Patientkey = Art.Patientkey
+                LEFT JOIN Ndwh.Dbo.Dimpatient Pat
+                       ON Pat.Patientkey = Vl.Patientkey
+         WHERE  Istxcurr = 1
+                AND Vl.Patientkey NOT IN (SELECT Patientkey
+                                          FROM   Pbfw_patient)
+         /*ommit pbfw patients */
+         UNION
+         SELECT Pbfw.Facilitykey,
+                Pbfw.Partnerkey,
+                Pbfw.Agencykey,
+                Pbfw.Patientkey,
+                Pbfw.Agegroupkey,
+                CASE
+                  WHEN Newpositives = 1 THEN 'New Positives'
+                  WHEN KnownPositive = 1 THEN  'Known Positives'
+                  ELSE 'Unknown'
+                END                           AS PBFWCategory,
+                Vl.Pbfw_validvlresultcategory AS ValidVLResultCategory,
+                Patient.Istxcurr              AS IsTXCurr,
+                Eligiblevl,
+                Pbfw_validvl                  AS HasValidVL
+         FROM   Ndwh.Dbo.Factpbfw AS Pbfw
+                LEFT JOIN Ndwh.Dbo.Factviralloads AS Vl
+                       ON Vl.Patientkey = Pbfw.Patientkey
+                LEFT JOIN Ndwh.Dbo.Dimpatient AS Patient
+                       ON Patient.Patientkey = Pbfw.Patientkey
+         WHERE  Istxcurr = 1),
+     Eligible_for_two_vl_tests
+     AS (
+        /*less than 25 years and not part of pbfw */
+        SELECT Art.Patientkey
+        FROM   Ndwh.Dbo.Factart AS Art
+               LEFT JOIN Ndwh.Dbo.Dimagegroup AS Agegroup
+                      ON Agegroup.Agegroupkey = Art.Agegroupkey
+               LEFT JOIN Ndwh.Dbo.Dimdate AS Start_date
+                      ON Start_date.Datekey = Art.Startartdatekey
+        WHERE  Agegroup.Age < 25
+               AND Datediff(Month, Start_date.Date, Eomonth(
+                   Dateadd(Mm, -1, Getdate())))
+                   >= 9
+               AND Art.Patientkey NOT IN (SELECT Patientkey
+                                          FROM   Pbfw_patient)
+        /*ommit pbfw patients */
+        UNION
+        /* 25 and above years and not part of pbfw */
+        SELECT Art.Patientkey
+        FROM   Ndwh.Dbo.Factart AS Art
+               LEFT JOIN Ndwh.Dbo.Dimagegroup AS Agegroup
+                      ON Agegroup.Agegroupkey = Art.Agegroupkey
+               LEFT JOIN Ndwh.Dbo.Dimdate AS Start_date
+                      ON Start_date.Datekey = Art.Startartdatekey
+        WHERE  Agegroup.Age >= 25
+               AND Datediff(Month, Start_date.Date, Eomonth(
+                   Dateadd(Mm, -1, Getdate())))
+                   >= 12
+               AND Art.Patientkey NOT IN (SELECT Patientkey
+                                          FROM   Pbfw_patient)
+         /*ommit pbfw patients */
+         UNION
+         /*pbfw */
+         SELECT Art.Patientkey
+         FROM   Ndwh.Dbo.Factart AS Art
+                INNER JOIN Pbfw_patient AS Pbfw
+                        ON Pbfw.Patientkey = Art.Patientkey
+                LEFT JOIN Ndwh.Dbo.Dimdate AS Start_date
+                       ON Start_date.Datekey = Art.Startartdatekey
+                          AND Datediff(Month, Start_date.Date, Eomonth(
+                              Dateadd(Mm, -1, Getdate()))) >= 9),
+     Two_consecutive_vl_tests_results
+     AS (
+        /*less than 25 years and not part of pbfw */
+        SELECT Art.Patientkey,
+               Vl.Latestvl1,
+               Vl1date.Date AS LatestVLDate1,
+               Vl.Latestvl2,
+               Vl2date.Date AS LatestVLDate2
+        FROM   Ndwh.Dbo.Factart AS Art
+               LEFT JOIN Ndwh.Dbo.Dimagegroup AS Agegroup
+                      ON Agegroup.Agegroupkey = Art.Agegroupkey
+               LEFT JOIN Ndwh.Dbo.Dimdate AS Start_date
+                      ON Start_date.Datekey = Art.Startartdatekey
+               INNER JOIN Ndwh.Dbo.Factviralloads AS Vl
+                       ON Vl.Patientkey = Art.Patientkey
+               INNER JOIN Ndwh.Dbo.Dimdate AS Vl2date
+                       ON Vl2date.Datekey = Vl.Latestvldate2key
+               INNER JOIN Ndwh.Dbo.Dimdate AS Vl1date
+                       ON Vl1date.Datekey = Vl.Latestvldate1key
+        WHERE  Agegroup.Age < 25
+               AND datediff(month, vl1Date.Date, eomonth(dateadd(mm,-1,getdate()))) <= 6
+               AND Datediff(Month, Vl2date.Date, Vl1date.Date) <= 6
+               /*Ensure that the second last vl and the last one is within 6 months */
+               AND Art.Patientkey NOT IN (SELECT Patientkey
+                                          FROM   Pbfw_patient)
+        /*ommit pbfw patients */
+        UNION
+        /* 25 and above years and not part of pbfw */
+        SELECT Art.Patientkey,
+               Vl.Latestvl1,
+               Vl1date.Date AS LatestVLDate1,
+               Vl.Latestvl2,
+               Vl2date.Date AS LatestVLDate2
+        FROM   Ndwh.Dbo.Factart AS Art
+               LEFT JOIN Ndwh.Dbo.Dimagegroup AS Agegroup
+                      ON Agegroup.Agegroupkey = Art.Agegroupkey
+               LEFT JOIN Ndwh.Dbo.Dimdate AS Start_date
+                      ON Start_date.Datekey = Art.Startartdatekey
+               INNER JOIN Ndwh.Dbo.Factviralloads AS Vl
+                       ON Vl.Patientkey = Art.Patientkey
+               INNER JOIN Ndwh.Dbo.Dimdate AS Vl2date
+                       ON Vl2date.Datekey = Vl.Latestvldate2key
+               INNER JOIN Ndwh.Dbo.Dimdate AS Vl1date
+                       ON Vl1date.Datekey = Vl.Latestvldate1key
+        WHERE  Agegroup.Age >= 25
+                AND datediff(month, vl1Date.Date, eomonth(dateadd(mm,-1,getdate()))) <= 12
+               AND Datediff(Month, Vl2date.Date, Vl1date.Date) <= 12
+               AND Art.Patientkey NOT IN (SELECT Patientkey
+                                          FROM   Pbfw_patient)
+         /*ommit pbfw patients */
+         UNION
+         /*pbfw */
+         SELECT Art.Patientkey,
+                Vl.Latestvl1,
+                Vl1date.Date AS LatestVLDate1,
+                Vl.Latestvl2,
+                Vl2date.Date AS LatestVLDate2
+         FROM   Ndwh.Dbo.Factart AS Art
+                INNER JOIN Pbfw_patient AS Pbfw
+                        ON Pbfw.Patientkey = Art.Patientkey
+                LEFT JOIN Ndwh.Dbo.Dimdate AS Start_date
+                       ON Start_date.Datekey = Art.Startartdatekey
+                INNER JOIN Ndwh.Dbo.Factviralloads AS Vl
+                        ON Vl.Patientkey = Art.Patientkey
+                INNER JOIN Ndwh.Dbo.Dimdate AS Vl2date
+                        ON Vl2date.Datekey = Vl.Latestvldate2key
+                INNER JOIN Ndwh.Dbo.Dimdate AS Vl1date
+                        ON Vl1date.Datekey = Vl.Latestvldate1key
+               AND datediff(month, vl1Date.Date, eomonth(dateadd(mm,-1,getdate()))) <= 6
+               AND Datediff(Month, Vl2date.Date, Vl1date.Date) <= 6
+        ),
+     Durable_ldl
+     AS (SELECT Patientkey,
+                Latestvl1,
+                Latestvl2
+         FROM   Two_consecutive_vl_tests_results
+         WHERE  ( Isnumeric(Latestvl2) = 1
+                  AND Cast(Replace(Latestvl2, ',', '') AS Float) < 50.00
+                   OR Latestvl2 IN ( 'undetectable', 'NOT DETECTED',
+                                     '0 copies/ml',
+                                     'LDL',
+                                     'Less than Low Detectable Level' )
+                )
+                AND ( Isnumeric(Latestvl1) = 1
+                      AND Cast(Replace(Latestvl1, ',', '') AS Float) < 50.00
+                       OR Latestvl1 IN ( 'undetectable', 'NOT DETECTED',
+                                         '0 copies/ml',
+                                         'LDL',
+                                         'Less than Low Detectable Level' ) ))
+SELECT Mflcode,
+       F.Facilityname,
+       County,
+       Subcounty,
+       P.Partnername,
+       A.Agencyname,
+       Pat.Gender,
+       G.Datimagegroup         AS AgeGroup,
+       Pbfwcategory,
+       Pregnant,
+       Breastfeeding,
+       Validvlresultcategory,
+       Sum(Base_data.Istxcurr) AS TXCurr,
+       Sum(Eligiblevl)         AS EligibleVL,
+       Sum(Hasvalidvl)         AS HasValidVL,
+       Sum(CASE
+             WHEN Eligible_for_two_vl_tests.Patientkey IS NOT NULL THEN 1
+             ELSE 0
+           END)                AS CountEligibleForTwoVLTests,
+       Sum(CASE
+             WHEN Two_consecutive_vl_tests_results.Patientkey IS NOT NULL THEN 1
+             ELSE 0
+           END)                AS CountTwoConsecutiveTests,
+       Sum(CASE
+             WHEN ( Isnumeric(Two_consecutive_vl_tests_results.Latestvl1) = 1
+                    AND Cast(Replace(Two_consecutive_vl_tests_results.Latestvl1,
+                             ',',
+                             '')
+                             AS Float
+                        ) <
+                        50.00 )
+                   OR ( Two_consecutive_vl_tests_results.Latestvl1 IN (
+                            'undetectable', 'NOT DETECTED', '0 copies/ml', 'LDL'
+                            ,
+                        'Less than Low Detectable Level' ) ) THEN 1
+             ELSE 0
+           END)                AS CountLDLLastOneTest,
+       Sum(CASE
+             WHEN Durable_ldl.Patientkey IS NOT NULL THEN 1
+             ELSE 0
+           END)                AS CountDurableLDL
+INTO   Reporting.Dbo.Aggregateldldurable
+FROM   Base_data
+       LEFT JOIN Eligible_for_two_vl_tests
+              ON Eligible_for_two_vl_tests.Patientkey = Base_data.Patientkey
+       LEFT JOIN Two_consecutive_vl_tests_results
+              ON Two_consecutive_vl_tests_results.Patientkey =
+                 Base_data.Patientkey
+       LEFT JOIN Durable_ldl
+              ON Durable_ldl.Patientkey = Base_data.Patientkey
+       LEFT JOIN Ndwh.Dbo.Dimagegroup G
+              ON G.Agegroupkey = Base_data.Agegroupkey
+       LEFT JOIN Ndwh.Dbo.Dimfacility F
+              ON F.Facilitykey = Base_data.Facilitykey
+       LEFT JOIN Ndwh.Dbo.Dimagency A
+              ON A.Agencykey = Base_data.Agencykey
+       LEFT JOIN Ndwh.Dbo.Dimpatient Pat
+              ON Pat.Patientkey = Base_data.Patientkey
+       LEFT JOIN Ndwh.Dbo.Dimpartner P
+              ON P.Partnerkey = Base_data.Partnerkey
+       LEFT JOIN NDWH.dbo.Factpbfw pbfw on pbfw.Patientkey=Base_data.PatientKey
+GROUP  BY Mflcode,
+          F.Facilityname,
+          County,
+          Subcounty,
+          P.Partnername,
+          A.Agencyname,
+          Pat.Gender,
+          G.Datimagegroup,
+          Pbfwcategory,
+          Validvlresultcategory ,
+          Pregnant,
+          Breastfeeding
+
+

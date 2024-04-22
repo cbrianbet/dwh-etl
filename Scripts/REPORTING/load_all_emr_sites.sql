@@ -1,53 +1,36 @@
 IF OBJECT_ID(N'REPORTING.dbo.all_EMRSites', N'U') IS NOT NULL 
 	DROP TABLE REPORTING.dbo.all_EMRSites;
-With EMRSites as (
-  SELECT 
-    fac.MFLCode, 
-    fac.FacilityName, 
-    fac.County, 
-    fac.SubCounty, 
-    a.SDP_Agency as AgencyName, 
-    a.SDP as PartnerName, 
-    fac.Latitude, 
-    fac.Longitude, 
-    fac.EMR, 
-    fac.isCT,  
-    fac.isHts, 
-	a.EMR_Status,
-    CAST(
-      GETDATE() AS DATE
-    ) AS LoadDate 
-  FROM 
-    NDWH.dbo.DimFacility fac 
-    JOIN ODS.dbo.All_EMRSites a on a.MFL_Code = fac.MFLCode
-), 
-ML AS (
-  select 
-    distinct SiteCode
-  from 
-    ODS.dbo.HTS_EligibilityExtract 
-  where 
-    HIVRiskCategory is not null
-) 
-Select 
-  MFLCode, 
-  FacilityName, 
-  County, 
-  SubCounty, 
-  AgencyName, 
-  PartnerName, 
-  Latitude, 
-  Longitude, 
-  EMR, 
-  isCT, 
-  isHts, 
-  COALESCE(
-    CASE WHEN SiteCode IS NOT NULL THEN 1 ELSE NULL END, 
-    0
-  ) AS isHTS_ML ,
-  EMR_Status
 
-  INTO REPORTING.dbo.all_EMRSites 
-from 
-  EMRSites 
-  left join ML on ML.SiteCode = EMRSites.MFLCode
+
+WITH ModulesUptake AS (
+    SELECT
+        MFLCode,
+        FacilityName,
+        SubCounty,
+        County,
+        isEMRSite,
+        PartnerName,
+        AgencyName,
+        modules.isHTS,
+        isHTSML,
+        isIITML,
+        isOTZ,
+        isOVC,
+        isPMTCT,
+        isPrep,
+        fac.Latitude,
+        fac.Longitude,
+        EMR_Status,
+        modules.EMR,
+        CAST(GETDATE() AS DATE) AS LoadDate 
+    FROM NDWH.dbo.FactModulesuptake AS modules
+    LEFT JOIN NDWH.dbo.DimFacility fac ON fac.FacilityKey = modules.FacilityKey
+    LEFT JOIN NDWH.dbo.DimPartner pat ON pat.PartnerKey = modules.Partnerkey
+    LEFT JOIN NDWH.dbo.DimAgency agency ON agency.AgencyKey = modules.Agencykey
+)
+
+
+SELECT *
+INTO REPORTING.dbo.all_EMRSites
+FROM ModulesUptake;
+

@@ -11,3 +11,8 @@ with cte AS (
 						)
 						delete from cte 
 						Where Row_Num >1 ;
+
+				INSERT INTO [ODS_logs].[dbo].[CT_DepressionScreeningCount_Log]([SiteCode],[CreatedDate],[DepressionScreeningCount])
+				SELECT SiteCode,GETDATE(),COUNT(concat(Sitecode,PatientPK)) AS DepressionScreeningCount 
+				FROM [ODS].[dbo].[CT_DepressionScreening] 
+				GROUP BY SiteCode;

@@ -19,7 +19,7 @@ BEGIN
             Emr,
             Project,
 			CONVERT(NVARCHAR(64), HASHBYTES('SHA2_256', CAST(PartnerPatientPk as NVARCHAR(36))), 2) As PartnerPatientPk,
-            
+            IndexPatientPkHash,
             KnowledgeOfHivStatus,
             PartnerPersonID,            
             CONVERT(NVARCHAR(64), HASHBYTES('SHA2_256', CAST(CccNumber as NVARCHAR(36))), 2) As CCCNumber,
@@ -53,6 +53,7 @@ BEGIN
         agency.AgencyKey,
 		age_group.AgeGroupKey,
         PartnerPatientPk,
+        IndexPatientPkHash,
         KnowledgeOfHivStatus,
         PartnerPersonID,
         CCCNumber,

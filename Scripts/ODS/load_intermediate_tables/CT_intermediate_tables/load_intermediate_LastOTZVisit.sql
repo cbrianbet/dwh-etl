@@ -47,7 +47,8 @@ BEGIN
 		ModulesCompletedToday_OTZ_Transition,
 		ModulesCompletedToday_OTZ_TreatmentLiteracy,
 		ModulesCompletedToday_OTZ_SRH,
-		ModulesCompletedToday_OTZ_Beyond,		
+		ModulesCompletedToday_OTZ_Beyond,	
+		OutcomeDate,	
 		cast(getdate() as date) as LoadDate
 	INTO [ODS].[dbo].[Intermediate_LastOTZVisit]
 	from source_LastOTZVisit

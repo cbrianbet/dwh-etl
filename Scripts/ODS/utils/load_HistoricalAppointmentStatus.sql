@@ -1,11 +1,17 @@
+use Historical;
+
+-- NB:first you need to create the table that everything will go into: dbo.HistoricalARTOutcomesBaseTable
+--truncate the table if you need to load afresh 
+truncate table Historical.dbo.HistoricalAppointmentStatus;
+
+
+---declare your start and end dates.
 declare 
-@start_date date = '2020-06-01',
-@end_date date = '2023-06-30';
+@start_date date = <>,
+@end_date date = <>;
 
 with dates as (
-
-    
-      
+     
  select datefromparts(year(@start_date), month(@start_date), 1) as dte
       union all
       select dateadd(month, 1, dte) --incrementing month by month until the date is less than or equal to @end_date
@@ -42,7 +48,8 @@ with clinical_visits_as_of_date as (
         PatientPK,
         SiteCode,
         VisitDate,
-        NextAppointmentDate  
+        NextAppointmentDate,
+        CurrentRegimen as RegimenAsof  
     from  ODS.dbo.CT_PatientVisits
     where SiteCode > 0 and NextAppointmentDate >= DATEADD(month, -6, @as_of_date) 
 
@@ -206,7 +213,8 @@ last_exit_as_of_date as (
             case 
                 when last_visit.NextAppointmentDate >= last_dispense.ExpectedReturn then last_visit.NextAppointmentDate 
                 else isnull(last_dispense.ExpectedReturn, last_visit.NextAppointmentDate)  
-            end as NextAppointmentDate
+            end as NextAppointmentDate,
+            RegimenAsOf
     from last_visit_encounter_as_of_date as last_visit
     full join last_pharmacy_dispense_as_of_date as last_dispense on  last_visit.SiteCode = last_dispense.SiteCode 
         and last_visit.PatientPK = last_dispense.PatientPK
@@ -304,7 +312,8 @@ from ODS.dbo.CT_FacilityManifest
         case 
             when datediff(dd, @as_of_date, visits_and_dispense_encounters_combined_tbl.NextAppointmentDate) >= 365 then dateadd(day, 30, LastEncounterDate)
             else visits_and_dispense_encounters_combined_tbl.NextAppointmentDate 
-        end As NextAppointmentDate    
+        end As NextAppointmentDate,
+        RegimenAsOf   
     from visits_and_dispense_encounters_combined_tbl
      ),
 
@@ -335,11 +344,9 @@ ARTOutcomesCompuation as (
         left join second_last_encounter on   second_last_encounter.PatientPK=last_encounter.PatientPK
         and second_last_encounter.SiteCode=last_encounter.SiteCode
     left join last_upload_as_of_date on  last_upload_as_of_date.SiteCode=last_encounter.SiteCode
-
-        ),
-
-
-    Summary AS (select 
+),
+Summary AS (
+select 
     ARTOutcomesCompuation.PatientIDHash as PatientIDHash,
     ARTOutcomesCompuation.PatientPKhash,
     ARTOutcomesCompuation.PatientID,
@@ -349,7 +356,8 @@ ARTOutcomesCompuation as (
     cast (ARTOutcomesCompuation.ExpectedNextAppointmentDate as date) as ExpectedNextAppointmentDate ,
     cast (ARTOutcomesCompuation.LastEncounterDate as date) as LastEncounterDate,
     DATEDIFF(dd, ARTOutcomesCompuation.ExpectedNextAppointmentDate, ARTOutcomesCompuation.LastEncounterDate) As DiffExpectedTCADateLastEncounter,
-    case when   DATEDIFF(day, ARTOutcomesCompuation.ExpectedNextAppointmentDate, ARTOutcomesCompuation.LastEncounterDate) < 0 Then 'Came before'
+    case 
+    when   DATEDIFF(day, ARTOutcomesCompuation.ExpectedNextAppointmentDate, ARTOutcomesCompuation.LastEncounterDate) < 0 Then 'Came before'
     When   DATEDIFF(day, ARTOutcomesCompuation.ExpectedNextAppointmentDate, ARTOutcomesCompuation.LastEncounterDate)= 0 Then 'On time'
     when   DATEDIFF(day, ARTOutcomesCompuation.ExpectedNextAppointmentDate, ARTOutcomesCompuation.LastEncounterDate) between 1 and 7 Then 'Missed 1-7 days'
     when   DATEDIFF(day, ARTOutcomesCompuation.ExpectedNextAppointmentDate, ARTOutcomesCompuation.LastEncounterDate) between 8 and 14 Then 'Missed 8-14 days'
@@ -359,43 +367,56 @@ ARTOutcomesCompuation as (
     when   DATEDIFF(day, ARTOutcomesCompuation.ExpectedNextAppointmentDate, ARTOutcomesCompuation.LastEncounterDate)  > 60 Then 'IIT and RTT beyond 30 days'
     When   DATEDIFF(day, ARTOutcomesCompuation.ExpectedNextAppointmentDate, ARTOutcomesCompuation.LastEncounterDate) >= 91 and ARTOutcomesCompuation.ExpectedNextAppointmentDate <>'1900-01-01'  Then 'Still IIT'
    -- When   DATEDIFF(day, ARTOutcomesCompuation.ExpectedNextAppointmentDate, ARTOutcomesCompuation.LastEncounterDate) >= 91 and ARTOutcomesCompuation.ExpectedNextAppointmentDate <>'1900-01-01'  Then 'IIT and RTT beyond 30 days'
-
     else 	
      Case when last_exit_as_of_date.exitReason	in ('dead','Death','Died') Then 'Dead'
         when last_exit_as_of_date.exitReason in ('Lost','Lost to followup','LTFU','ltfu') Then 'Still IIT'
         When last_exit_as_of_date.exitReason in ('Stopped','Stopped Treatment') Then 'Stopped'
         When last_exit_as_of_date.exitReason in ('Transfer','Transfer Out','transfer_out','Transferred out') Then 'Transfer-Out'
         When last_exit_as_of_date.exitReason not in ('dead','Death','Died','Lost','Lost to followup','LTFU','ltfu','Stopped','Stopped Treatment','Transfer','Transfer Out','transfer_out','Transferred out') Then 'Other'
-  
     else last_exit_as_of_date.exitReason 
      END
     	end as AppointmentStatus,
 	ARTOutcomesCompuation.AsOfDate,
     ARTOutcomesCompuation.StartARTDate,
     ARTOutcomesCompuation.ARTDurationMonths,
-    last_upload_as_of_date.DateRecieved 
+    last_upload_as_of_date.DateRecieved,
+    RegimenAsof
 from ARTOutcomesCompuation  
 left join last_exit_as_of_date on  last_exit_as_of_date.PatientPK= ARTOutcomesCompuation.PatientPK
-and last_exit_as_of_date.sitecode=ARTOutcomesCompuation.sitecode
+    and last_exit_as_of_date.sitecode=ARTOutcomesCompuation.sitecode
  left  join  last_upload_as_of_date on  last_upload_as_of_date.SiteCode=ARTOutcomesCompuation.SiteCode 
-               WHERE ARTOutcomesCompuation.NextAppointmentDate > ARTOutcomesCompuation.LastEncounterDate
+where ARTOutcomesCompuation.NextAppointmentDate > ARTOutcomesCompuation.LastEncounterDate
    -- AND ARTOutcomesCompuation.NextAppointmentDate > DATEADD(month, -6, ARTOutcomesCompuation.AsOfDate)
+),
+unscheduled_visits_as_of_date as (
+    select 
+        PatientPK,
+        SiteCode,
+        @as_of_date as AsOfDate,
+        count(*) as NoOfUnscheduledVisits
+    from ODS.dbo.CT_PatientVisits
+    where VisitType like '%unscheduled%'
+    and VisitDate <= @as_of_date
+    group by 
+        PatientPK,
+        SiteCode
+)
+insert into Historical.dbo.HistoricalAppointmentStatus
+Select 
+    summary.* ,
+	unscheduled_visits_as_of_date.NoOfUnscheduledVisits
 
-
-    )
- 
-  --Insert into ODS.dbo.[HistoricalAppointmentStatus]
-    -- select * from Summary 
-	   Select * into ODS.dbo.[HistoricalAppointmentStatus]
-   from Summary
-      where AppointmentStatus in ('Came before','Dead','IIT and RTT beyond 30 days','IIT and RTT within 30 days','LostinHMIS','LTFU','Missed 1-7 days','Missed 15-30 days','Missed 8-14 days','On time','Still IIT','Stopped','Transfer-Out') 
+from Summary
+left join unscheduled_visits_as_of_date on unscheduled_visits_as_of_date.PatientPK = summary.PatientPK 
+    and unscheduled_visits_as_of_date.SiteCode = summary.MFLCode
+    and unscheduled_visits_as_of_date.AsOfDate = summary.AsOfDate
+where AppointmentStatus in ('Came before','Dead','IIT and RTT beyond 30 days','IIT and RTT within 30 days','LostinHMIS','LTFU','Missed 1-7 days','Missed 15-30 days','Missed 8-14 days','On time','Still IIT','Stopped','Transfer-Out') 
 
 fetch next from cursor_AsOfDates into @as_of_date
+
 end
 
 --free up objects
---drop table #months
---close cursor_AsOfDates 
---deallocate cursor_AsOfDates 
---truncate table ODS.dbo.[HistoricalAppointmentStatus]
---drop  table ODS.dbo.[HistoricalAppointmentStatus] drop column NextappointmentDate
+drop table #months
+close cursor_AsOfDates 
+deallocate cursor_AsOfDates 
