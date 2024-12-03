@@ -11,7 +11,7 @@ BEGIN
 			INSERT INTO  [ODS_Logs].[dbo].[CT_Otz_Log](MaxVisitDate,LoadStartDateTime)
 			VALUES(@MaxVisitDate_Hist,GETDATE())
 
-			MERGE [ODS].[dbo].[CT_Otz] AS a
+			MERGE [ODS].[Care].[CT_Otz] AS a
 				USING(SELECT Distinct
 							P.[PatientCccNumber] AS PatientID
 							,P.[PatientPID] AS PatientPK

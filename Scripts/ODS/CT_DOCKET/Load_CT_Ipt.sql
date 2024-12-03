@@ -11,7 +11,7 @@ BEGIN
 		VALUES(@VisitDate,GETDATE());
 
 	       ---- Refresh [ODS].[dbo].[CT_Ipt]
-			MERGE [ODS].[dbo].[CT_Ipt] AS a
+			MERGE [ODS].[Care].[CT_Ipt] AS a
 				USING(SELECT Distinct
 						 P.[PatientCccNumber] AS PatientID
 						,P.[PatientPID] AS PatientPK
