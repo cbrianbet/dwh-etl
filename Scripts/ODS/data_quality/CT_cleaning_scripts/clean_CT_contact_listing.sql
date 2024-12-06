@@ -41,16 +41,6 @@ UPDATE [ODS].[DBO].[CT_ContactListing]
                             END
  WHERE IPVScreeningOutcome IN ('0', 'No', 'Yes', '1065', '1066')
 
- GO 
-
- -- clean KnowledgeOfHivStatus   
- UPDATE [ODS].[DBO].[CT_ContactListing]
-    SET KnowledgeOfHivStatus = CASE 
-                                WHEN KnowledgeOfHivStatus IN ('Negative', 'Yes', 'Positive', 'Exposed Infant', 'Exposed', '664', '703') THEN 'Yes'  
-                                WHEN KnowledgeOfHivStatus IN ('No', 'Unknown', '1067', '0') THEN 'No'
-                            END
-WHERE KnowledgeOfHivStatus IN ('Negative', 'Yes', 'Positive', 'Exposed Infant', 'Exposed', '664', '703', 'No', 'Unknown', '1067', '0')                
-
-GO
+ GO
 
 

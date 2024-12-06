@@ -50,7 +50,7 @@ BEGIN
 												,max(InnerC.ID) As maxID
 												,MAX(InnerC.created )AS Maxdatecreated
 										FROM [DWAPICentral].[dbo].[PatientExtract](NoLock) P
-											INNER JOIN [DWAPICentral].[dbo].[OvcExtract](NoLock) InnerC ON InnerC.[PatientId] = P.ID
+											INNER JOIN [DWAPICentral].[dbo].[DefaulterTracingExtract](NoLock) InnerC ON InnerC.[PatientId] = P.ID
 											INNER JOIN [DWAPICentral].[dbo].[Facility](NoLock) F ON P.[FacilityId] = F.Id AND F.Voided = 0
 										GROUP BY F.code
 												,p.[PatientPID]

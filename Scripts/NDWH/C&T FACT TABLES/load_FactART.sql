@@ -696,7 +696,6 @@ InitiatedCMTreatment as (
             end_month.DateKey as AsOfDateKey,
             Patient.PbfwAtConfirmedPositive as IsPbfwAtConfirmationPositive,
             Case When ConfirmedTreatmentFailure.PatientPKHash is not null then 1 else 0 End as ConfirmedTreatmentFailure,
-
             case when TBLamResults.PatientPKHash is not null then 1 else 0 end as DoneTBLamTest,
             case when TBLamResults.TestResult='Present' Then 1 else 0 End as TBLamPositive,
             case when TBLamPosonTBRx.PatientPKHash is not null then 1 Else 0 End as TBLamPosonTBRx,
@@ -706,6 +705,7 @@ InitiatedCMTreatment as (
             case when CSFCrAg.TestResult='1.00' then 1 else 0 End as CSFCrAgPositive,
             case when PreemtiveCMTheraphy.PatientPKHash is not null then 1 Else 0 End as PreemtiveCMTheraphy,
             case when InitiatedCMTreatment.PatientPKHash is not null then 1 Else 0 End as InitiatedCMTreatment,
+            case when MaxOrderedOrderedOnTBDrugs.Patientpkhash is not null then 1 Else 0 End as OnTBTreatment,
             cast(getdate() as date) as LoadDate
 INTO NDWH.dbo.FACTART 
 from  CombinedPatientAndPBFW Patient
@@ -729,13 +729,13 @@ left join rtt_within_last_12_months on rtt_within_last_12_months.PatientPKHash =
 left join swithced_to_second_line_in_last_12_monhts on swithced_to_second_line_in_last_12_monhts.PatientPKHash = Patient.PatientPKHash
   and swithced_to_second_line_in_last_12_monhts.SiteCode = Patient.SiteCode
   left join ConfirmedTreatmentFailure on ConfirmedTreatmentFailure.PatientPKHash=Patient.patientpkhash and ConfirmedTreatmentFailure.SiteCode=Patient.sitecode
-
   left join MaxOrderedTBLamResults TBLamResults on TBLamResults.PatientPKHash=Patient.PatientPKHash and TBLamResults.SiteCode=Patient.SiteCode
   left join TBLamPosonTBRx on TBLamPosonTBRx.PatientPKHash=Patient.PatientPKHash and TBLamPosonTBRx.SiteCode=Patient.SiteCode
   left join MaxOrderedSerumCrag SerumCrag on SerumCrag.PatientPKHash=Patient.PatientPKHash and SerumCrag.SiteCode=Patient.SiteCode
   left join MaxOrderedCSFCrAg CSFCrAg on CSFCrAg.Patientpkhash=Patient.PatientPKHash and CSFCrAg.SiteCode=Patient.SiteCode
   left join PreemtiveCMTheraphy on PreemtiveCMTheraphy.PatientPKHash=Patient.PatientPKHash and PreemtiveCMTheraphy.SiteCode=Patient.SiteCode
   left join InitiatedCMTreatment on InitiatedCMTreatment.PatientPKHash=Patient.PatientPKHash and InitiatedCMTreatment.SiteCode=Patient.SiteCode
+  left join MaxOrderedOrderedOnTBDrugs on MaxOrderedOrderedOnTBDrugs.Patientpkhash=Patient.Patientpkhash and MaxOrderedOrderedOnTBDrugs.sitecode=Patient.sitecode
 WHERE pat.voided =0 ;
 alter table NDWH.dbo.FactART add primary key(FactKey)
 END

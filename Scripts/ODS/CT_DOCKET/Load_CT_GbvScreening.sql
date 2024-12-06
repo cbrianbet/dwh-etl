@@ -50,7 +50,7 @@ BEGIN
 										,max(InnerGSE.ID) As Max_ID
 										,MAX(cast(InnerGSE.created as date)) AS Maxdatecreated
 								FROM [DWAPICentral].[dbo].[PatientExtract](NoLock) P
-									INNER JOIN [DWAPICentral].[dbo].[AllergiesChronicIllnessExtract](NoLock) InnerGSE ON InnerGSE.[PatientId] = P.ID
+									INNER JOIN [DWAPICentral].[dbo].[GbvScreeningExtract](NoLock) InnerGSE ON InnerGSE.[PatientId] = P.ID
 									INNER JOIN [DWAPICentral].[dbo].[Facility](NoLock) F ON P.[FacilityId] = F.Id AND F.Voided = 0
 								GROUP BY F.code
 										,p.[PatientPID]
