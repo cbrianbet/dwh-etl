@@ -10,7 +10,7 @@ BEGIN
 		VALUES(@MaxVisitDate_Hist,GETDATE())
 
 	       ---- Refresh [ODS].[dbo].[CT_DepressionScreening]
-			MERGE [ODS].[dbo].[CT_DepressionScreening]AS a
+			MERGE [ODS].[Care].[CT_DepressionScreening]AS a
 				USING(SELECT distinct
 							P.[PatientCccNumber] AS PatientID
 							,P.[PatientPID] AS PatientPK

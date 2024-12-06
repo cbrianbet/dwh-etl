@@ -1,4 +1,4 @@
-MERGE ODS.dbo.CT_FacilityManifestCargo AS a
+MERGE ODS.[Care].CT_FacilityManifestCargo AS a
 	USING
 	(SELECT *
 		FROM
