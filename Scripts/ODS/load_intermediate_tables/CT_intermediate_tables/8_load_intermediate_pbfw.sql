@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[ODS].[dbo].[Intermediate_Pbfw]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[dbo].[Intermediate_Pbfw];		
+IF OBJECT_ID(N'[ODS].[Intermediate].[Intermediate_Pbfw]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[Intermediate].[Intermediate_Pbfw];		
 with visits_source as (
 select 
     distinct obs.SiteCode,
@@ -12,12 +12,12 @@ select
 		art_patient.StartARTDate,
 		patient.DateConfirmedHIVPositive,
 		last_visit.LastvisitDate
-from ODS.dbo.intermediate_LatestObs as obs
-left join ODS.dbo.CT_ARTPatients as art_patient on art_patient.PatientPK = obs.PatientPK
+from ODS.[Intermediate].intermediate_LatestObs as obs
+left join ODS.Care.CT_ARTPatients as art_patient on art_patient.PatientPK = obs.PatientPK
     and art_patient.SiteCode = obs.SiteCode
-left join Ods.Dbo.Ct_patient as patient on patient.PatientPk = obs.PatientPK
+left join Ods.Care.Ct_patient as patient on patient.PatientPk = obs.PatientPK
 	and patient.SiteCode = obs.SiteCode
-left join ODS.dbo.Intermediate_LastVisitDate as last_visit on last_visit.PatientPK = obs.PatientPK
+left join ODS.[Intermediate].Intermediate_LastVisitDate as last_visit on last_visit.PatientPK = obs.PatientPK
 	and last_visit.SiteCode = obs.SiteCode
 where 
     Pregnant='Yes' OR breastfeeding='Yes'
@@ -34,8 +34,8 @@ visits_odering_asc as (
 		visit.PatientPK,
 		visit.SiteCode,
 		VisitDate
-	from ODS.dbo.CT_PatientVisits as visit
-	left join ODS.dbo.CT_ARTPatients as art_patient on art_patient.PatientPK = visit.PatientPK
+	from ODS.Care.CT_PatientVisits as visit
+	left join ODS.Care.CT_ARTPatients as art_patient on art_patient.PatientPK = visit.PatientPK
     and art_patient.SiteCode = visit.SiteCode
 	where
 	    Pregnant='Yes' OR breastfeeding='Yes'
@@ -57,7 +57,7 @@ anc_source as (
 		Sitecode,
 		Visitdate,
 		HIVStatusBeforeANC
-	from   Ods.Dbo.Mnch_ancvisits
+	from   Ods.Mnch.Mnch_ancvisits
 	where Hivstatusbeforeanc = 'KP'
 			OR Hivtestfinalresult = 'Positive'
 ),
@@ -70,7 +70,7 @@ pnc_source AS (
 		Patientpkhash,
 		Sitecode,
 		Visitdate
-	from   ods.dbo.Mnch_pncvisits
+	from   ods.Mnch.Mnch_pncvisits
 	where Priorhivstatus = 'Positive'
 			or Hivtestfinalresult = 'Positive'
 			and Babyfeeding in ( 'Breastfed exclusively',
@@ -86,7 +86,7 @@ mat_source as (
 	Patientpkhash,
 	Sitecode,
 	Visitdate
-	from  Ods.Dbo.Mnch_matvisits
+	from  Ods.Mnch.Mnch_matvisits
 	where Hivtestfinalresult = 'Positive'
 		or Onartanc = 'Yes'
 		and Initiatedbf = 'Yes'
@@ -117,7 +117,7 @@ mnch_art_ordering as (
 			SiteCode,
 			PatientPK,
 			StartARTDate
-	from ODS.dbo.MNCH_Arts
+	from ODS.MNCH.MNCH_Arts
 ),
 earliest_mnch_start_art as (
 	select 
@@ -133,7 +133,7 @@ mnch_enrollment_ordering as (
 			SiteCode,
 			PatientPK,
 			HIVStatusBeforeANC		
-		from ODS.dbo.MNCH_Enrolments
+		from ODS.MNCH.MNCH_Enrolments
 ),
 latest_mnch_enrollment as (
 	select 
@@ -240,5 +240,5 @@ select
 	else 'Missing'
 	end as PBFWCategory,
 	ANCdate1 as GreenCardAncDate1
-into ODS.dbo.Intermediate_Pbfw
+into ODS.[Intermediate].Intermediate_Pbfw
 from joined_data

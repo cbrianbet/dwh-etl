@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[ODS].[dbo].[Intermediate_ARTOutcomes]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[dbo].[Intermediate_ARTOutcomes];
+IF OBJECT_ID(N'[ODS].[Intermediate].[Intermediate_ARTOutcomes]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[Intermediate].[Intermediate_ARTOutcomes];
 BEGIN
 	With Exits As (
         Select 
@@ -12,7 +12,7 @@ BEGIN
         EffectiveDiscontinuationDate,
         ReasonForDeath,
         ReEnrollmentDate
-        from ODS.dbo.CT_PatientStatus
+        from ODS.Care.CT_PatientStatus
 		WHERE VOIDED=0
     ),
     Latestexits As (
@@ -33,7 +33,7 @@ BEGIN
 	select 
 		cast (SiteCode as nvarchar)As SiteCode ,
 		Max(DateRecieved) As DateUploaded
-	 from ODS.dbo.CT_FacilityManifest
+	 from ODS.Care.CT_FacilityManifest
 	  group by SiteCode
 	),
     ARTOutcomes AS (
@@ -74,10 +74,10 @@ THEN 'LIHMIS'
 		 Patients.Project,
          Latestexits.ReEnrollmentDate,
          Latestexits.EffectiveDiscontinuationDate
-	FROM ODS.dbo.CT_Patient as Patients
+	FROM ODS.Care.CT_Patient as Patients
 
-	INNER JOIN ODS.dbo.CT_ARTPatients  ART  ON  Patients.PatientPK=ART.PatientPK and Patients.Sitecode=ART.Sitecode
-	Left JOIN ODS.dbo.Intermediate_LastPatientEncounter  LastPatientEncounter ON   Patients.PatientPK  =LastPatientEncounter.PatientPK   AND Patients.SiteCode  =LastPatientEncounter.SiteCode
+	INNER JOIN ODS.Care.CT_ARTPatients  ART  ON  Patients.PatientPK=ART.PatientPK and Patients.Sitecode=ART.Sitecode
+	Left JOIN ODS.[Intermediate].Intermediate_LastPatientEncounter  LastPatientEncounter ON   Patients.PatientPK  =LastPatientEncounter.PatientPK   AND Patients.SiteCode  =LastPatientEncounter.SiteCode
 	LEFT JOIN  LatestExits   ON  Patients.PatientPK=Latestexits.PatientPK  and Patients.Sitecode=Latestexits.Sitecode
 	left join LatestUpload on LatestUpload.SiteCode=Patients.SiteCode
 
@@ -89,7 +89,7 @@ THEN 'LIHMIS'
 		Select 
 		distinct sitecode,
 		 Max(Visitdate) As SiteAbstractionDate
-		 from ODS.dbo.CT_PatientVisits
+		 from ODS.Care.CT_PatientVisits
 		 WHERE VOIDED=0
 		 group by SiteCode
     )
@@ -113,7 +113,7 @@ THEN 'LIHMIS'
             ReEnrollmentDate,
            EffectiveDiscontinuationDate,
 			cast(getdate() as date) as LoadDate
-	  INTO  ODS.[dbo].[Intermediate_ARTOutcomes]
+	  INTO  ODS.[Intermediate].[Intermediate_ARTOutcomes]
 	 from ARTOutcomes
 	 left join LatestUpload ON LatestUpload.SiteCode = ARTOutcomes.SiteCode 
 	 left  join  LatestVisits  ON  LatestVisits.SiteCode = ARTOutcomes.SiteCode

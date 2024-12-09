@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[ODS].[dbo].[Intermediate_ViralLoadsIntervals]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[dbo].[Intermediate_ViralLoadsIntervals];
+IF OBJECT_ID(N'[ODS].[Intermediate].[Intermediate_ViralLoadsIntervals]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[Intermediate].[Intermediate_ViralLoadsIntervals];
 
 BEGIN
 
@@ -27,8 +27,8 @@ with source_viral_loads as (
 				end  
 		end as VLSup,
 		StartARTDate
-	FROM ODS.dbo.CT_PatientLabs as labs
-	INNER join ODS.dbo.CT_ARTPatients art on art.PatientPK = labs.Patientpk 
+	FROM ODS.Care.CT_PatientLabs as labs
+	INNER join ODS.Care.CT_ARTPatients art on art.PatientPK = labs.Patientpk 
 		and art.SiteCode = labs.SiteCode
 	where TestName = 'Viral Load'
 			and TestName <>'CholesterolLDL (mmol/L)' and TestName <> 'Hepatitis C viral load' 
@@ -112,7 +112,7 @@ select
 	_24monthVL_data._24monthVLDate,
 	_24monthVL_data._24MonthVLSup,
     cast(getdate() as date) as LoadDate
-into [ODS].[dbo].[Intermediate_ViralLoadsIntervals]
+into [ODS].[Intermediate].[Intermediate_ViralLoadsIntervals]
 from distinct_viral_load_clients
 left join _6monthVL_data on _6monthVL_data.PatientPk = distinct_viral_load_clients .PatientPK
 	and _6monthVL_data.SiteCode = distinct_viral_load_clients.SiteCode
