@@ -3,7 +3,7 @@ registered in the EMR. There seem to be no match. Need to know the link from the
 
 UPDATE a
     SET a.PatientPK = null,a.PatientPKHash =null
-FROM [ODS].[dbo].[Mhealth_Ushauri_HEI] a;
+FROM [ODS].[Mhealth].[Mhealth_Ushauri_HEI] a;
 
 --Lanyo to advice on the leankage between Ushauri Hei and MNCH_Heis
 --UPDATE a
