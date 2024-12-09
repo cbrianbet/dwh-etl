@@ -1,7 +1,7 @@
 
 BEGIN
-    --truncate table [ODS].[dbo].[MNCH_Enrolments]
-	MERGE [ODS].[dbo].[MNCH_Enrolments] AS a
+    --truncate table [ODS].[MNCH].[MNCH_Enrolments]
+	MERGE [ODS].[MNCH].[MNCH_Enrolments] AS a
 			USING(
 					SELECT distinct p.[PatientMnchID],p.[PatientPk],P.[SiteCode],p.[FacilityName],P.EMR,p.[Project],cast(p.[DateExtracted] as date)[DateExtracted]
 						  ,[ServiceType],cast([EnrollmentDateAtMnch] as date) [EnrollmentDateAtMnch],[MnchNumber],[FirstVisitAnc],[Parity],[Gravidae]
@@ -45,7 +45,7 @@ BEGIN
 
 						 ROW_NUMBER() OVER (PARTITION BY PatientPK,Sitecode,[EnrollmentDateAtMnch] ORDER BY
 						PatientPK,Sitecode) Row_Num
-						FROM  [ODS].[dbo].[MNCH_Enrolments] (NoLock)
+						FROM  [ODS].[MNCH].[MNCH_Enrolments] (NoLock)
 						)
 						delete from cte 
 						Where Row_Num >1 ;

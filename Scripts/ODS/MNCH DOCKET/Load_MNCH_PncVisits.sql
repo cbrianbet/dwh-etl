@@ -1,6 +1,6 @@
 
 BEGIN
-	MERGE [ODS].[dbo].[MNCH_PncVisits] AS a
+	MERGE [ODS].[MNCH].[MNCH_PncVisits] AS a
 			USING(
 					SELECT distinct P.[PatientMnchID],P.[PatientPk],[PNCRegisterNumber],P.[SiteCode],P.[EMR],F.Name FacilityName,P.[Project]
 						  ,cast(P.[DateExtracted] as date)[DateExtracted],p.[VisitID],cast(p.[VisitDate] as date)[VisitDate] ,[PNCVisitNo]

@@ -1,6 +1,6 @@
 
 BEGIN
-	MERGE [ODS].[dbo].[MNCH_Patient] AS a
+	MERGE [ODS].[MNCH].[MNCH_Patient] AS a
 			USING(
 					SELECT distinct P.[PatientPk],P.[SiteCode],P.[Emr],[Project],[Processed],[QueueId],[Status],[StatusDate],[DateExtracted]
 						  ,[FacilityId],[FacilityName],[Pkv],[PatientMnchID],[PatientHeiID],[Gender],[DOB],[FirstEnrollmentAtMnch],[Occupation]
@@ -42,12 +42,12 @@ BEGIN
 
 						 ROW_NUMBER() OVER (PARTITION BY PatientPK,Sitecode ORDER BY
 						PatientPK,Sitecode) Row_Num
-						FROM  [ODS].[dbo].[MNCH_Patient](NoLock)
+						FROM  [ODS].[MNCH].[MNCH_Patient](NoLock)
 						)
 						delete from cte 
 						Where Row_Num >1 ;
 
-			update ods.dbo.MNCH_Patient
+			update ods.MNCH.MNCH_Patient
 set voided =0
 where voided is null
 END

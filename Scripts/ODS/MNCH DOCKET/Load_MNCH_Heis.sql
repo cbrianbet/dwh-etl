@@ -1,7 +1,7 @@
 
 BEGIN
-    --truncate table [ODS].[dbo].[MNCH_Heis]
-	MERGE [ODS].[dbo].[MNCH_Heis] AS a
+    --truncate table [ODS].[MNCH].[MNCH_Heis]
+	MERGE [ODS].[MNCH].[MNCH_Heis] AS a
 			USING(
 					SELECT distinct P.[PatientPk],P.[SiteCode],P.[Emr],P.[Project],P.[Processed],P.[QueueId],P.[Status],P.[StatusDate]/*,P.[DateExtracted]*/
 						  ,P.[FacilityId],P.[FacilityName],P.[PatientMnchID],[DNAPCR1Date],[DNAPCR2Date],[DNAPCR3Date],[ConfirmatoryPCRDate],[BasellineVLDate]
@@ -50,7 +50,7 @@ BEGIN
 					
 					ROW_NUMBER() OVER (PARTITION BY P.SiteCode,P.PatientPK
 					ORDER BY RecordUUID desc) Row_Num
-					FROM [ODS].[dbo].[MNCH_Heis] p)   
+					FROM [ODS].[MNCH].[MNCH_Heis] p)   
 		
 				delete from cte
 				where  Row_Num  > 1;  	
