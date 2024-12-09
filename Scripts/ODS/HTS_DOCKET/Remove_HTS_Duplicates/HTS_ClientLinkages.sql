@@ -3,6 +3,6 @@ with cte AS ( Select
 		a.[SiteCode],            
 		a.DateExtracted, ROW_NUMBER() OVER (PARTITION BY a.[PatientPk],a.[SiteCode]
 		ORDER BY a.DateExtracted desc) Row_Num
-       from [ODS].[dbo].[HTS_ClientLinkages] a)
+       from [ODS].[HTS].[HTS_ClientLinkages] a)
 
 	delete from cte where Row_Num>1

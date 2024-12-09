@@ -1,5 +1,5 @@
 BEGIN
-	MERGE [ODS].[dbo].[HTS_TestKits] AS a
+	MERGE [ODS].[HTS].[HTS_TestKits] AS a
 	USING(SELECT DISTINCT a.[FacilityName]
 		  ,a.[SiteCode]
 		  ,a.[PatientPk]
