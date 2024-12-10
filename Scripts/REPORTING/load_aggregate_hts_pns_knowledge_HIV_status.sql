@@ -17,11 +17,11 @@ Go
         pns.DateElicitedKey,
         pns.DateLinkedToCareKey,
         tests.DateTestedKey
-    FROM NDWH.dbo.FactHTSPartnerNotificationServices AS pns
-    LEFT JOIN NDWH.dbo.DimFacility AS facility ON facility.FacilityKey = pns.FacilityKey
-    LEFT JOIN NDWH.dbo.DimPatient AS patient ON patient.PatientPKHash = pns.PartnerPatientPk
+    FROM NDWH.Fact.FactHTSPartnerNotificationServices AS pns
+    LEFT JOIN NDWH.Dim.DimFacility AS facility ON facility.FacilityKey = pns.FacilityKey
+    LEFT JOIN NDWH.Dim.DimPatient AS patient ON patient.PatientPKHash = pns.PartnerPatientPk
         AND patient.SiteCode = facility.MFLCode
-    LEFT JOIN NDWH.dbo.FactHTSClientTests AS tests ON tests.PatientKey = patient.PatientKey
+    LEFT JOIN NDWH.Fact.FactHTSClientTests AS tests ON tests.PatientKey = patient.PatientKey
     WHERE TestType IN ('Initial Test', 'Initial')
 ),
 pns_tests_linkages AS (
@@ -29,7 +29,7 @@ pns_tests_linkages AS (
         pns_and_tests.*,
         linkages.ReportedCCCNumber  
     FROM pns_and_tests
-    LEFT JOIN NDWH.dbo.FactHTSClientLinkages AS linkages ON linkages.PatientKey = pns_and_tests.PatientKey
+    LEFT JOIN NDWH.Fact.FactHTSClientLinkages AS linkages ON linkages.PatientKey = pns_and_tests.PatientKey
 ),
 line_list_dataset AS (
     SELECT DISTINCT
@@ -79,14 +79,14 @@ line_list_dataset AS (
             ELSE 0 
         END AS UnknownStatus
     FROM pns_tests_linkages AS dataset
-    LEFT JOIN NDWH.dbo.DimPatient AS patient ON patient.PatientKey = dataset.PatientKey
-    LEFT JOIN NDWH.dbo.DimPartner AS patner ON patner.PartnerKey = dataset.PartnerKey
-    LEFT JOIN NDWH.dbo.DimFacility AS facility ON facility.FacilityKey = dataset.FacilityKey
-    LEFT JOIN NDWH.dbo.DimAgency AS agency ON agency.AgencyKey = dataset.AgencyKey   
-    LEFT JOIN NDWH.dbo.DimDate AS elicited ON elicited.DateKey = dataset.DateElicitedKey
-    LEFT JOIN NDWH.dbo.DimDate AS tested ON tested.DateKey = dataset.DateTestedKey
-    LEFT JOIN NDWH.dbo.DimDate AS linked ON linked.DateKey = dataset.DateLinkedToCareKey
-    LEFT JOIN NDWH.dbo.DimAgeGroup AS agegroup ON agegroup.AgeGroupKey = dataset.AgeGroupKey
+    LEFT JOIN NDWH.Dim.DimPatient AS patient ON patient.PatientKey = dataset.PatientKey
+    LEFT JOIN NDWH.Dim.DimPartner AS patner ON patner.PartnerKey = dataset.PartnerKey
+    LEFT JOIN NDWH.Dim.DimFacility AS facility ON facility.FacilityKey = dataset.FacilityKey
+    LEFT JOIN NDWH.Dim.DimAgency AS agency ON agency.AgencyKey = dataset.AgencyKey   
+    LEFT JOIN NDWH.Dim.DimDate AS elicited ON elicited.DateKey = dataset.DateElicitedKey
+    LEFT JOIN NDWH.Dim.DimDate AS tested ON tested.DateKey = dataset.DateTestedKey
+    LEFT JOIN NDWH.Dim.DimDate AS linked ON linked.DateKey = dataset.DateLinkedToCareKey
+    LEFT JOIN NDWH.Dim.DimAgeGroup AS agegroup ON agegroup.AgeGroupKey = dataset.AgeGroupKey
 )
 SELECT 
     Mflcode,

@@ -8,8 +8,8 @@ With TurnedPositive as (
     FinalTestResult,
     testingdate.[Date] as DateTested
     from 
-    NDWH.dbo.FactHTSClientTests as tests
-    left join NDWH.dbo.DimDate as testingdate on testingdate.[Date]=tests.DateTestedKey
+    NDWH.Fact.FactHTSClientTests as tests
+    left join NDWH.Dim.DimDate as testingdate on testingdate.[Date]=tests.DateTestedKey
     where  TestType='Initial Test'
 )
 SELECT
@@ -74,16 +74,16 @@ SELECT
       ,prepenrol.date as PrepEnrollmentDate
       ,CAST(GETDATE() AS DATE) AS LoadDate 
       into REPORTING.dbo.LinelistPrep
-  FROM NDWH.dbo.FactPrepVisits as visits
-    left join NDWH.dbo.DimFacility as fac on fac.FacilityKey=visits.FacilityKey
-    left join NDWH.dbo.DimPatient as pat on pat.PatientKey=visits.PatientKey
-    left join NDWH.dbo.DimPartner as partner on partner.PartnerKey=visits.PartnerKey
-    left join NDWH.dbo.DimAgency as agency on agency.AgencyKey=visits.agencykey
-    left join NDWH.dbo.DimAgeGroup as agegroup on agegroup.AgeGroupKey=visits.AgeGroupKey
-    left JOIN NDWH.dbo.DimDate as visit on visit.DateKey = visits.VisitDateKey
-    left JOIN NDWH.dbo.DimDate as tca on tca.DateKey = visits.NextAppointmentDateKey
-    left JOIN NDWH.dbo.DimDate as PregnancyEnded on PregnancyEnded.DateKey = visits.PregnancyEndDateKey
-    left JOIN NDWH.dbo.DimDate as prepenrol on prepenrol.DateKey = visits.PrepEnrollmentDateKey
-    left join NDWH.dbo.FactPrepDiscontinuation as disc on disc.PatientKey=visits.PatientKey
+  FROM NDWH.Fact.FactPrepVisits as visits
+    left join NDWH.Dim.DimFacility as fac on fac.FacilityKey=visits.FacilityKey
+    left join NDWH.Dim.DimPatient as pat on pat.PatientKey=visits.PatientKey
+    left join NDWH.Dim.DimPartner as partner on partner.PartnerKey=visits.PartnerKey
+    left join NDWH.Dim.DimAgency as agency on agency.AgencyKey=visits.agencykey
+    left join NDWH.Dim.DimAgeGroup as agegroup on agegroup.AgeGroupKey=visits.AgeGroupKey
+    left JOIN NDWH.Dim.DimDate as visit on visit.DateKey = visits.VisitDateKey
+    left JOIN NDWH.Dim.DimDate as tca on tca.DateKey = visits.NextAppointmentDateKey
+    left JOIN NDWH.Dim.DimDate as PregnancyEnded on PregnancyEnded.DateKey = visits.PregnancyEndDateKey
+    left JOIN NDWH.Dim.DimDate as prepenrol on prepenrol.DateKey = visits.PrepEnrollmentDateKey
+    left join NDWH.Fact.FactPrepDiscontinuation as disc on disc.PatientKey=visits.PatientKey
     left join TurnedPositive on TurnedPositive.Patientkey=visits.Patientkey and visit.[Date]=DateTested
       

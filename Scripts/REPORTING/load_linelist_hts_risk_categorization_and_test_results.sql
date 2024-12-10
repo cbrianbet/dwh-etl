@@ -28,14 +28,14 @@ with source_data as (
 		tests.ReferredServices,
         tests.EntryPoint
 	from 
-		NDWH.dbo.FactHTSClientTests as tests
-	left join NDWH.dbo.FactHTSEligibilityExtract elig on elig.PatientKey = tests.PatientKey
+		NDWH.Fact.FactHTSClientTests as tests
+	left join NDWH.Fact.FactHTSEligibilityExtract elig on elig.PatientKey = tests.PatientKey
 		and elig.VisitDateKey = tests.DateTestedKey
-	left join NDWH.dbo.DimFacility as facility on facility.FacilityKey = tests.FacilityKey
-	left join NDWH.dbo.DimAgency as agency on agency.AgencyKey = tests.AgencyKey
-	left join NDWH.dbo.DimPartner as partner on partner.PartnerKey = tests.PartnerKey
-	left join NDWH.dbo.DimPatient as patient on patient.PatientKey = tests.PatientKey
-	left join NDWH.dbo.DimDate as testDate on testDate.DateKey =tests.DateTestedKey
+	left join NDWH.Dim.DimFacility as facility on facility.FacilityKey = tests.FacilityKey
+	left join NDWH.Dim.DimAgency as agency on agency.AgencyKey = tests.AgencyKey
+	left join NDWH.Dim.DimPartner as partner on partner.PartnerKey = tests.PartnerKey
+	left join NDWH.Dim.DimPatient as patient on patient.PatientKey = tests.PatientKey
+	left join NDWH.Dim.DimDate as testDate on testDate.DateKey =tests.DateTestedKey
 	where 
 		testDate.Date>='2023-04-01' and TestType='Initial Test'
 ),
@@ -44,7 +44,7 @@ prep_assessments_odering as (
 		row_number() OVER (PARTITION BY PatientKey ORDER BY AssessmentVisitDateKey DESC) as num,
         PatientKey,
 		AssessmentVisitDateKey
-	from NDWH.dbo.FactPrepAssessments
+	from NDWH.Fact.FactPrepAssessments
 ),
 latest_prep_assessment as (
 	select 

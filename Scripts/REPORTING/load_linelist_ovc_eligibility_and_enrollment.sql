@@ -51,20 +51,20 @@ SELECT
 		ELSE 0
 	END AS isEnrolled
 INTO [REPORTING].[dbo].LineListOVCEligibilityAndEnrollments
-FROM [NDWH].[dbo].[FactART] art
-LEFT JOIN [NDWH].[dbo].[FactOVC] it on it.PatientKey = art.PatientKey
-LEFT JOIN NDWH.dbo.DimDate enrld on enrld.DateKey = it.OVCEnrollmentDateKey
-LEFT JOIN NDWH.dbo.DimFacility f on f.FacilityKey = art.FacilityKey
-LEFT JOIN NDWH.dbo.DimAgency a on a.AgencyKey = art.AgencyKey
-LEFT JOIN NDWH.dbo.DimPatient pat on pat.PatientKey = art.PatientKey
-LEFT JOIN NDWH.dbo.DimPartner p on p.PartnerKey = art.PartnerKey
-LEFT JOIN NDWH.dbo.FactViralLoads vl on vl.PatientKey = art.PatientKey
-LEFT JOIN NDWH.dbo.DimAgeGroup g on g.Age = AgeLastVisit
-LEFT JOIN NDWH.dbo.DimDate exd on exd.DateKey = it.OVCExitDateKey
-LEFT JOIN NDWH.dbo.DimDate lvd on lvd.DateKey = vl.LastVLDateKey
-LEFT JOIN NDWH.dbo.DimDate fvd on fvd.DateKey = vl.FirstVLDateKey
-LEFT JOIN NDWH.dbo.DimDate validvl on validvl.DateKey = vl.ValidVLDateKey
-LEFT JOIN NDWH.dbo.DimRelationshipWithPatient rp on rp.RelationshipWithPatientKey = it.RelationshipWithPatientKey
-LEFT JOIN NDWH.dbo.DimARTOutcome ao on ao.ARTOutcomeKey = art.ARTOutcomeKey
-LEFT JOIN NDWH.dbo.FactLatestObs lo on lo.PatientKey = art.PatientKey
+FROM [NDWH].[Fact].[FactART] art
+LEFT JOIN [NDWH].[Fact].[FactOVC] it on it.PatientKey = art.PatientKey
+LEFT JOIN NDWH.Dim.DimDate enrld on enrld.DateKey = it.OVCEnrollmentDateKey
+LEFT JOIN NDWH.Dim.DimFacility f on f.FacilityKey = art.FacilityKey
+LEFT JOIN NDWH.Dim.DimAgency a on a.AgencyKey = art.AgencyKey
+LEFT JOIN NDWH.Dim.DimPatient pat on pat.PatientKey = art.PatientKey
+LEFT JOIN NDWH.Dim.DimPartner p on p.PartnerKey = art.PartnerKey
+LEFT JOIN NDWH.[Fact].FactViralLoads vl on vl.PatientKey = art.PatientKey
+LEFT JOIN NDWH.Dim.DimAgeGroup g on g.Age = AgeLastVisit
+LEFT JOIN NDWH.Dim.DimDate exd on exd.DateKey = it.OVCExitDateKey
+LEFT JOIN NDWH.Dim.DimDate lvd on lvd.DateKey = vl.LastVLDateKey
+LEFT JOIN NDWH.Dim.DimDate fvd on fvd.DateKey = vl.FirstVLDateKey
+LEFT JOIN NDWH.Dim.DimDate validvl on validvl.DateKey = vl.ValidVLDateKey
+LEFT JOIN NDWH.Dim.DimRelationshipWithPatient rp on rp.RelationshipWithPatientKey = it.RelationshipWithPatientKey
+LEFT JOIN NDWH.Dim.DimARTOutcome ao on ao.ARTOutcomeKey = art.ARTOutcomeKey
+LEFT JOIN NDWH.Fact.FactLatestObs lo on lo.PatientKey = art.PatientKey
 where art.AgeLastVisit between 0 and 17 and IsTXCurr = 1

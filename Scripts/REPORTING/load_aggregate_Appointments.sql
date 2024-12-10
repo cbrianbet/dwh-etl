@@ -13,9 +13,9 @@ with Bookings AS (
     AgencyKey,
     COUNT(distinct apt.PatientKey) as NumBooked
   from
-  NDWH.dbo.FACTAppointments apt
-  left join NDWH.dbo.DimPatient as patient on patient.PatientKey = apt.PatientKey
-  left join NDWH.dbo.DimAgeGroup as age_group on age_group.Age = DATEDIFF(YY, patient.DOB, apt.LastEncounterDate)
+  NDWH.Fact.FACTAppointments apt
+  left join NDWH.Dim.DimPatient as patient on patient.PatientKey = apt.PatientKey
+  left join NDWH.Dim.DimAgeGroup as age_group on age_group.Age = DATEDIFF(YY, patient.DOB, apt.LastEncounterDate)
   group by
     Facilitykey,
     EOMONTH(ExpectedNextAppointmentDate),
@@ -34,9 +34,9 @@ appointments_summary as (
       EOMONTH(LastEncounterDate) as EndOfMonthEncounter,
       age_group.DATIMAgeGroup,
       count(distinct apt.PatientKey) NumOfPatients
-    from NDWH.dbo.FACTAppointments as apt
-    left join NDWH.dbo.DimPatient as patient on patient.PatientKey = apt.PatientKey
-    left join NDWH.dbo.DimAgeGroup as age_group on age_group.Age = DATEDIFF(YY, patient.DOB, apt.LastEncounterDate)
+    from NDWH.Fact.FACTAppointments as apt
+    left join NDWH.Dim.DimPatient as patient on patient.PatientKey = apt.PatientKey
+    left join NDWH.Dim.DimAgeGroup as age_group on age_group.Age = DATEDIFF(YY, patient.DOB, apt.LastEncounterDate)
     group by
       apt.FacilityKey,
       apt.PartnerKey,
@@ -62,9 +62,9 @@ select
   cast(getdate() as date) as LoadDate
 into REPORTING.dbo.AggregateAppointments
 from appointments_summary
-left join NDWH.dbo.DimFacility as facility on facility.FacilityKey = appointments_summary.FacilityKey
-left join NDWH.dbo.DimPartner as partner on partner.PartnerKey = appointments_summary.PartnerKey
-left join NDWH.dbo.DimAgency as agency on agency.AgencyKey = appointments_summary.AgencyKey
+left join NDWH.Dim.DimFacility as facility on facility.FacilityKey = appointments_summary.FacilityKey
+left join NDWH.Dim.DimPartner as partner on partner.PartnerKey = appointments_summary.PartnerKey
+left join NDWH.Dim.DimAgency as agency on agency.AgencyKey = appointments_summary.AgencyKey
 left join Bookings AS Bookings on Bookings.EndOfMonthBookings = appointments_summary.EndOfMonthEncounter
   and Bookings.FacilityKey = appointments_summary.FacilityKey
   and Bookings.PartnerKey = appointments_summary.PartnerKey

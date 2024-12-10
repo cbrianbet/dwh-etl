@@ -19,13 +19,13 @@ SELECT DISTINCT
 	sum(case when TestResultsMonth3 is null then 1 else 0 end) nottested,
     CAST(GETDATE() AS DATE) AS LoadDate 
 INTO REPORTING.dbo.AggregatePrepTestingAt3MonthRefill
-FROM NDWH.dbo.FactPrepRefills prep
-LEFT JOIN NDWH.dbo.DimFacility f on f.FacilityKey = prep.FacilityKey
-LEFT JOIN NDWH.dbo.DimAgency a on a.AgencyKey = prep.AgencyKey
-LEFT JOIN NDWH.dbo.DimPatient pat on pat.PatientKey = prep.PatientKey
-LEFT join NDWH.dbo.DimAgeGroup age on age.AgeGroupKey=prep.AgeGroupKey
-LEFT JOIN NDWH.dbo.DimPartner p on p.PartnerKey = prep.PartnerKey
-LEFT JOIN NDWH.dbo.DimDate test ON test.DateKey = DateDispenseMonth3 
+FROM NDWH.Fact.FactPrepRefills prep
+LEFT JOIN NDWH.Dim.DimFacility f on f.FacilityKey = prep.FacilityKey
+LEFT JOIN NDWH.Dim.DimAgency a on a.AgencyKey = prep.AgencyKey
+LEFT JOIN NDWH.Dim.DimPatient pat on pat.PatientKey = prep.PatientKey
+LEFT join NDWH.Dim.DimAgeGroup age on age.AgeGroupKey=prep.AgeGroupKey
+LEFT JOIN NDWH.Dim.DimPartner p on p.PartnerKey = prep.PartnerKey
+LEFT JOIN NDWH.Dim.DimDate test ON test.DateKey = DateDispenseMonth3 
 GROUP BY  
     MFLCode,		
 	f.FacilityName,
