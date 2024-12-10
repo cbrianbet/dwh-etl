@@ -1,8 +1,8 @@
 
-IF OBJECT_ID(N'[NDWH].[dbo].[FactARTBaselines]', N'U') IS NOT NULL 
-	DROP TABLE [NDWH].[dbo].[FactARTBaselines];
+IF OBJECT_ID(N'[NDWH].[Fact].[FactARTBaselines]', N'U') IS NOT NULL 
+	DROP TABLE [NDWH].[Fact].[FactARTBaselines];
 
-ALTER TABLE ODS.dbo.All_EMRSites  ALTER COLUMN SDP_Agency nvarchar(4000) ;
+ALTER TABLE ODS.Care.All_EMRSites  ALTER COLUMN SDP_Agency nvarchar(4000) ;
 
 BEGIN	
 with MFL_partner_agency_combination as (
@@ -10,7 +10,7 @@ with MFL_partner_agency_combination as (
 		distinct MFL_Code,
 		SDP,
 	    SDP_Agency as Agency 
-	from ODS.dbo.All_EMRSites 
+	from ODS.Care.All_EMRSites 
 )
 select 
 	Factkey = IDENTITY(INT, 1, 1),
@@ -21,19 +21,19 @@ select
     age_group.AgeGroupKey as AgeATARTStart,
     WHOStageAtART,
 	cast(getdate() as date) as LoadDate
-into NDWH.dbo.FactARTBaselines
-from ODS.dbo.intermediate_ARTBaselines art
-left join NDWH.dbo.DimPatient as patient on art.PatientPKHash = patient.PatientPKHash 
+into NDWH.[Fact].FactARTBaselines
+from ODS.[intermediate].intermediate_ARTBaselines art
+left join NDWH.Dim.DimPatient as patient on art.PatientPKHash = patient.PatientPKHash 
     and art.SiteCode = patient.SiteCode
-left join NDWH.dbo.DimFacility as facility on facility.MFLCode = art.SiteCode
+left join NDWH.Dim.DimFacility as facility on facility.MFLCode = art.SiteCode
 left join MFL_partner_agency_combination on MFL_partner_agency_combination.MFL_Code = art.SiteCode
-left join NDWH.dbo.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
-left join NDWH.dbo.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
-left join NDWH.dbo.DimAgeGroup as age_group on age_group.Age = art.AgeATARTStart
+left join NDWH.Dim.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
+left join NDWH.Dim.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
+left join NDWH.Dim.DimAgeGroup as age_group on age_group.Age = art.AgeATARTStart
 
 
 
-alter table NDWH.dbo.FactARTBaselines add primary key(FactKey);
+alter table NDWH.[Fact].FactARTBaselines add primary key(FactKey);
 END
 
 

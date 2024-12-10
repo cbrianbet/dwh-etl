@@ -1,12 +1,12 @@
-IF OBJECT_ID(N'[NDWH].[dbo].FactTxCurrConcordance', N'U') IS NOT NULL 		
-	drop table [NDWH].[dbo].FactTxCurrConcordance
+IF OBJECT_ID(N'[NDWH].[Fact].FactTxCurrConcordance', N'U') IS NOT NULL 		
+	drop table [NDWH].[Fact].FactTxCurrConcordance
 GO
 
 WITH NDW_CurTx AS (
                 SELECT
                      SiteCode,
                    Count(*) AS CurTx_total
-                FROM NDWH.dbo.DimPatient as Patient
+                FROM NDWH.Dim.DimPatient as Patient
                 WHERE isTXcurr =1
                 group by SiteCode
             
@@ -17,7 +17,7 @@ WITH NDW_CurTx AS (
                    DateRecieved as DateUploaded,
                     [SiteCode],
                     ROW_NUMBER()OVER(Partition by Sitecode Order by DateRecieved Desc) as Num
-                FROM ods.dbo.CT_FacilityManifest m
+                FROM ods.Care.CT_FacilityManifest m
                 
             ),
             Upload As (
@@ -35,7 +35,7 @@ WITH NDW_CurTx AS (
                     SDP as PartnerName,
                     SDP_Agency as Agency,
                     EMR
-                from ODS.dbo.All_EMRSites
+                from ODS.Care.All_EMRSites
             ),
             EMR As (
                 SELECT
@@ -45,7 +45,7 @@ WITH NDW_CurTx AS (
                     ,[value]
                     ,statusDate
                     ,indicatorDate
-                FROM ODS.dbo.livesync_Indicator
+                FROM ODS.Care.livesync_Indicator
                 where stage like '%EMR' and name like '%TX_CURR' and indicatorDate= EOMONTH(DATEADD(mm,-1,GETDATE()))
             ),
             DHIS2_CurTx AS (
@@ -55,7 +55,7 @@ WITH NDW_CurTx AS (
                     [County],
                     [CurrentOnART_Total],
                     ReportMonth_Year
-                FROM [ODS].[dbo].[CT_DHIS2]
+                FROM [ODS].Care.[CT_DHIS2]
                 WHERE ReportMonth_Year =CONVERT(VARCHAR(6), DATEADD(MONTH, -1, GETDATE()), 112) and ISNUMERIC(SiteCode) >0
             ),
             LatestEMR AS (
@@ -76,7 +76,7 @@ WITH NDW_CurTx AS (
                     Name,
                     Start,
                     PatientCount
-                from ODS.dbo.CT_FacilityManifest
+                from ODS.Care.CT_FacilityManifest
                 where cast  (DateRecieved as date)> DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0) --First day of previous month
                 and cast (DateRecieved as date) <= DATEADD(MONTH, DATEDIFF(MONTH, -1, GETDATE())-1, -1) --Last Day of previous month
             ),
@@ -96,8 +96,8 @@ WITH NDW_CurTx AS (
                 Fac.MFL_Code,
                 fac.Facility_Name,
                 Count (*) As Received
-            FROM [ODS].[dbo].[CT_Patient](NoLock) Patient
-            INNER JOIN [ODS].[dbo].[all_EMRSites](NoLock) Fac ON Patient.[SiteCode] = Fac.MFL_Code AND Patient.Voided=0 and Patient.SiteCode>0
+            FROM [ODS].[Care].[CT_Patient](NoLock) Patient
+            INNER JOIN [ODS].[Care].[all_EMRSites](NoLock) Fac ON Patient.[SiteCode] = Fac.MFL_Code AND Patient.Voided=0 and Patient.SiteCode>0
             group by
                 Fac.MFL_Code,
                 fac.Facility_Name
@@ -108,7 +108,7 @@ WITH NDW_CurTx AS (
                     Facility_Name,
                     SDP as PartnerName,
                     SDP_Agency as AgencyName
-                from ODS.dbo.all_EMRSites
+                from ODS.Care.all_EMRSites
             ),
             Combined AS (
                 Select distinct
@@ -139,13 +139,13 @@ WITH NDW_CurTx AS (
                 Sitecode,
                  DwapiVersion,
                  Docket
-                        From ODS.dbo.CT_FacilityManifestCargo 
+                        From ODS.Care.CT_FacilityManifestCargo 
             ),
             SiteAbstraction as (
                 select 
                     distinct SiteCode, 
                     SiteAbstractionDate 
-                from ODS.dbo.Intermediate_ARTOutcomes
+                from ODS.[Intermediate].Intermediate_ARTOutcomes
             ),
             Summary As (Select
                 coalesce (NDW_CurTx.SiteCode, null ) As MFLCode,
@@ -195,13 +195,13 @@ Select
             Percent_variance_KHIS_DWH as Proportion_variance_KHIS_DWH ,
             Percent_variance_KHIS_EMR as Proportion_variance_KHIS_EMR,
             DwapiVersion
-            into [NDWH].[dbo].FactTxCurrConcordance
+            into [NDWH].[Fact].FactTxCurrConcordance
 from Summary
-left join NDWH.dbo.DimFacility as facility on facility.MFLCode = Summary.MFLCode
+left join NDWH.Dim.DimFacility as facility on facility.MFLCode = Summary.MFLCode
 left join Facilityinfo on Facilityinfo.MFL_Code=Summary.MFLCode
-left join NDWH.dbo.DimPartner as partner on partner.PartnerName = Facilityinfo.PartnerName
-left join NDWH.dbo.DimAgency as agency on agency.AgencyName = Facilityinfo.Agency
-left join NDWH.dbo.DimDate as date_abstraction on date_abstraction.Date = Summary.SiteAbstractionDate
+left join NDWH.Dim.DimPartner as partner on partner.PartnerName = Facilityinfo.PartnerName
+left join NDWH.Dim.DimAgency as agency on agency.AgencyName = Facilityinfo.Agency
+left join NDWH.Dim.DimDate as date_abstraction on date_abstraction.Date = Summary.SiteAbstractionDate
 
 
-alter table NDWH.dbo.FactTxCurrConcordance add primary key(FactKey);
+alter table NDWH.[Fact].FactTxCurrConcordance add primary key(FactKey);
