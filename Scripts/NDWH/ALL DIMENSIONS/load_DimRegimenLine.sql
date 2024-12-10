@@ -1,13 +1,13 @@
 
-MERGE [NDWH].[dbo].[DimRegimenLine] AS a
+MERGE [NDWH].[Dim].[DimRegimenLine] AS a
 		USING(	SELECT DISTINCT StartRegimenLine as RegimenLine 
-				FROM ODS.dbo.CT_ARTPatients 
+				FROM ODS.Care.CT_ARTPatients 
 				WHERE 	StartRegimenLine IS NOT NULL
 						AND StartRegimenLine <>''
 				UNION 
 				SELECT 
 					DISTINCT LTRIM(RTRIM(LastRegimenLine)) AS RegimenLine 
-				FROM ODS.dbo.CT_ARTPatients
+				FROM ODS.Care.CT_ARTPatients
 				WHERE LastRegimenLine IS NOT NULL AND LastRegimenLine<>''
 				) AS b 
 						ON(
@@ -30,7 +30,7 @@ UPDATE source_regimen_line
 							WHEN RegimenLine IN ('Other') THEN 'Other'
 							ELSE 'Unknown'
 					  END
-FROM [NDWH].[dbo].[DimRegimenLine] source_regimen_line
+FROM [NDWH].[Dim].[DimRegimenLine] source_regimen_line
 
 
 						 

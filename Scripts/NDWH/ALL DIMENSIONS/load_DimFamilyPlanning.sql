@@ -1,6 +1,6 @@
-MERGE [NDWH].[dbo].[DimFamilyPlanning] AS a
+MERGE [NDWH].[Dim].[DimFamilyPlanning] AS a
 	USING	(	SELECT DISTINCT FamilyPlanningMethod AS FamilyPlanning
-				FROM ODS.dbo.CT_PatientVisits
+				FROM ODS.Care.CT_PatientVisits
 				WHERE FamilyPlanningMethod <> 'NULL' AND FamilyPlanningMethod <>''
 			) AS b 
 						ON(

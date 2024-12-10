@@ -1,7 +1,7 @@
 
-MERGE [NDWH].[dbo].[DimDifferentiatedCare] AS a
+MERGE [NDWH].[Dim].[DimDifferentiatedCare] AS a
 		USING	(	SELECT DISTINCT DifferentiatedCare as DifferentiatedCare
-					FROM ODS.dbo.CT_PatientVisits
+					FROM ODS.Care.CT_PatientVisits
 					WHERE DifferentiatedCare <> 'NULL' AND DifferentiatedCare <>''
 				) AS b 
 						ON(

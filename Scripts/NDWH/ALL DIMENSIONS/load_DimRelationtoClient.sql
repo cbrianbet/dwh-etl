@@ -1,7 +1,7 @@
 
-MERGE [NDWH].[dbo].[DimRelationshipWithPatient] AS a
+MERGE [NDWH].[Dim].[DimRelationshipWithPatient] AS a
 		USING	(	SELECT DISTINCT RelationshipWithPatient
-					FROM ODS.dbo.CT_ContactListing 
+					FROM ODS.Care.CT_ContactListing 
 				) AS b 
 						ON(
 							a.RelationshipWithPatient = b.RelationshipWithPatient
