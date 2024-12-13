@@ -1,74 +1,74 @@
-update ODS.dbo.Intermediate_ARTOutcomes 
+update ODS.[Intermediate].Intermediate_ARTOutcomes 
 	set PatientPKHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK  as nvarchar(36))), 2),
 		PatientIDHash = convert(nvarchar(100), hashbytes('SHA2_256', cast(PatientID  as nvarchar(100))), 2);
 
-update ODS.dbo.Intermediate_BaseLineViralLoads 
+update ODS.[Intermediate].Intermediate_BaseLineViralLoads 
 	set PatientPKHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK  as nvarchar(36))), 2),
 		PatientIDHash = convert(nvarchar(100), hashbytes('SHA2_256', cast(PatientID  as nvarchar(100))), 2);
 
-update ODS.dbo.Intermediate_EncounterHTSTests 
+update ODS.[Intermediate].Intermediate_EncounterHTSTests 
 	set PatientPKHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK  as nvarchar(36))), 2);
 
-update ODS.dbo.Intermediate_LastestPrepAssessments 
+update ODS.[Intermediate].Intermediate_LastestPrepAssessments 
 	set PatientPKHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK  as nvarchar(36))), 2);
        
-update ODS.dbo.Intermediate_LastestWeightHeight 
+update ODS.[Intermediate].Intermediate_LastestWeightHeight 
 	set PatientPKHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK  as nvarchar(36))), 2),
 		PatientIDHash = convert(nvarchar(100), hashbytes('SHA2_256', cast(PatientID  as nvarchar(100))), 2);;
 
-update ODS.dbo.Intermediate_LastOTZVisit 
+update ODS.[Intermediate].Intermediate_LastOTZVisit 
 	set PatientPKHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK  as nvarchar(36))), 2),
 		PatientIDHash = convert(nvarchar(100), hashbytes('SHA2_256', cast(PatientID  as nvarchar(100))), 2);
 
-update ODS.dbo.Intermediate_LastOVCVisit 
+update ODS.[Intermediate].Intermediate_LastOVCVisit 
 	set PatientPKHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK  as nvarchar(36))), 2),
 		PatientIDHash = convert(nvarchar(100), hashbytes('SHA2_256', cast(PatientID  as nvarchar(100))), 2);
 
-update ODS.dbo.Intermediate_LastPatientEncounter 
+update ODS.[Intermediate].Intermediate_LastPatientEncounter 
 	set PatientPKHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK  as nvarchar(36))), 2),
 		PatientIDHash = convert(nvarchar(100), hashbytes('SHA2_256', cast(PatientID  as nvarchar(100))), 2);
 
-update ODS.dbo.Intermediate_LastPatientEncounterAsAt 
+update ODS.[Intermediate].Intermediate_LastPatientEncounterAsAt 
 	set PatientPKHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK  as nvarchar(36))), 2),
 		PatientIDHash = convert(nvarchar(100), hashbytes('SHA2_256', cast(PatientID  as nvarchar(100))), 2);
 
-update ODS.dbo.Intermediate_LastPharmacyDispenseDate 
+update ODS.[Intermediate].Intermediate_LastPharmacyDispenseDate 
 	set PatientPKHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK  as nvarchar(36))), 2),
 		PatientIDHash = convert(nvarchar(100), hashbytes('SHA2_256', cast(PatientID  as nvarchar(100))), 2);
 
-update ODS.dbo.Intermediate_LastVisitAsAt 
+update ODS.[Intermediate].Intermediate_LastVisitAsAt 
 	set PatientPKHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK  as nvarchar(36))), 2),
 		PatientIDHash = convert(nvarchar(100), hashbytes('SHA2_256', cast(PatientID  as nvarchar(100))), 2);
 
-update ODS.dbo.Intermediate_LastVisitDate 
+update ODS.[Intermediate].Intermediate_LastVisitDate 
 	set PatientPKHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK  as nvarchar(36))), 2),
 		PatientIDHash = convert(nvarchar(100), hashbytes('SHA2_256', cast(PatientID  as nvarchar(100))), 2);
 
-update ODS.dbo.Intermediate_LatestViralLoads 
+update ODS.[Intermediate].Intermediate_LatestViralLoads 
 	set PatientPKHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK  as nvarchar(36))), 2),
 		PatientIDHash = convert(nvarchar(100), hashbytes('SHA2_256', cast(PatientID  as nvarchar(100))), 2);
 
-update ODS.dbo.Intermediate_OrderedViralLoads 
+update ODS.[Intermediate].Intermediate_OrderedViralLoads 
 	set PatientPKHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK  as nvarchar(36))), 2),
 		PatientIDHash = convert(nvarchar(100), hashbytes('SHA2_256', cast(PatientID  as nvarchar(100))), 2);
 
-update ODS.dbo.Intermediate_PharmacyDispenseAsAtDate 
+update ODS.[Intermediate].Intermediate_PharmacyDispenseAsAtDate 
 	set PatientPKHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK  as nvarchar(36))), 2),
 		PatientIDHash = convert(nvarchar(100), hashbytes('SHA2_256', cast(PatientID  as nvarchar(100))), 2);
 
-update ODS.dbo.Intermediate_PregnancyAsATInitiation 
+update ODS.[Intermediate].Intermediate_PregnancyAsATInitiation 
 	set PatientPKHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK  as nvarchar(36))), 2),
 		PatientIDHash = convert(nvarchar(100), hashbytes('SHA2_256', cast(PatientID  as nvarchar(100))), 2);
 
-update ODS.dbo.Intermediate_PregnancyDuringART 
+update ODS.[Intermediate].Intermediate_PregnancyDuringART 
 	set PatientPKHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK  as nvarchar(36))), 2),
 		PatientIDHash = convert(nvarchar(100), hashbytes('SHA2_256', cast(PatientID  as nvarchar(100))), 2);
 
-update ODS.dbo.Intermediate_PrepLastVisit 
+update ODS.[Intermediate].Intermediate_PrepLastVisit 
 	set PatientPKHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK  as nvarchar(36))), 2);
 
-update ODS.dbo.Intermediate_ViralLoadsIntervals 
+update ODS.[Intermediate].Intermediate_ViralLoadsIntervals 
 	set PatientPKHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK  as nvarchar(36))), 2)
 
-update ODS.dbo.intermediate_LatestObs 
+update ODS.[Intermediate].intermediate_LatestObs 
 	set PatientPKHash = convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK  as nvarchar(36))), 2);
