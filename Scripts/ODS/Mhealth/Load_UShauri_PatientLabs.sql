@@ -2,7 +2,7 @@
 -----truncate table[ODS].[dbo].[Mhealth_mLab_PatientLab]
 BEGIN
 
-  MERGE  [ODS].[dbo].[Mhealth_mLab_PatientLab] AS a
+  MERGE  [ODS].[Mhealth].[Mhealth_mLab_PatientLab] AS a
   USING (
     SELECT DISTINCT [PatientPK]
 					,[PatientPKHash]

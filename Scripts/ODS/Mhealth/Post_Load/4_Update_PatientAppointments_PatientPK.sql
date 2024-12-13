@@ -1,13 +1,13 @@
 UPDATE a
     SET a.PatientPK = null,a.PatientPKHash =null
-FROM [ODS].[dbo].[Mhealth_Ushauri_PatientAppointments]  a;
+FROM [ODS].[Mhealth].[Mhealth_Ushauri_PatientAppointments]  a;
 
 /* Update of the PatientPK from the C&T patients.This are for the patients who are in ushauri and have been
 registered in the EMR. Indentified using the patientCCCNumber */
 UPDATE a
     SET a.PatientPK = p.PatientPK
-FROM [ODS].[dbo].[Mhealth_Ushauri_PatientAppointments] a
-    JOIN [ODS].[dbo].[CT_Patient] p
+FROM [ODS].[Mhealth].[Mhealth_Ushauri_PatientAppointments] a
+    JOIN [ODS].[Care].[CT_Patient] p
 ON  a.sitecode = p.sitecode AND a.patientID = p.patientID;
 
 
