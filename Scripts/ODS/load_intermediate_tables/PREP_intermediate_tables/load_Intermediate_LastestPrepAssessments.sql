@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[ODS].[dbo].[Intermediate_LastestPrepAssessments]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[dbo].[Intermediate_LastestPrepAssessments];
+IF OBJECT_ID(N'[ODS].[Intermediate].[Intermediate_LastestPrepAssessments]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[Intermediate].[Intermediate_LastestPrepAssessments];
 BEGIN
 
     with source_data as (
@@ -31,12 +31,12 @@ BEGIN
             VisitDate As AssessmentVisitDate,
             case 
                 when VisitDate is not null then 1 else 0 end as ScreenedPrep
-        from ODS.dbo.PrEP_BehaviourRisk
+        from ODS.[PrEP].PrEP_BehaviourRisk
     )
     select 
         source_data.*,cast( '' as nvarchar(100)) PatientPKHash,cast( '' as nvarchar(100)) HIVPartnerCCCnumberHash,
         cast(getdate() as date) as LoadDate
-    into ODS.dbo.Intermediate_LastestPrepAssessments
+    into ODS.[Intermediate].Intermediate_LastestPrepAssessments
     from  source_data
     where num = 1;
 
