@@ -3,7 +3,7 @@ IF Object_id(N'REPORTING.dbo.AggregateLDLDurable', N'U') IS NOT NULL
 
 WITH Pbfw_patient
      AS (SELECT DISTINCT Patientkey
-         FROM   Ndwh.Dbo.Factpbfw),
+         FROM   Ndwh.Fact.Factpbfw),
      Base_data
      AS (SELECT Art.Facilitykey,
                 Art.Partnerkey,
@@ -15,10 +15,10 @@ WITH Pbfw_patient
                 Istxcurr                  AS IsTXCurr,
                 Eligiblevl,
                 Hasvalidvl                AS HasValidVL
-         FROM   Ndwh.Dbo.Factart Art
-                LEFT JOIN Ndwh.Dbo.Factviralloads Vl
+         FROM   Ndwh.Fact.Factart Art
+                LEFT JOIN Ndwh.Fact.Factviralloads Vl
                        ON Vl.Patientkey = Art.Patientkey
-                LEFT JOIN Ndwh.Dbo.Dimpatient Pat
+                LEFT JOIN Ndwh.Dim.Dimpatient Pat
                        ON Pat.Patientkey = Vl.Patientkey
          WHERE  Istxcurr = 1
                 AND Vl.Patientkey NOT IN (SELECT Patientkey
@@ -39,20 +39,20 @@ WITH Pbfw_patient
                 Patient.Istxcurr              AS IsTXCurr,
                 Eligiblevl,
                 Pbfw_validvl                  AS HasValidVL
-         FROM   Ndwh.Dbo.Factpbfw AS Pbfw
-                LEFT JOIN Ndwh.Dbo.Factviralloads AS Vl
+         FROM   Ndwh.Fact.Factpbfw AS Pbfw
+                LEFT JOIN Ndwh.Fact.Factviralloads AS Vl
                        ON Vl.Patientkey = Pbfw.Patientkey
-                LEFT JOIN Ndwh.Dbo.Dimpatient AS Patient
+                LEFT JOIN Ndwh.Dim.Dimpatient AS Patient
                        ON Patient.Patientkey = Pbfw.Patientkey
          WHERE  Istxcurr = 1),
      Eligible_for_two_vl_tests
      AS (
         /*less than 25 years and not part of pbfw */
         SELECT Art.Patientkey
-        FROM   Ndwh.Dbo.Factart AS Art
-               LEFT JOIN Ndwh.Dbo.Dimagegroup AS Agegroup
+        FROM   Ndwh.Fact.Factart AS Art
+               LEFT JOIN Ndwh.Dim.Dimagegroup AS Agegroup
                       ON Agegroup.Agegroupkey = Art.Agegroupkey
-               LEFT JOIN Ndwh.Dbo.Dimdate AS Start_date
+               LEFT JOIN Ndwh.Dim.Dimdate AS Start_date
                       ON Start_date.Datekey = Art.Startartdatekey
         WHERE  Agegroup.Age < 25
                AND Datediff(Month, Start_date.Date, Eomonth(
@@ -64,10 +64,10 @@ WITH Pbfw_patient
         UNION
         /* 25 and above years and not part of pbfw */
         SELECT Art.Patientkey
-        FROM   Ndwh.Dbo.Factart AS Art
-               LEFT JOIN Ndwh.Dbo.Dimagegroup AS Agegroup
+        FROM   Ndwh.Fact.Factart AS Art
+               LEFT JOIN Ndwh.Dim.Dimagegroup AS Agegroup
                       ON Agegroup.Agegroupkey = Art.Agegroupkey
-               LEFT JOIN Ndwh.Dbo.Dimdate AS Start_date
+               LEFT JOIN Ndwh.Dim.Dimdate AS Start_date
                       ON Start_date.Datekey = Art.Startartdatekey
         WHERE  Agegroup.Age >= 25
                AND Datediff(Month, Start_date.Date, Eomonth(
@@ -79,10 +79,10 @@ WITH Pbfw_patient
          UNION
          /*pbfw */
          SELECT Art.Patientkey
-         FROM   Ndwh.Dbo.Factart AS Art
+         FROM   Ndwh.Fact.Factart AS Art
                 INNER JOIN Pbfw_patient AS Pbfw
                         ON Pbfw.Patientkey = Art.Patientkey
-                LEFT JOIN Ndwh.Dbo.Dimdate AS Start_date
+                LEFT JOIN Ndwh.Dim.Dimdate AS Start_date
                        ON Start_date.Datekey = Art.Startartdatekey
                           AND Datediff(Month, Start_date.Date, Eomonth(
                               Dateadd(Mm, -1, Getdate()))) >= 9),
@@ -94,16 +94,16 @@ WITH Pbfw_patient
                Vl1date.Date AS LatestVLDate1,
                Vl.Latestvl2,
                Vl2date.Date AS LatestVLDate2
-        FROM   Ndwh.Dbo.Factart AS Art
-               LEFT JOIN Ndwh.Dbo.Dimagegroup AS Agegroup
+        FROM   Ndwh.Fact.Factart AS Art
+               LEFT JOIN Ndwh.Dim.Dimagegroup AS Agegroup
                       ON Agegroup.Agegroupkey = Art.Agegroupkey
-               LEFT JOIN Ndwh.Dbo.Dimdate AS Start_date
+               LEFT JOIN Ndwh.Dim.Dimdate AS Start_date
                       ON Start_date.Datekey = Art.Startartdatekey
-               INNER JOIN Ndwh.Dbo.Factviralloads AS Vl
+               INNER JOIN Ndwh.Fact.Factviralloads AS Vl
                        ON Vl.Patientkey = Art.Patientkey
-               INNER JOIN Ndwh.Dbo.Dimdate AS Vl2date
+               INNER JOIN Ndwh.Dim.Dimdate AS Vl2date
                        ON Vl2date.Datekey = Vl.Latestvldate2key
-               INNER JOIN Ndwh.Dbo.Dimdate AS Vl1date
+               INNER JOIN Ndwh.Dim.Dimdate AS Vl1date
                        ON Vl1date.Datekey = Vl.Latestvldate1key
         WHERE  Agegroup.Age < 25
                AND datediff(month, vl1Date.Date, eomonth(dateadd(mm,-1,getdate()))) <= 6
@@ -119,16 +119,16 @@ WITH Pbfw_patient
                Vl1date.Date AS LatestVLDate1,
                Vl.Latestvl2,
                Vl2date.Date AS LatestVLDate2
-        FROM   Ndwh.Dbo.Factart AS Art
-               LEFT JOIN Ndwh.Dbo.Dimagegroup AS Agegroup
+        FROM   Ndwh.Fact.Factart AS Art
+               LEFT JOIN Ndwh.Dim.Dimagegroup AS Agegroup
                       ON Agegroup.Agegroupkey = Art.Agegroupkey
-               LEFT JOIN Ndwh.Dbo.Dimdate AS Start_date
+               LEFT JOIN Ndwh.Dim.Dimdate AS Start_date
                       ON Start_date.Datekey = Art.Startartdatekey
-               INNER JOIN Ndwh.Dbo.Factviralloads AS Vl
+               INNER JOIN Ndwh.Fact.Factviralloads AS Vl
                        ON Vl.Patientkey = Art.Patientkey
-               INNER JOIN Ndwh.Dbo.Dimdate AS Vl2date
+               INNER JOIN Ndwh.Dim.Dimdate AS Vl2date
                        ON Vl2date.Datekey = Vl.Latestvldate2key
-               INNER JOIN Ndwh.Dbo.Dimdate AS Vl1date
+               INNER JOIN Ndwh.Dim.Dimdate AS Vl1date
                        ON Vl1date.Datekey = Vl.Latestvldate1key
         WHERE  Agegroup.Age >= 25
                 AND datediff(month, vl1Date.Date, eomonth(dateadd(mm,-1,getdate()))) <= 12
@@ -143,16 +143,16 @@ WITH Pbfw_patient
                 Vl1date.Date AS LatestVLDate1,
                 Vl.Latestvl2,
                 Vl2date.Date AS LatestVLDate2
-         FROM   Ndwh.Dbo.Factart AS Art
+         FROM   Ndwh.Fact.Factart AS Art
                 INNER JOIN Pbfw_patient AS Pbfw
                         ON Pbfw.Patientkey = Art.Patientkey
-                LEFT JOIN Ndwh.Dbo.Dimdate AS Start_date
+                LEFT JOIN Ndwh.Dim.Dimdate AS Start_date
                        ON Start_date.Datekey = Art.Startartdatekey
-                INNER JOIN Ndwh.Dbo.Factviralloads AS Vl
+                INNER JOIN Ndwh.Fact.Factviralloads AS Vl
                         ON Vl.Patientkey = Art.Patientkey
-                INNER JOIN Ndwh.Dbo.Dimdate AS Vl2date
+                INNER JOIN Ndwh.Dim.Dimdate AS Vl2date
                         ON Vl2date.Datekey = Vl.Latestvldate2key
-                INNER JOIN Ndwh.Dbo.Dimdate AS Vl1date
+                INNER JOIN Ndwh.Dim.Dimdate AS Vl1date
                         ON Vl1date.Datekey = Vl.Latestvldate1key
                AND datediff(month, vl1Date.Date, eomonth(dateadd(mm,-1,getdate()))) <= 6
                AND Datediff(Month, Vl2date.Date, Vl1date.Date) <= 6
@@ -179,9 +179,9 @@ WITH Pbfw_patient
 			SELECT DISTINCT
 				pat.PatientKey,
 				otz.FacilityKey
-			FROM NDWH.dbo.FactOTZ otz
-			left join NDWH.dbo.DimAgeGroup age on age.AgeGroupKey=otz.AgeGroupKey
-			left JOIN NDWH.dbo.DimPatient pat on pat.PatientKey = otz.PatientKey
+			FROM NDWH.Fact.FactOTZ otz
+			left join NDWH.Dim.DimAgeGroup age on age.AgeGroupKey=otz.AgeGroupKey
+			left JOIN NDWH.Dim.DimPatient pat on pat.PatientKey = otz.PatientKey
 			WHERE age.Age BETWEEN 10 AND 19 AND IsTXCurr = 1
 		 )
 SELECT Mflcode,
@@ -237,17 +237,17 @@ FROM   Base_data
               ON Durable_ldl.Patientkey = Base_data.Patientkey
        LEFT JOIN OTZ_Patients
               ON OTZ_Patients.Patientkey = Base_data.Patientkey
-       LEFT JOIN Ndwh.Dbo.Dimagegroup G
+       LEFT JOIN Ndwh.Dim.Dimagegroup G
               ON G.Agegroupkey = Base_data.Agegroupkey
-       LEFT JOIN Ndwh.Dbo.Dimfacility F
+       LEFT JOIN Ndwh.Dim.Dimfacility F
               ON F.Facilitykey = Base_data.Facilitykey
-       LEFT JOIN Ndwh.Dbo.Dimagency A
+       LEFT JOIN Ndwh.Dim.Dimagency A
               ON A.Agencykey = Base_data.Agencykey
-       LEFT JOIN Ndwh.Dbo.Dimpatient Pat
+       LEFT JOIN Ndwh.Dim.Dimpatient Pat
               ON Pat.Patientkey = Base_data.Patientkey
-       LEFT JOIN Ndwh.Dbo.Dimpartner P
+       LEFT JOIN Ndwh.Dim.Dimpartner P
               ON P.Partnerkey = Base_data.Partnerkey
-       LEFT JOIN NDWH.dbo.Factpbfw pbfw on pbfw.Patientkey=Base_data.PatientKey
+       LEFT JOIN NDWH.Fact.Factpbfw pbfw on pbfw.Patientkey=Base_data.PatientKey
 GROUP  BY Mflcode,
           F.Facilityname,
           County,

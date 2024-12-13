@@ -13,11 +13,11 @@ select
     age_group.AgeGroupKey,
     patient.Gender,
     count( distinct history.PatientKey) as iit_patients
-from NDWH.dbo.FactARTHistory as history
-left join NDWH.dbo.DimARTOutcome as outcome on outcome.ARTOutcomeKey = history.ARTOutcomeKey
-left join NDWH.dbo.DimDate as date on date.DateKey = history.AsOfDateKey
-left join NDWH.dbo.DimPatient as patient on patient.PatientKey = history.PatientKey
-left join NDWH.dbo.DimAgeGroup as age_group on age_group.Age = datediff(yy, patient.DOB, date.[Date])
+from NDWH.Fact.FactARTHistory as history
+left join NDWH.Dim.DimARTOutcome as outcome on outcome.ARTOutcomeKey = history.ARTOutcomeKey
+left join NDWH.Dim.DimDate as date on date.DateKey = history.AsOfDateKey
+left join NDWH.Dim.DimPatient as patient on patient.PatientKey = history.PatientKey
+left join NDWH.Dim.DimAgeGroup as age_group on age_group.Age = datediff(yy, patient.DOB, date.[Date])
 where outcome.ARTOutcome in ('uL', 'L')
 group by 
     FacilityKey,
@@ -38,9 +38,9 @@ defaulter_tracing as (
     date.Year as AsofYearTracing,
     date.Month as AsofMonthTracing,
     count(distinct defaulter.PatientKey) as defaluter_traced_clients
-  from NDWH.dbo.FactDefaulterTracing as defaulter
-  left join NDWH.dbo.DimDate as date on date.DateKey = defaulter.VisitDateKey
-  left join NDWH.dbo.DimPatient as patient on patient.PatientKey = defaulter.PatientKey
+  from NDWH.Fact.FactDefaulterTracing as defaulter
+  left join NDWH.Dim.DimDate as date on date.DateKey = defaulter.VisitDateKey
+  left join NDWH.Dim.DimPatient as patient on patient.PatientKey = defaulter.PatientKey
   group by 
     FacilityKey,
     AgencyKey,
@@ -103,10 +103,10 @@ select
     CAST(GETDATE() AS DATE) AS LoadDate 
 into [REPORTING].[dbo].AggregateIITTracingStatus
 from enriched_dataset
-left join NDWH.dbo.DimFacility as facility on facility.FacilityKey = enriched_dataset.FacilityKey
-left join NDWH.dbo.DimPartner as partner on partner.PartnerKey = enriched_dataset.PartnerKey
-left join NDWH.dbo.DimAgency as agency on agency.AgencyKey = enriched_dataset.AgencyKey
-left join NDWH.dbo.DimAgeGroup as agegroup on agegroup.AgeGroupKey = enriched_dataset.AgeGroupKey
+left join NDWH.Dim.DimFacility as facility on facility.FacilityKey = enriched_dataset.FacilityKey
+left join NDWH.Dim.DimPartner as partner on partner.PartnerKey = enriched_dataset.PartnerKey
+left join NDWH.Dim.DimAgency as agency on agency.AgencyKey = enriched_dataset.AgencyKey
+left join NDWH.Dim.DimAgeGroup as agegroup on agegroup.AgeGroupKey = enriched_dataset.AgeGroupKey
 
 END
 

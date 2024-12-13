@@ -16,10 +16,10 @@ with ncd_indicators as (
         dyslipidemia.Date as FirstDyslipidemiaRecordedDate,
         [Mental illness],
         Dyslipidemia
-    from NDWH.dbo.FactNCD as ncd
-    left join NDWH.dbo.DimDate as hypertension on hypertension.DateKey = ncd.FirstHypertensionRecoredeDateKey
-    left join NDWH.dbo.DimDate as diabetes on diabetes.DateKey = ncd.FirstDiabetesRecordedDateKey 
-    left join NDWH.dbo.DimDate as dyslipidemia on dyslipidemia.DateKey =ncd.FirstDyslipidemiaRecordedDateKey
+    from NDWH.Fact.FactNCD as ncd
+    left join NDWH.Dim.DimDate as hypertension on hypertension.DateKey = ncd.FirstHypertensionRecoredeDateKey
+    left join NDWH.Dim.DimDate as diabetes on diabetes.DateKey = ncd.FirstDiabetesRecordedDateKey 
+    left join NDWH.Dim.DimDate as dyslipidemia on dyslipidemia.DateKey =ncd.FirstDyslipidemiaRecordedDateKey
 )
 Select distinct 
     pat.PatientIDHash,
@@ -124,21 +124,21 @@ Select distinct
     cast (AsOfDateKey as date) as EndofMonthDate,
     cast(getdate() as date) as LoadDate
 INTO [REPORTING].[dbo].[Linelist_FACTART]
-from  NDWH.dbo.FACTART As ART 
-left join NDWH.dbo.DimPatient pat on pat.PatientKey = ART.PatientKey
-left join NDWH.dbo.DimPartner partner on partner.PartnerKey = ART.PartnerKey
-left join NDWH.dbo.DimAgency agency on agency.AgencyKey = ART.AgencyKey
-left join NDWH.dbo.DimFacility fac on fac.FacilityKey = ART.FacilityKey
-left join NDWH.dbo.DimAgeGroup age on age.AgeGroupKey = ART.AgeGroupKey
-left join NDWH.dbo.DimDate startdate on startdate.DateKey = ART.StartARTDateKey
-left join NDWH.dbo.DimARTOutcome as outcome on outcome.ARTOutcomeKey=ART.ARTOutcomeKey
-left join NDWH.dbo.FactViralLoads as vl on vl.PatientKey = ART.PatientKey
-left join NDWH.dbo.FactLatestObs as obs on obs.PatientKey = ART.PatientKey
-left join NDWH.dbo.DimDifferentiatedCare as dif on dif.DifferentiatedCareKey = obs.DifferentiatedCareKey
-left join NDWH.dbo.DimDate as lastVL on lastVL.DateKey =  vl.LastVLDateKey
+from  NDWH.Fact.FACTART As ART 
+left join NDWH.Dim.DimPatient pat on pat.PatientKey = ART.PatientKey
+left join NDWH.Dim.DimPartner partner on partner.PartnerKey = ART.PartnerKey
+left join NDWH.Dim.DimAgency agency on agency.AgencyKey = ART.AgencyKey
+left join NDWH.Dim.DimFacility fac on fac.FacilityKey = ART.FacilityKey
+left join NDWH.Dim.DimAgeGroup age on age.AgeGroupKey = ART.AgeGroupKey
+left join NDWH.Dim.DimDate startdate on startdate.DateKey = ART.StartARTDateKey
+left join NDWH.Dim.DimARTOutcome as outcome on outcome.ARTOutcomeKey=ART.ARTOutcomeKey
+left join NDWH.Fact.FactViralLoads as vl on vl.PatientKey = ART.PatientKey
+left join NDWH.Fact.FactLatestObs as obs on obs.PatientKey = ART.PatientKey
+left join NDWH.Dim.DimDifferentiatedCare as dif on dif.DifferentiatedCareKey = obs.DifferentiatedCareKey
+left join NDWH.Dim.DimDate as lastVL on lastVL.DateKey =  vl.LastVLDateKey
 left join ncd_indicators as ncd on ncd.PatientKey = ART.PatientKey
-left join NDWH.dbo.FactCD4 as CD4 on CD4.PatientKey= ART.PatientKey
-left join NDWH.dbo.DimDate as end_month on end_month.DateKey = ART.AsOfDateKey;
+left join NDWH.Fact.FactCD4 as CD4 on CD4.PatientKey= ART.PatientKey
+left join NDWH.Dim.DimDate as end_month on end_month.DateKey = ART.AsOfDateKey;
 
 END
 

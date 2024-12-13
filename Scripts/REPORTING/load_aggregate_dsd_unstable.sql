@@ -41,14 +41,14 @@ FROM (
         ELSE 0 END AS BMI,
     Case when ISNumeric(ValidVLResult)=1 and cast(Replace(ValidVLResult,',','') as FLOAT) >= 200.00 then 1 else 0 end as HighVL,
     isTXCurr
-    FROM NDWH.dbo.FactLatestObs lob
-    INNER JOIN NDWH.dbo.DimAgeGroup age on age.AgeGroupKey = lob.AgeGroupKey
-    INNER JOIN NDWH.dbo.DimFacility f on f.FacilityKey = lob.FacilityKey
-    INNER JOIN NDWH.dbo.DimAgency a on a.AgencyKey = lob.AgencyKey
-    INNER JOIN NDWH.dbo.DimPatient pat on pat.PatientKey = lob.PatientKey
-    INNER JOIN NDWH.dbo.DimPartner p on p.PartnerKey = lob.PartnerKey
-    INNER JOIN NDWH.dbo.FactART art on art.PatientKey = lob.PatientKey
-    LEFT JOIN NDWH.dbo.FactViralLoads vl on vl.PatientKey = lob.PatientKey and vl.PatientKey IS NOT NULL
+    FROM NDWH.Fact.FactLatestObs lob
+    INNER JOIN NDWH.Dim.DimAgeGroup age on age.AgeGroupKey = lob.AgeGroupKey
+    INNER JOIN NDWH.Dim.DimFacility f on f.FacilityKey = lob.FacilityKey
+    INNER JOIN NDWH.Dim.DimAgency a on a.AgencyKey = lob.AgencyKey
+    INNER JOIN NDWH.Dim.DimPatient pat on pat.PatientKey = lob.PatientKey
+    INNER JOIN NDWH.Dim.DimPartner p on p.PartnerKey = lob.PartnerKey
+    INNER JOIN NDWH.Fact.FactART art on art.PatientKey = lob.PatientKey
+    LEFT JOIN NDWH.Fact.FactViralLoads vl on vl.PatientKey = lob.PatientKey and vl.PatientKey IS NOT NULL
     WHERE pat.isTXCurr = 1
 ) A
 GROUP BY MFLCode, FacilityName, County, SubCounty, PartnerName, AgencyName, Gender, AgeGroup

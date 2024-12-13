@@ -32,11 +32,11 @@ select
     HEIExitCriteria,
     HEIHIVStatus
 into REPORTING.dbo.LinelistHEI
-from NDWH.dbo.FactHEI as hei
-left join NDWH.dbo.DimFacility as facility on facility.FacilityKey = hei.FacilityKey
-left join NDWH.dbo.DimPartner as partner on partner.PartnerKey = hei.PartnerKey
-left join NDWH.dbo.DimAgency as agency on agency.AgencyKey = hei.AgencyKey
-left join NDWH.dbo.DimAgeGroup as age_group on age_group.AgeGroupKey = hei.AgeGroupKey
-left join NDWH.dbo.DimPatient as patient on patient.PatientKey = hei.PatientKey
+from NDWH.Fact.FactHEI as hei
+left join NDWH.Dim.DimFacility as facility on facility.FacilityKey = hei.FacilityKey
+left join NDWH.Dim.DimPartner as partner on partner.PartnerKey = hei.PartnerKey
+left join NDWH.Dim.DimAgency as agency on agency.AgencyKey = hei.AgencyKey
+left join NDWH.Dim.DimAgeGroup as age_group on age_group.AgeGroupKey = hei.AgeGroupKey
+left join NDWH.Dim.DimPatient as patient on patient.PatientKey = hei.PatientKey
 
 go

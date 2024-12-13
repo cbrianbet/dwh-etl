@@ -18,15 +18,15 @@ Select
    DwapiVersion
    into Reporting.dbo.Aggregate_Concordance_HTSPOS
 from
-   NDWH.dbo.FactHTSPosConcordance as htspos 
+   NDWH.Fact.FactHTSPosConcordance as htspos 
    LEFT join
-      NDWH.dbo.DimFacility fac 
+      NDWH.Dim.DimFacility fac 
       on fac.FacilityKey = htspos.FacilityKey 
    LEFT JOIN
-      NDWH.dbo.DimAgency agency 
+      NDWH.Dim.DimAgency agency 
       on agency.AgencyKey = htspos.AgencyKey 
    LEFT JOIN
-      NDWH.dbo.DimPartner pat 
+      NDWH.Dim.DimPartner pat 
       on pat.PartnerKey = htspos.PartnerKey 
 ORDER BY
    Proportion_variance_EMR_DWH DESC

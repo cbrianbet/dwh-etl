@@ -41,15 +41,15 @@ SELECT
 	cast (art.StartARTDateKey as date) as startARTDate,
     CAST(GETDATE() AS DATE) AS LoadDate 
 INTO [REPORTING].[dbo].[LineListOTZ]
-FROM NDWH.dbo.FactOTZ otz
-INNER join NDWH.dbo.DimAgeGroup age on age.AgeGroupKey=otz.AgeGroupKey
-INNER join NDWH.dbo.DimFacility f on f.FacilityKey = otz.FacilityKey
-INNER JOIN NDWH.dbo.DimAgency a on a.AgencyKey = otz.AgencyKey
-INNER JOIN NDWH.dbo.DimPatient pat on pat.PatientKey = otz.PatientKey
-INNER JOIN NDWH.dbo.DimPartner p on p.PartnerKey = otz.PartnerKey
-LEFT JOIN NDWH.dbo.FactViralLoads vl on vl.PatientKey = otz.PatientKey and vl.PatientKey IS NOT NULL
-LEFT JOIN NDWH.dbo.FACTART art on art.PatientKey = otz.PatientKey
-LEFT JOIN NDWH.dbo.DimARTOutcome as outcome on outcome.ARTOutcomeKey = art.ARTOutcomeKey
+FROM NDWH.Fact.FactOTZ otz
+INNER join NDWH.Dim.DimAgeGroup age on age.AgeGroupKey=otz.AgeGroupKey
+INNER join NDWH.Dim.DimFacility f on f.FacilityKey = otz.FacilityKey
+INNER JOIN NDWH.Dim.DimAgency a on a.AgencyKey = otz.AgencyKey
+INNER JOIN NDWH.Dim.DimPatient pat on pat.PatientKey = otz.PatientKey
+INNER JOIN NDWH.Dim.DimPartner p on p.PartnerKey = otz.PartnerKey
+LEFT JOIN NDWH.Fact.FactViralLoads vl on vl.PatientKey = otz.PatientKey and vl.PatientKey IS NOT NULL
+LEFT JOIN NDWH.Fact.FACTART art on art.PatientKey = otz.PatientKey
+LEFT JOIN NDWH.Dim.DimARTOutcome as outcome on outcome.ARTOutcomeKey = art.ARTOutcomeKey
 WHERE age.Age BETWEEN 10 AND 19 AND IsTXCurr = 1
 
 GO
