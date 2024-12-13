@@ -7,7 +7,7 @@ BEGIN
 			where [MotherBabyPairs].SiteCode =Facilities.SiteCode;
 	END
 
-	MERGE [ODS].[dbo].[MNCH_MotherBabyPairs] AS a
+	MERGE [ODS].[MNCH].[MNCH_MotherBabyPairs] AS a
 			USING(
 					SELECT distinct [PatientIDCCC],P.[PatientPk],[BabyPatientPK],[MotherPatientPK],[BabyPatientMncHeiID],[MotherPatientMncHeiID]
 						  ,P.[SiteCode],F.Name FacilityName,P.[EMR],P.[Project]
@@ -46,7 +46,7 @@ BEGIN
 								BabyPatientMncHeiID,[BabyPatientPK],
 								 ROW_NUMBER() OVER (PARTITION BY p.[PatientPk],p.[SiteCode],BabyPatientMncHeiID,[BabyPatientPK]
 								ORDER BY p.[PatientPk],p.[SiteCode],BabyPatientMncHeiID desc) Row_Num
-							   FROM [ODS].[dbo].[MNCH_MotherBabyPairs] p)
+							   FROM [ODS].[MNCH].[MNCH_MotherBabyPairs] p)
 
 					delete from cte where Row_Num>1
 END

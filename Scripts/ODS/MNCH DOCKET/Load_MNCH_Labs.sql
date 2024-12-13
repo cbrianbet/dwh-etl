@@ -1,7 +1,7 @@
 
 BEGIN
-    --truncate table [ODS].[dbo].[MNCH_Labs]
-	MERGE [ODS].[dbo].[MNCH_Labs] AS a
+    --truncate table [ODS].[MNCH].[MNCH_Labs]
+	MERGE [ODS].[MNCH].[MNCH_Labs] AS a
 			USING(
 					SELECT  distinct P.[PatientPk],P.[SiteCode],P.[Emr],P.[Project],P.[Processed],P.[QueueId],P.[Status],P.[StatusDate]
 						  ,[PatientMNCH_ID],P.[FacilityName],[SatelliteName],[VisitID],P.[OrderedbyDate],[ReportedbyDate],[TestName],[TestResult]
@@ -44,7 +44,7 @@ BEGIN
 
 						 ROW_NUMBER() OVER (PARTITION BY PatientPK,Sitecode,[OrderedbyDate] ORDER BY
 						PatientPK,Sitecode,[OrderedbyDate]) Row_Num
-						FROM  [ODS].[dbo].[MNCH_Labs](NoLock)
+						FROM  [ODS].[MNCH].[MNCH_Labs](NoLock)
 						)
 						Delete from cte 
 						Where Row_Num >1 ;
