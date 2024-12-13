@@ -1,15 +1,15 @@
 --clean TestResults2
-UPDATE ODS.dbo.HTS_TestKits
+UPDATE ODS.[HTS].HTS_TestKits
     SET TestResult2 = NULL
 WHERE TestResult2 = 'N/A'
 
 --clean TestKitName2
-UPDATE ODS.dbo.HTS_TestKits
+UPDATE ODS.[HTS].HTS_TestKits
     SET TestKitName2 = NULL
 WHERE TestKitName2 = ''
 
 --clean TestKitName1
-UPDATE ODS.dbo.HTS_TestKits
+UPDATE ODS.[HTS].HTS_TestKits
     SET TestKitName1 = NULL
 WHERE TestKitName1 = ''
 
@@ -30,11 +30,11 @@ CREATE FUNCTION dbo.Remove_SpecialCharacters( @str VARCHAR(MAX))
     END
 GO
 
-UPDATE ODS.dbo.HTS_TestKits
+UPDATE ODS.[HTS].HTS_TestKits
     SET TestKitLotNumber1 = dbo.Remove_SpecialCharacters(TestKitLotNumber1);
 
 
-UPDATE ODS.dbo.HTS_TestKits
+UPDATE ODS.[HTS].HTS_TestKits
     SET TestKitLotNumber2 = dbo.Remove_SpecialCharacters(TestKitLotNumber2);
 
 
@@ -45,7 +45,7 @@ with cleaned_up_dates as (
     select
         TestKitExpiry1,
         try_cast(TestKitExpiry1 as datetime) as TestKitExpiryCleanedVersion1
-    from ODS.dbo.HTS_TestKits
+    from ODS.[HTS].HTS_TestKits
 ),
 dd_mm_yyyy_data as (
     select 
@@ -61,9 +61,9 @@ combined_dates as (
     union
     select TestKitExpiry1, TestKitExpiryCleanedVersion2 as TestKitExpiry1Cleaned from dd_mm_yyyy_data
 )
-update ODS.dbo.HTS_TestKits
+update ODS.[HTS].HTS_TestKits
     set TestKitExpiry1 =  combined_dates.TestKitExpiry1Cleaned
-from ODS.dbo.HTS_TestKits as kits
+from ODS.[HTS].HTS_TestKits as kits
 inner join combined_dates on combined_dates.TestKitExpiry1 = kits.TestKitExpiry1
 
 
@@ -73,7 +73,7 @@ inner join combined_dates on combined_dates.TestKitExpiry1 = kits.TestKitExpiry1
     select
         TestKitExpiry2,
         try_cast(TestKitExpiry2 as datetime) as TestKitExpiryCleanedVersion1
-    from ODS.dbo.HTS_TestKits
+    from ODS.[HTS].HTS_TestKits
 ),
 dd_mm_yyyy_data as (
     select 
@@ -89,7 +89,7 @@ combined_dates as (
     union
     select TestKitExpiry2, TestKitExpiryCleanedVersion2 as TestKitExpiry2Cleaned from dd_mm_yyyy_data
 )
-update ODS.dbo.HTS_TestKits
+update ODS.[HTS].HTS_TestKits
    set TestKitExpiry2 =  combined_dates.TestKitExpiry2Cleaned
-from ODS.dbo.HTS_TestKits as kits
+from ODS.[HTS].HTS_TestKits as kits
 inner join combined_dates on combined_dates.TestKitExpiry2 = kits.TestKitExpiry2

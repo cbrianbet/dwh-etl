@@ -1,15 +1,15 @@
-IF OBJECT_ID(N'[ODS].[DBO].[lkp_exit_reason]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[DBO].[lkp_exit_reason];
+IF OBJECT_ID(N'[ODS].[lkp].[lkp_exit_reason]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[lkp].[lkp_exit_reason];
 BEGIN
 		-- create table statement
-		CREATE TABLE [ODS].[DBO].[lkp_exit_reason](
+		CREATE TABLE [ODS].[lkp].[lkp_exit_reason](
 			source_name VARCHAR(50) NOT NULL PRIMARY KEY WITH (IGNORE_DUP_KEY = ON),
 			target_name VARCHAR(50) NOT NULL,
 			date_created DATE NOT NULL
 		)
 
 		-- insert table
-		INSERT INTO [ODS].[DBO].[lkp_exit_reason] (
+		INSERT INTO [ODS].[lkp].[lkp_exit_reason] (
 				   source_name,
 				   target_name,
 				   date_created

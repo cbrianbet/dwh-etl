@@ -1,8 +1,8 @@
- IF OBJECT_ID(N'[ODS].[DBO].[lkp_pwp]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[DBO].[lkp_pwp];
+ IF OBJECT_ID(N'[ODS].[lkp].[lkp_pwp]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[lkp].[lkp_pwp];
 BEGIN
 		 --create table statement
-		CREATE TABLE [ODS].[DBO].[lkp_pwp](
+		CREATE TABLE [ODS].[lkp].[lkp_pwp](
 			source_name VARCHAR(200) NOT NULL PRIMARY KEY WITH (IGNORE_DUP_KEY = ON),
 			target_name VARCHAR(200) NOT NULL,
 			date_created DATE NOT NULL
@@ -11,7 +11,7 @@ BEGIN
 
 
 		-- insert to table statement
-		INSERT INTO [ODS].[DBO].[lkp_pwp](
+		INSERT INTO [ODS].[lkp].[lkp_pwp](
 				   source_name,
 				   target_name,
 				   date_created

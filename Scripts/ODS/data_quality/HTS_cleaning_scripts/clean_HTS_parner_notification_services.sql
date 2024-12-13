@@ -1,10 +1,10 @@
 -- clean FacilityLinkedTo
-UPDATE ODS.dbo.HTS_PartnerNotificationServices
+UPDATE ODS.[HTS].HTS_PartnerNotificationServices
     SET FacilityLinkedTo = NULL
 WHERE FacilityLinkedTo = ''
 
 --clean PnsApproach
-UPDATE ODS.dbo.HTS_PartnerNotificationServices
+UPDATE ODS.[HTS].HTS_PartnerNotificationServices
     SET PnsApproach = CASE PnsApproach
                         WHEN 'Pr: Provider Referral' THEN 'Provider Referral'
                         WHEN 'D: Dual Referral' THEN 'Provider Referral'
@@ -14,7 +14,7 @@ WHERE PnsApproach IN ('Pr: Provider Referral', 'D: Dual Referral', 'Cr: Passive 
 
 
 --clean LinkedToCare 
-UPDATE ODS.dbo.HTS_PartnerNotificationServices
+UPDATE ODS.[HTS].HTS_PartnerNotificationServices
 SET LinkedToCare = CASE LinkedToCare
                         WHEN 'Y'  THEN 'Yes'
                         WHEN 'N' THEN 'No'
@@ -22,22 +22,22 @@ SET LinkedToCare = CASE LinkedToCare
 WHERE LinkedToCare IN ('Y', 'N')
 
 -- clean PnsConsent
-UPDATE ODS.dbo.HTS_PartnerNotificationServices
+UPDATE ODS.[HTS].HTS_PartnerNotificationServices
     SET PnsConsent = 'No'
 WHERE PnsConsent = '0'
 
 -- Clean ScreenedForIpv
-UPDATE ODS.dbo.HTS_PartnerNotificationServices
+UPDATE ODS.[HTS].HTS_PartnerNotificationServices
     SET ScreenedForIpv = NULL
 WHERE ScreenedForIpv = 'NA'
 
 --Clean CccNumber
-UPDATE ODS.dbo.HTS_PartnerNotificationServices
+UPDATE ODS.[HTS].HTS_PartnerNotificationServices
     SET CccNumber = NULL
 WHERE CccNumber = ''
 
 -- Clean Age
-UPDATE ODS.dbo.HTS_PartnerNotificationServices
+UPDATE ODS.[HTS].HTS_PartnerNotificationServices
     SET Age = NULL
 WHERE Age < 0 and Age > 100
 

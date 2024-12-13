@@ -1,14 +1,14 @@
-IF OBJECT_ID(N'[ODS].[DBO].[lkp_MaritalStatus]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[DBO].[lkp_MaritalStatus];
+IF OBJECT_ID(N'[ODS].[lkp].[lkp_MaritalStatus]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[lkp].[lkp_MaritalStatus];
 BEGIN
-		 CREATE TABLE [ODS].[DBO].[lkp_MaritalStatus](
+		 CREATE TABLE [ODS].[lkp].[lkp_MaritalStatus](
 			[ident] [int] IDENTITY(1,1) NOT NULL,
 			[Source_MaritalStatus] [varchar](150) NULL,
 			[Target_MaritalStatus] [varchar](150) NULL,
 			[DateImported] [date] NULL DEFAULT (getdate())
 			)
 
-		INSERT INTO [ODS].[DBO].[lkp_MaritalStatus](
+		INSERT INTO [ODS].[lkp].[lkp_MaritalStatus](
 				   Source_MaritalStatus,
 				   Target_MaritalStatus,
 				   DateImported
