@@ -22,11 +22,11 @@ WITH Src_PatientConcat AS
 	SELECT  SiteCode
 		,PatientPK
 		,CONCAT(SiteCode,PatientPK) AS ODSPatient
-	FROM [ODS].[dbo].[Mnch_Patient]
-) UPDATE [ODS].[dbo].[mnch_Patient]
+	FROM [ODS].[MNCH].[Mnch_Patient]
+) UPDATE [ODS].[MNCH].[mnch_Patient]
 
 SET VOIDED = 1
-FROM [ODS].[dbo].[mnch_Patient] a
+FROM [ODS].[MNCH].[mnch_Patient] a
 INNER JOIN ODS_PatientConcat b
 ON a.SiteCode = b.SiteCode AND a.PatientPK = b.PatientPK
 WHERE b.ODSPatient NOT IN ( SELECT PatientConcatColumn FROM Src_PatientConcat); 

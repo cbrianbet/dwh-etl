@@ -1,7 +1,7 @@
 
 BEGIN
-  --truncate table [ODS].[dbo].[HTS_ClientTests]
-		MERGE [ODS].[dbo].[HTS_ClientTests] AS a
+  --truncate table [ODS].[HTS].[HTS_ClientTests]
+		MERGE [ODS].[HTS].[HTS_ClientTests] AS a
 			USING(SELECT distinct
 			             -- a.ID
 						  a.[FacilityName]
@@ -40,16 +40,16 @@ BEGIN
 						  ,[ReferredServices]
 							,a.RecordUUID  
 					 FROM [HTSCentral].[dbo].[HtsClientTests](NoLock) a					  
-					 LEFT JOIN ods.dbo.lkp_patient_source mm
+					 LEFT JOIN ods.lkp.lkp_patient_source mm
 						on a.entryPoint =mm.source_name
-					 LEFT JOIN ods.dbo.lkp_htsStrategy mp
+					 LEFT JOIN ods.lkp.lkp_htsStrategy mp
 						on a.TestStrategy = mp.Source_htsStrategy
 					 INNER JOIN ( select  ct.sitecode,ct.patientPK,ct.FinalTestResult,ct.TestDate,ct.EncounterId
 										  ,max(ID) As MaxID,max(cast(DateExtracted as date))MaxDateExtracted  
 									from [HTSCentral].[dbo].[HtsClientTests] ct								  
-									LEFT JOIN ods.dbo.lkp_patient_source mn
+									LEFT JOIN ods.lkp.lkp_patient_source mn
 										on ct.entryPoint = mn.source_name
-									LEFT JOIN ods.dbo.lkp_htsStrategy mq
+									LEFT JOIN ods.lkp.lkp_htsStrategy mq
 										on ct.TestStrategy = mq.Source_htsStrategy
 									GROUP BY ct.sitecode,ct.patientPK,ct.FinalTestResult,ct.TestDate
 											,ct.EncounterId
