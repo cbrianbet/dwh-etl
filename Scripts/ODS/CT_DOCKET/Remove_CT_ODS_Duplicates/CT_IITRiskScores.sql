@@ -5,7 +5,7 @@ with cte AS (
 
 						 ROW_NUMBER() OVER (PARTITION BY PatientPK,Sitecode ORDER BY
 						PatientPK,Sitecode) Row_Num
-						FROM  [ODS].[dbo].[CT_IITRiskScores](NoLock)
+						FROM  [ODS].[Care].[CT_IITRiskScores](NoLock)
 						)
 						delete from cte 
 						Where Row_Num >1 ;
