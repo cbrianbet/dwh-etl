@@ -146,4 +146,9 @@ UPDATE a
     from [ODS].[Care].[CT_Patient] a
 WHERE Nupi='';
 
+update a
+set NUPI = null
+from ODS.Care.CT_Patient a
+where NUPI like '%Client not found.%'
+
 
