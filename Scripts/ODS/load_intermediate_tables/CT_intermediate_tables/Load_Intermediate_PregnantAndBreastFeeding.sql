@@ -2,7 +2,7 @@
 Created By: Dennis Mugo
 Revised By: Ann Kiwara and Nobert Mumo
 */
-TRUNCATE TABLE ODS.dbo.Intermediate_PregnantAndBreastFeeding;
+TRUNCATE TABLE [ODS].[Intermediate].[Intermediate_PregnantAndBreastFeeding];
 
 DECLARE @start_date DATE;
 
@@ -57,7 +57,7 @@ WITH ReportedAsPregnant As (
 						,@as_of_date As AsOfDate
 						,VisitDate					
 						,0 IsPBFW
-						from ods.dbo.CT_PatientVisits 
+						from [ODS].[Care].[CT_PatientVisits] 
 						where  Pregnant='Yes' and cast(LMP as date) <>'1900-01-01' and LMP is not null and voided=0 and LMP <=@as_of_date 
 						and VisitDate <= @as_of_date and SiteCode is not null
 						
@@ -182,7 +182,7 @@ ReportedAsBreastFeeding As (
 						,@as_of_date As AsOfDate
 						,VisitDate	As BreastFeedingRelatedVisitDate			
 						,0 IsPBFW
-						from ods.dbo.CT_PatientVisits 
+						from [ODS].[Care].[CT_PatientVisits] 
 						where  Breastfeeding='Yes'  and voided=0 and VisitDate <= @as_of_date
 						and SiteCode is not null
 
@@ -231,9 +231,9 @@ IsBreastFeedingFromHeiDOB As( ---breastfeeding confirmed from MNCH
 						,BreastFeedingRelatedVisitDate					
 						,0 IsPBFW 
 				From MaxOrderedBreastFeedingAsOfDate                           
-				left join ods.dbo.MNCH_MotherBabyPairs pairs
+				left join [ODS].[MNCH].[MNCH_MotherBabyPairs] pairs
 				on MaxOrderedBreastFeedingAsOfDate.SiteCode = pairs.SiteCode  and MaxOrderedBreastFeedingAsOfDate.PatientPK = pairs.MotherPatientPK
-				left join ods.dbo.MNCH_Patient  Patient
+				left join [ODS].[MNCH].[MNCH_Patient]  Patient
 				on pairs.SiteCode = Patient.SiteCode 
 							and pairs.BabyPatientPK = Patient.PatientPK
 				WHERE Datediff(month,Patient.DOB,@as_of_date) <=24 ---and pairs.PatientPK = 12706 and pairs.SiteCode = 11259	
@@ -295,12 +295,16 @@ Step 9 combine breastfeeders and and pregnancies
 */
 PBFW As(
   
-	   select MaxOrderedCombineBreastFeeding.SiteCode
-			,MaxOrderedCombineBreastFeeding.PatientPK
-			,MaxOrderedCombineBreastFeeding.PatientPKHash
-			,IsPregnant  = case when PregnantAsOfDate.Pregnant ='yes' then 1 else 0 end
+	   select 
+			coalesce(MaxOrderedCombineBreastFeeding.SiteCode, PregnantAsOfDate.SiteCode) as SiteCode
+			,coalesce(MaxOrderedCombineBreastFeeding.PatientPK, PregnantAsOfDate.PatientPK) as PatientPK
+			,coalesce(MaxOrderedCombineBreastFeeding.PatientPKHash, PregnantAsOfDate.PatientPK) as PatientPKHash
+			,IsPregnant  = case 
+								when PregnantAsOfDate.Pregnant ='yes' then 1 
+								else 0 
+							end
 			,IsBreastFeedingAsOfDate
-			,MaxOrderedCombineBreastFeeding.AsOfDate
+			,coalesce(MaxOrderedCombineBreastFeeding.AsOfDate, PregnantAsOfDate.AsOfDate) as AsOfDate
 			,BreastFeedingRelatedVisitDate
 			,PregnantAsOfDate.PregnancyRelatedVisitDate
 			,IsPBFW	 = 1  
@@ -315,7 +319,7 @@ PBFW As(
 --/*
 --Step 10 : Insert into [ODS].[dbo].[Intermediate_PregnantAndBreastFeeding] for reuse
 --*/
-insert into [ODS].[dbo].[Intermediate_PregnantAndBreastFeeding]([SiteCode],[PatientPK],PatientPKHash,[IsPregnant],[IsBreastFeeding],[AsOfDate],BreastFeedingRelatedVisitDate,PregnancyRelatedVisitDate,[IsPBFW])
+insert into [ODS].[Intermediate].[Intermediate_PregnantAndBreastFeeding]([SiteCode],[PatientPK],PatientPKHash,[IsPregnant],[IsBreastFeeding],[AsOfDate],BreastFeedingRelatedVisitDate,PregnancyRelatedVisitDate,[IsPBFW])
 SELECT  [SiteCode]
       ,[PatientPK]
 	  ,PatientPKHash
@@ -325,7 +329,7 @@ SELECT  [SiteCode]
       ,BreastFeedingRelatedVisitDate
 	  ,PregnancyRelatedVisitDate
       ,[IsPBFW]
-  FROM PBFW where [SiteCode] is not null
+  FROM PBFW 
 
 fetch next from cursor_AsOfDates into @as_of_date
 end
