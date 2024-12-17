@@ -4,7 +4,7 @@
 ------Update Date of Birth to missing where Year <1910------------------------------
 
 ------Update Date of Birth to missing where Year <1910------------------------------
-UPDATE ODS.[Care].CT_Patient   SET DOB = NULL where (DOB) < CAST ('1910-01-01' AS DATE)
+UPDATE [ODS].[Care].[CT_Patient]   SET DOB = NULL where (DOB) < CAST ('1910-01-01' AS DATE)
 Go
 
 UPDATE [ODS].[Care].[CT_Patient]  SET DOB = NULL where (DOB) > GETDATE()
@@ -145,5 +145,10 @@ UPDATE a
     SET Nupi = null            
     from [ODS].[Care].[CT_Patient] a
 WHERE Nupi='';
+
+update a
+set NUPI = null
+from [ODS].[Care].[CT_Patient] a
+where NUPI like '%Client not found.%'
 
 
