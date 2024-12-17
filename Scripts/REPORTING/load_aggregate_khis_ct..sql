@@ -42,9 +42,9 @@ SELECT dhisorgid,
        agency                  AS AgencyName,
        Cast(Getdate() AS DATE) AS LoadDate
 INTO   reporting.dbo.aggregatekhis_ct
-FROM   ndwh.dbo.fact_ct_dhis2 CT
-       LEFT JOIN ndwh.dbo.dimfacility facility
+FROM   ndwh.Fact.fact_ct_dhis2 CT
+       LEFT JOIN ndwh.Dim.dimfacility facility
               ON facility.facilitykey = CT.facilitykey
-       LEFT JOIN ndwh.dbo.dimpartner partner
+       LEFT JOIN ndwh.Dim.dimpartner partner
               ON partner.partnerkey = ct.partnerkey
 WHERE  mflcode IS NOT NULL; 

@@ -1,7 +1,7 @@
 
 BEGIN
 
-			MERGE [ODS].[dbo].[Mhealth_FacilityReferral_Patient] AS a
+			MERGE [ODS].[Mhealth].[Mhealth_FacilityReferral_Patient] AS a
 				USING(SELECT DISTINCT [ReferralPK]
 									  ,[ReferralPKHash]
 									  ,[PatientID]

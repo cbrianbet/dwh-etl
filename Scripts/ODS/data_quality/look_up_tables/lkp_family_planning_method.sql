@@ -1,15 +1,15 @@
-IF OBJECT_ID(N'[ODS].[DBO].[lkp_family_planning_method]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[DBO].[lkp_family_planning_method];
+IF OBJECT_ID(N'[ODS].[lkp].[lkp_family_planning_method]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[lkp].[lkp_family_planning_method];
 BEGIN
 		-- create table statement
-		CREATE TABLE [ODS].[DBO].[lkp_family_planning_method](
+		CREATE TABLE [ODS].[lkp].[lkp_family_planning_method](
 			source_name VARCHAR(250) NOT NULL PRIMARY KEY WITH (IGNORE_DUP_KEY = ON),
 			target_name VARCHAR(250) NOT NULL,
 			date_created DATE NOT NULL
 		)
 
 		-- insert table
-		INSERT INTO [ODS].[DBO].[lkp_family_planning_method] (
+		INSERT INTO [ODS].[lkp].[lkp_family_planning_method] (
 				   source_name,
 				   target_name,
 				   date_created

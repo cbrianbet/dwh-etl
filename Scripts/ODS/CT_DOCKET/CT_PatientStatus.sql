@@ -20,7 +20,7 @@ BEGIN;
 			Getdate()
 		  );
 		---- Refresh [ODS].[dbo].[CT_PatientStatus]
-		MERGE [ODS].[dbo].[ct_patientstatus] AS a using(
+		MERGE [ODS].[Care].[ct_patientstatus] AS a using(
 		  SELECT DISTINCT
 					P.[patientcccnumber] AS PatientID,
 					P.[patientpid] AS PatientPK,

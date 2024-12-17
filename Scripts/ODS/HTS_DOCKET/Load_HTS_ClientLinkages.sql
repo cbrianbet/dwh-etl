@@ -1,6 +1,6 @@
 BEGIN
---truncate table [ODS].[dbo].[HTS_ClientLinkages]
-		MERGE [ODS].[dbo].[HTS_ClientLinkages] AS a
+--truncate table [ODS].[HTS].[HTS_ClientLinkages]
+		MERGE [ODS].[HTS].[HTS_ClientLinkages] AS a
 			USING(SELECT 	DISTINCT a.[FacilityName]
 							  ,a.[SiteCode]
 							  ,a.[PatientPk]

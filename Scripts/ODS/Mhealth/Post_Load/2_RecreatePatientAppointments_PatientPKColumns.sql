@@ -2,9 +2,9 @@
 BEGIN
 
 
-		IF EXISTS (SELECT * FROM sys.columns      /* 1st if confirms if the PatientPK column exists on [ODS].[dbo].[Ushauri_Patient] exists on ODS   */
+		IF EXISTS (SELECT * FROM sys.columns      /* 1st if confirms if the PatientPK column exists on [ODS].[Mhealth].[Ushauri_Patient] exists on ODS   */
 					WHERE Name = N'PatientPK'
-					AND Object_ID = Object_ID(N'[ODS].[dbo].[Mhealth_Ushauri_PatientAppointments]'))
+					AND Object_ID = Object_ID(N'[ODS].[Mhealth].[Mhealth_Ushauri_PatientAppointments]'))
 		BEGIN
 			  IF  NOT EXISTS (SELECT *					/* If above condition is met, check if Ushauri_Patient exists. If it exists escape. If it doesn't exist create it*/
 							 FROM   INFORMATION_SCHEMA.COLUMNS
@@ -12,15 +12,15 @@ BEGIN
 							 AND COLUMN_NAME = 'UshauriPatientPK')
 
 					BEGIN
-						EXEC sp_rename '[ODS].[dbo].[Mhealth_Ushauri_PatientAppointments].PatientPK', 'UshauriPatientPK', 'COLUMN';
+						EXEC sp_rename '[ODS].[Mhealth].[Mhealth_Ushauri_PatientAppointments].PatientPK', 'UshauriPatientPK', 'COLUMN';
 					END
 
 		END
 
 
-		IF EXISTS (SELECT * FROM sys.columns      /* 1st if confirms if the PatientPK column exists on [ODS].[dbo].[Ushauri_Patient] exists on ODS   */
+		IF EXISTS (SELECT * FROM sys.columns      /* 1st if confirms if the PatientPK column exists on [ODS].[Mhealth].[Ushauri_Patient] exists on ODS   */
 				WHERE Name = N'PatientPKHash'
-				AND Object_ID = Object_ID(N'[ODS].[dbo].[Mhealth_Ushauri_PatientAppointments]'))
+				AND Object_ID = Object_ID(N'[ODS].[Mhealth].[Mhealth_Ushauri_PatientAppointments]'))
 		BEGIN
 			  IF  NOT EXISTS (SELECT *					/* If above condition is met, check if Ushauri_Patient exists. If it exists escape. If it doesn't exist create it*/
 							FROM   INFORMATION_SCHEMA.COLUMNS
@@ -28,7 +28,7 @@ BEGIN
 							AND COLUMN_NAME = 'PatientPKHash')
 
 					BEGIN
-						EXEC sp_rename '[ODS].[dbo].[Mhealth_Ushauri_PatientAppointments].PatientPKHash', 'PatientPKHash', 'COLUMN';
+						EXEC sp_rename '[ODS].[Mhealth].[Mhealth_Ushauri_PatientAppointments].PatientPKHash', 'PatientPKHash', 'COLUMN';
 					END
 
 		END
@@ -41,7 +41,7 @@ BEGIN
 			  WHERE
 				TABLE_NAME = 'Mhealth_Ushauri_PatientAppointments' AND COLUMN_NAME = 'patientPK')
 			BEGIN
-			  ALTER TABLE [ODS].[dbo].[Mhealth_Ushauri_PatientAppointments]
+			  ALTER TABLE [ODS].[Mhealth].[Mhealth_Ushauri_PatientAppointments]
 				ADD patientPK int NULL
 			END;
 
@@ -53,7 +53,7 @@ BEGIN
 			  WHERE
 				TABLE_NAME = 'Mhealth_Ushauri_PatientAppointments' AND COLUMN_NAME = 'PatientPKHash')
 			BEGIN
-			  alter table [ODS].[dbo].[Mhealth_Ushauri_PatientAppointments]
+			  alter table [ODS].[Mhealth].[Mhealth_Ushauri_PatientAppointments]
 					add PatientPKHash nvarchar(150) null
 			END;
 
@@ -65,7 +65,7 @@ BEGIN
 			  WHERE
 				TABLE_NAME = 'Mhealth_Ushauri_PatientAppointments' AND COLUMN_NAME = 'UshauriPatientPKHash')
 			BEGIN
-			  alter table [ODS].[dbo].[Mhealth_Ushauri_PatientAppointments]
+			  alter table [ODS].[Mhealth].[Mhealth_Ushauri_PatientAppointments]
 					add UshauriPatientPKHash nvarchar(150) null
 			END;
 

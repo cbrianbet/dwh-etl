@@ -1,14 +1,14 @@
-IF OBJECT_ID(N'[ODS].[DBO].[lkp_htsDisability]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[DBO].[lkp_htsDisability];
+IF OBJECT_ID(N'[ODS].[lkp].[lkp_htsDisability]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[lkp].[lkp_htsDisability];
 BEGIN
             -- create table statement
-	CREATE TABLE [ODS].[DBO].[lkp_htsDisability](
+	CREATE TABLE [ODS].[lkp].[lkp_htsDisability](
 		source_Disability VARCHAR(100) NOT NULL PRIMARY KEY WITH (IGNORE_DUP_KEY = ON),
 		target_Disability VARCHAR(100) NOT NULL,
 		DateImported DATE NOT NULL
 	)
 	-- insert table
-	INSERT INTO [ODS].[DBO].[lkp_htsDisability](
+	INSERT INTO [ODS].[lkp].[lkp_htsDisability](
 				source_Disability,
 				target_Disability,
 				DateImported

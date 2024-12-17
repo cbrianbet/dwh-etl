@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[ODS].[DBO].[Intermediate_LastestWeightHeight]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[DBO].[Intermediate_LastestWeightHeight];
+IF OBJECT_ID(N'[ODS].[Intermediate].[Intermediate_LastestWeightHeight]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[Intermediate].[Intermediate_LastestWeightHeight];
 BEGIN
 	with source_LatestWeightHeight as (
 		select  
@@ -14,13 +14,13 @@ BEGIN
 			Weight,
 			Height,
 			VisitBy
-		from ODS.dbo.CT_PatientVisits
+		from ODS.care.CT_PatientVisits
 		where Weight is not null and  VOIDED=0
 	)
 	select 
 		source_LatestWeightHeight.*,
 		cast(getdate() as date) as LoadDate
-	into [ODS].[DBO].[Intermediate_LastestWeightHeight]
+	into [ODS].[Intermediate].[Intermediate_LastestWeightHeight]
 	from source_LatestWeightHeight
 	where rank = 1
 END

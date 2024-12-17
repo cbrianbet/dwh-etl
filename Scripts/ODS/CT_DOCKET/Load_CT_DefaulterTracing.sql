@@ -8,7 +8,7 @@ BEGIN
 		INSERT INTO  [ODS_Logs].[dbo].[CT_DefaulterTracing_Log](MaxVisitDate,LoadStartDateTime)
 		VALUES(@MaxVisitDate_Hist,GETDATE())
 	       ---- Refresh [ODS].[dbo].[CT_DefaulterTracing]
-			MERGE [ODS].[dbo].[CT_DefaulterTracing] AS a
+			MERGE [ODS].[Care].[CT_DefaulterTracing] AS a
 				USING(SELECT distinct P.[PatientPID] AS PatientPK
 						  ,P.[PatientCccNumber] AS PatientID
 						  ,P.[Emr]
@@ -50,7 +50,7 @@ BEGIN
 												,max(InnerC.ID) As maxID
 												,MAX(InnerC.created )AS Maxdatecreated
 										FROM [DWAPICentral].[dbo].[PatientExtract](NoLock) P
-											INNER JOIN [DWAPICentral].[dbo].[OvcExtract](NoLock) InnerC ON InnerC.[PatientId] = P.ID
+											INNER JOIN [DWAPICentral].[dbo].[DefaulterTracingExtract](NoLock) InnerC ON InnerC.[PatientId] = P.ID
 											INNER JOIN [DWAPICentral].[dbo].[Facility](NoLock) F ON P.[FacilityId] = F.Id AND F.Voided = 0
 										GROUP BY F.code
 												,p.[PatientPID]

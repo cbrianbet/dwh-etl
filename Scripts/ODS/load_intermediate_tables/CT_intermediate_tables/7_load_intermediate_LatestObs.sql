@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[ODS].[dbo].[intermediate_LatestObs]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[dbo].[intermediate_LatestObs];
+IF OBJECT_ID(N'[ODS].[intermediate].[intermediate_LatestObs]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[intermediate].[intermediate_LatestObs];
 
 BEGIN	
 with MFL_partner_agency_combination as (
@@ -7,7 +7,7 @@ with MFL_partner_agency_combination as (
 		distinct MFL_Code,
 		SDP,
 	    SDP_Agency as Agency 
-	from ODS.dbo.All_EMRSites 
+	from ODS.care.All_EMRSites 
 ),
 
 latest_weight_height as (
@@ -16,15 +16,15 @@ select
 	SiteCode,
 	Weight as LatestWeight,
 	Height as LatestHeight
-from ODS.dbo.Intermediate_LastestWeightHeight
+from ODS.[intermediate].Intermediate_LastestWeightHeight
 ),
 age_of_last_visit as (
 	select 
 		last_encounter.PatientPK,
 		last_encounter.SiteCode,
 		datediff(yy, patient.DOB, last_encounter.LastEncounterDate) as AgeLastVisit
-	from ODS.dbo.CT_Patient as patient
-	left join ODS.dbo.Intermediate_LastPatientEncounter as last_encounter on last_encounter.PatientPK = patient.PatientPK
+	from ODS.care.CT_Patient as patient
+	left join ODS.[intermediate].Intermediate_LastPatientEncounter as last_encounter on last_encounter.PatientPK = patient.PatientPK
 		and last_encounter.SiteCode = patient.SiteCode
 	WHERE patient.VOIDED=0
 ),
@@ -34,8 +34,8 @@ latest_adherence as (
 		visits.SiteCode,
 		visits.PatientPK,
 		visits.Adherence
-	from ODS.dbo.CT_PatientVisits as visits
-	inner join ODS.dbo.Intermediate_LastVisitDate as last_visit on visits.SiteCode = last_visit.SiteCode 
+	from ODS.Care.CT_PatientVisits as visits
+	inner join ODS.[intermediate].Intermediate_LastVisitDate as last_visit on visits.SiteCode = last_visit.SiteCode 
 		and visits.PatientPK = last_visit.PatientPK 
 		and visits.VisitDate = last_visit.LastVisitDate  
 		and visits.VisitID = last_visit.visitID
@@ -47,8 +47,8 @@ latest_differentiated_care as (
 		distinct visits.SiteCode,
 		visits.PatientPK,
 		visits.DifferentiatedCare
-	from ODS.dbo.CT_PatientVisits as visits
-	inner join ODS.dbo.Intermediate_LastVisitDate as last_visit on visits.SiteCode = last_visit.SiteCode 
+	from ODS.Care.CT_PatientVisits as visits
+	inner join ODS.[intermediate].Intermediate_LastVisitDate as last_visit on visits.SiteCode = last_visit.SiteCode 
 		and visits.PatientPK = last_visit.PatientPK 
 		and visits.VisitDate = last_visit.LastVisitDate 
 		and visits.VisitID = last_visit.visitID
@@ -62,7 +62,7 @@ latest_mmd as (
 			when abs(datediff(day,LastEncounterDate, NextAppointmentDate)) <=89 then 0
 			when abs(datediff(day,LastEncounterDate, NextAppointmentDate))  >= 90 THEN  1 
 		end as onMMD
-	from ODS.dbo.Intermediate_LastPatientEncounter
+	from ODS.[intermediate].Intermediate_LastPatientEncounter
 ),
 lastest_stability_assessment as (
 	select
@@ -70,8 +70,8 @@ lastest_stability_assessment as (
 		visits.SiteCode,
 		visits.PatientPK,
 		visits.StabilityAssessment
-	from ODS.dbo.CT_PatientVisits as visits
-	inner join ODS.dbo.Intermediate_LastVisitDate as last_visit on visits.SiteCode = last_visit.SiteCode 
+	from ODS.Care.CT_PatientVisits as visits
+	inner join ODS.[intermediate].Intermediate_LastVisitDate as last_visit on visits.SiteCode = last_visit.SiteCode 
 		and visits.PatientPK = last_visit.PatientPK 
 		and visits.VisitDate = last_visit.LastVisitDate  
 		and visits.VisitID = last_visit.visitID
@@ -82,8 +82,8 @@ latest_pregnancy as (
 		distinct visits.PatientPK, 
 		visits.SiteCode,
 		visits.Pregnant
-	from ODS.dbo.CT_PatientVisits as visits
-	inner join ODS.dbo.Intermediate_LastVisitDate as last_visit on visits.SiteCode = last_visit.SiteCode 
+	from ODS.Care.CT_PatientVisits as visits
+	inner join ODS.[intermediate].Intermediate_LastVisitDate as last_visit on visits.SiteCode = last_visit.SiteCode 
 		and visits.PatientPK = last_visit.PatientPK 
 		and visits.VisitDate = last_visit.LastVisitDate
 		and visits.VisitID = last_visit.visitID
@@ -95,8 +95,8 @@ latest_fp_method as (
 		distinct visits.PatientPK, 
 		visits.SiteCode,
 		visits.FamilyPlanningMethod
-	from ODS.dbo.CT_PatientVisits as visits
-	inner join ODS.dbo.Intermediate_LastVisitDate as last_visit on visits.SiteCode = last_visit.SiteCode 
+	from ODS.Care.CT_PatientVisits as visits
+	inner join ODS.[intermediate].Intermediate_LastVisitDate as last_visit on visits.SiteCode = last_visit.SiteCode 
 		and visits.PatientPK = last_visit.PatientPK 
 		and visits.VisitDate = last_visit.LastVisitDate
 		and visits.VisitID = last_visit.visitID
@@ -112,8 +112,8 @@ latest_breastfeeding as (
 		visits.Breastfeeding,
         visits.LMP,
         visits.GestationAge
-	from ODS.dbo.CT_PatientVisits as visits
-	inner join ODS.dbo.Intermediate_LastVisitDate as last_visit on visits.SiteCode = last_visit.SiteCode 
+	from ODS.Care.CT_PatientVisits as visits
+	inner join ODS.[intermediate].Intermediate_LastVisitDate as last_visit on visits.SiteCode = last_visit.SiteCode 
 		and visits.PatientPK = last_visit.PatientPK 
 		and visits.VisitDate = last_visit.LastVisitDate
 		and visits.VisitID = last_visit.visitID
@@ -126,8 +126,8 @@ latest_Who as (
 		distinct visits.PatientPK, 
 		visits.WhoStage,
         visits.SiteCode
-	from ODS.dbo.CT_PatientVisits as visits
-	inner join ODS.dbo.Intermediate_LastVisitDate as last_visit on visits.SiteCode = last_visit.SiteCode 
+	from ODS.Care.CT_PatientVisits as visits
+	inner join ODS.[intermediate].Intermediate_LastVisitDate as last_visit on visits.SiteCode = last_visit.SiteCode 
 		and visits.PatientPK = last_visit.PatientPK 
 		and visits.VisitDate = last_visit.LastVisitDate
 		and visits.VisitID = last_visit.visitID
@@ -144,7 +144,7 @@ latest_Who as (
         visits.OnIPT,
         visits.StartIPT,
         visits.EverOnIPT
-	from ODS.dbo.CT_IPT as visits
+	from ODS.Care.CT_IPT as visits
 	WHERE  VISITS.VOIDED=0
 	),
  latest_TBScreening as (
@@ -156,7 +156,7 @@ latest_Who as (
         Screening.EverOnIPT,
         Screening.SiteCode
 	from last_TBScreening as Screening
-	inner join ODS.dbo.Intermediate_LastVisitDate as last_visit on Screening.SiteCode = last_visit.SiteCode 
+	inner join ODS.[intermediate].Intermediate_LastVisitDate as last_visit on Screening.SiteCode = last_visit.SiteCode 
 		and Screening.PatientPK = last_visit.PatientPK 
 		and Screening.VisitDate = last_visit.LastVisitDate
 		and Screening.VisitID = last_visit.visitID
@@ -183,8 +183,8 @@ latest_Who as (
         latest_TBScreening.StartIPT,
         latest_TBScreening.EverOnIPT,
         cast(getdate() as date) as LoadDate
-        into ODS.dbo.intermediate_LatestObs
-	from ODS.dbo.CT_Patient as patient
+        into ODS.[intermediate].intermediate_LatestObs
+	from ODS.Care.CT_Patient as patient
 	left join latest_weight_height on latest_weight_height.PatientPKHash = patient.PatientPKHash
 		and latest_weight_height.SiteCode = patient.SiteCode
 	left join age_of_last_visit on age_of_last_visit.PatientPK = patient.PatientPK

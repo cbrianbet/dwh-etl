@@ -1,6 +1,6 @@
 
 BEGIN
-		MERGE [ODS].[dbo].[HTS_PartnerTracings] AS a
+		MERGE [ODS].[HTS].[HTS_PartnerTracings] AS a
 			USING(SELECT DISTINCT  a.[FacilityName]
 			  ,a.[SiteCode]
 			  ,a.[PatientPk]

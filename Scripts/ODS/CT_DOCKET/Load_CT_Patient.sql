@@ -9,7 +9,7 @@ BEGIN
 			INSERT INTO  [ODS_Logs].[dbo].[CT_Patient_Log](MaxRegistrationDate,LoadStartDateTime)
 			VALUES(@RegistrationDate,GETDATE())
 			--truncate table [ODS].[dbo].[CT_Patient] 
-			MERGE [ODS].[dbo].[CT_Patient] AS a
+			MERGE [ODS].[Care].[CT_Patient] AS a
 				USING(SELECT  DISTINCT	P.ID,
 										P.[PatientCccNumber] as PatientID
 										,P.[PatientPID] as PatientPK

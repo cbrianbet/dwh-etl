@@ -1,7 +1,7 @@
 
 BEGIN
-    --truncate table [ODS].[dbo].[MNCH_Arts]
-	MERGE [ODS].[dbo].[MNCH_Arts] AS a
+    --truncate table [ODS].[mnch].[MNCH_Arts]
+	MERGE [ODS].[mnch].[MNCH_Arts] AS a
 			USING(
 					SELECT  distinct  P.[PatientPk],P.[SiteCode],P.[Emr], P.[Project], P.[Processed], P.[QueueId], P.[Status], P.[StatusDate], P.[DateExtracted]
 						  , P.[Pkv], P.[PatientMnchID], P.[PatientHeiID], P.[FacilityName],[RegistrationAtCCC],[StartARTDate],[StartRegimen]

@@ -5,7 +5,7 @@ Go
 
 WITH Pbfw_patient
      AS (SELECT DISTINCT Patientkey
-         FROM   Ndwh.Dbo.Factpbfw),
+         FROM   Ndwh.Fact.Factpbfw),
      Base_data
      AS (SELECT Art.Facilitykey,
                 Art.Partnerkey,
@@ -17,10 +17,10 @@ WITH Pbfw_patient
                 Istxcurr                  AS IsTXCurr,
                 Eligiblevl,
                 Hasvalidvl                AS HasValidVL
-         FROM   Ndwh.Dbo.Factart Art
-                LEFT JOIN Ndwh.Dbo.Factviralloads Vl
+         FROM   Ndwh.Fact.Factart Art
+                LEFT JOIN Ndwh.Fact.Factviralloads Vl
                        ON Vl.Patientkey = Art.Patientkey
-                LEFT JOIN Ndwh.Dbo.Dimpatient Pat
+                LEFT JOIN Ndwh.Dim.Dimpatient Pat
                        ON Pat.Patientkey = Vl.Patientkey
          WHERE  Istxcurr = 1
                 AND Vl.Patientkey NOT IN (SELECT Patientkey
@@ -40,10 +40,10 @@ WITH Pbfw_patient
                 Patient.Istxcurr              AS IsTXCurr,
                 Eligiblevl,
                 Pbfw_validvl                  AS HasValidVL
-         FROM   Ndwh.Dbo.Factpbfw AS Pbfw
-                LEFT JOIN Ndwh.Dbo.Factviralloads AS Vl
+         FROM   Ndwh.Fact.Factpbfw AS Pbfw
+                LEFT JOIN Ndwh.Fact.Factviralloads AS Vl
                        ON Vl.Patientkey = Pbfw.Patientkey
-                LEFT JOIN Ndwh.Dbo.Dimpatient AS Patient
+                LEFT JOIN Ndwh.Dim.Dimpatient AS Patient
                        ON Patient.Patientkey = Pbfw.Patientkey
          WHERE  Istxcurr = 1)
 SELECT Mflcode,
@@ -87,22 +87,22 @@ SELECT Mflcode,
        Sum ([6monthvlsup])               AS VLAt6Months_Sup,
        Cast(Getdate() AS Date)           AS LoadDate
 INTO   [Reporting].[Dbo].Aggregatevluptakeoutcome
-FROM   Ndwh.Dbo.Factart Art
-       LEFT JOIN Ndwh.Dbo.Factviralloads Vl
+FROM   Ndwh.Fact.Factart Art
+       LEFT JOIN Ndwh.Fact.Factviralloads Vl
               ON Vl.Patientkey = Art.Patientkey
-       LEFT JOIN Ndwh.Dbo.Dimagegroup G
+       LEFT JOIN Ndwh.Dim.Dimagegroup G
               ON G.Agegroupkey = Vl.Agegroupkey
-       LEFT JOIN Ndwh.Dbo.Dimfacility F
+       LEFT JOIN Ndwh.Dim.Dimfacility F
               ON F.Facilitykey = Vl.Facilitykey
-       LEFT JOIN Ndwh.Dbo.Dimagency A
+       LEFT JOIN Ndwh.Dim.Dimagency A
               ON A.Agencykey = Vl.Agencykey
-       LEFT JOIN Ndwh.Dbo.Dimpatient Pat
+       LEFT JOIN Ndwh.Dim.Dimpatient Pat
               ON Pat.Patientkey = Vl.Patientkey
-       LEFT JOIN Ndwh.Dbo.Dimpartner P
+       LEFT JOIN Ndwh.Dim.Dimpartner P
               ON P.Partnerkey = Vl.Partnerkey
-       LEFT JOIN Ndwh.Dbo.Dimartoutcome AS Outcome
+       LEFT JOIN Ndwh.Dim.Dimartoutcome AS Outcome
               ON Outcome.Artoutcomekey = Art.Artoutcomekey
-       LEFT JOIN Ndwh.Dbo.Dimdate AS Date
+       LEFT JOIN Ndwh.Dim.Dimdate AS Date
               ON Date.Datekey = Art.Startartdatekey
        LEFT JOIN Base_data AS Base
               ON Base.Patientkey = Art.Patientkey

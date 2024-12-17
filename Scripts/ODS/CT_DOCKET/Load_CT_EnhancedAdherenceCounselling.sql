@@ -1,3 +1,4 @@
+
 BEGIN
 
 		  DECLARE	@MaxVisitDate_Hist			DATETIME,
@@ -10,7 +11,8 @@ BEGIN
 		VALUES(@MaxVisitDate_Hist,GETDATE())
 
 	       ---- Refresh [ODS].[dbo].[CT_EnhancedAdherenceCounselling]
-			MERGE [ODS].[dbo].[CT_EnhancedAdherenceCounselling] AS a
+		   --truncate table[ODS].[dbo].[CT_EnhancedAdherenceCounselling]
+			MERGE [ODS].[Care].[CT_EnhancedAdherenceCounselling] AS a
 				USING(SELECT Distinct
 							P.[PatientCccNumber] AS PatientID
 							,P.[PatientPID] AS PatientPK
@@ -80,15 +82,15 @@ BEGIN
 							INNER JOIN [DWAPICentral].[dbo].[EnhancedAdherenceCounsellingExtract](NoLock) EAC ON EAC.[PatientId] = P.ID
 							INNER JOIN [DWAPICentral].[dbo].[Facility](NoLock) F ON P.[FacilityId] = F.Id AND F.Voided = 0
 							INNER JOIN (
-								SELECT F.code as SiteCode
+								SELECT distinct F.code as SiteCode
 										,p.[PatientPID] as PatientPK
 										,InnerEAC.visitDate
 										,InnerEAC.VisitID
 										,InnerEAC.voided
 										,max(InnerEAC.ID) As Max_ID
-										,MAX(cast(InnerEAC.created as date)) AS Maxdatecreated
+										,MAX(InnerEAC.created) AS Maxdatecreated
 								FROM [DWAPICentral].[dbo].[PatientExtract](NoLock) P
-									INNER JOIN [DWAPICentral].[dbo].[AllergiesChronicIllnessExtract](NoLock) InnerEAC ON InnerEAC.[PatientId] = P.ID
+									INNER JOIN  [DWAPICentral].[dbo].[EnhancedAdherenceCounsellingExtract](NoLock) InnerEAC ON InnerEAC.[PatientId] = P.ID
 									INNER JOIN [DWAPICentral].[dbo].[Facility](NoLock) F ON P.[FacilityId] = F.Id AND F.Voided = 0
 								GROUP BY F.code
 										,p.[PatientPID]
@@ -101,8 +103,8 @@ BEGIN
 								EAC.visitDate = tm.visitDate and
 								EAC.VisitID = tm.VisitID and
 								EAC.voided = tm.voided and
-								cast(EAC.created as date) = tm.Maxdatecreated and
-								EAC.ID = tm.Max_ID
+								EAC.ID = tm.Max_ID and
+								Cast(EAC.created as date) = cast(tm.Maxdatecreated  as date)
 						WHERE P.gender != 'Unknown' AND F.code >0
 				) AS b
 						ON(

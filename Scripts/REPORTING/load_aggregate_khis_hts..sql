@@ -33,12 +33,12 @@ Begin
            Agency                  As AgencyName,
            Cast(Getdate() As Date) As LoadDate
     Into   Reporting.Dbo.Aggregate_khis_hts
-    From   Ndwh.Dbo.Fact_hts_dhis2 Ct
-           Left Join Ndwh.Dbo.Dimfacility Facility
+    From   Ndwh.Fact.Fact_hts_dhis2 Ct
+           Left Join Ndwh.Dim.Dimfacility Facility
                   On Facility.Facilitykey = Ct.Facilitykey
-           Left Join Ndwh.Dbo.Dimpartner Partner
+           Left Join Ndwh.Dim.Dimpartner Partner
                   On Partner.Partnerkey = Ct.Partnerkey
-           Left Join Ndwh.Dbo.Dimagency Agency
+           Left Join Ndwh.Dim.Dimagency Agency
                   On Agency.Agencykey = Ct.Agencykey
     Where  Mflcode Is Not Null
 End 

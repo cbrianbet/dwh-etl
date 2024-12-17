@@ -24,9 +24,9 @@ eligibility_indicators as (
       else 0
     end as SexwithAlcohoDrugs,
     case 
-      when EverHadSTI = 'Yes' then 1 
+      when CurrentlyHasSTI = 'YES' then 1 
       else 0 
-    end as EverHadSTI
+    end as CurrentlyHasSTI
 from NDWH.dbo.FactHTSEligibilityextract as eligibility_data
 left join NDWH.dbo.DimDate as eligibilitydate on eligibilitydate.DateKey = eligibility_data.VisitDateKey
 ),
@@ -47,7 +47,7 @@ joined_data as (
     cases.DateConfirmedHIVPos,
     eligibility.ELigibilityVisitDate,
     SexwithAlcohoDrugs,
-    EverHadSTI
+    CurrentlyHasSTI
   from cases
   inner join latest_eligibility_indicators_per_patient as eligibility on eligibility.PatientKey = cases.PatientKey
 )
@@ -60,7 +60,7 @@ select
   agency.AgencyName,
   count(joined_data.PatientKey) as NoOfCases,
   sum(SexwithAlcohoDrugs) HasSexwithAlcohoDrugs,
-  sum(EverHadSTI) as EverHadSTI
+  sum(CurrentlyHasSTI) as CurrentlyHasSTI
 into HIVCaseSurveillance.dbo.CsAggregateAlcoholSexSTIRiskFactors
 from joined_data
 left join NDWH.dbo.DimPartner as partner on partner.PartnerKey = joined_data.PartnerKey

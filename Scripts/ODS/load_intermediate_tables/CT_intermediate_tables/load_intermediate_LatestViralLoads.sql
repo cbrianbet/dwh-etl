@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[ODS].[dbo].[Intermediate_LatestViralLoads]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[dbo].[Intermediate_LatestViralLoads];
+IF OBJECT_ID(N'[ODS].[Intermediate].[Intermediate_LatestViralLoads]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[Intermediate].[Intermediate_LatestViralLoads];
 BEGIN
 	with source_LatestViralLoads as (
 		select
@@ -17,7 +17,7 @@ BEGIN
 			[Emr],
 			[Project],
 			Reason
-		from ODS.dbo.CT_PatientLabs
+		from ODS.Care.CT_PatientLabs
 		where TestName = 'Viral Load'
 				and TestName <>'CholesterolLDL (mmol/L)' and TestName <> 'Hepatitis C viral load' 
 				and TestResult is not null and VOIDED=0
@@ -25,7 +25,7 @@ BEGIN
 	select 
  		source_LatestViralLoads.*,						
 		cast(getdate() as date) as LoadDate
-	into [ODS].[dbo].[Intermediate_LatestViralLoads]
+	into [ODS].[Intermediate].[Intermediate_LatestViralLoads]
 	from source_LatestViralLoads
 	where rank = 1
 END

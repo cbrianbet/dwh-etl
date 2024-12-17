@@ -11,19 +11,19 @@ BEGIN
                              latitude,
                              implementation,
                              sdp_agency                 AS Agency
-             FROM   ods.dbo.all_emrsites),
+             FROM   ods.Care.all_emrsites),
          site_abstraction
          AS (SELECT sitecode,
                     Max(visitdate) AS DateSiteAbstraction
-             FROM   ods.dbo.ct_patientvisits
+             FROM   ods.Care.ct_patientvisits
              GROUP  BY sitecode),
          latest_upload
          AS (SELECT sitecode,
                     Max(Cast([daterecieved] AS DATE)) AS LatestDateUploaded
-             FROM   [ODS].[dbo].[ct_facilitymanifest](nolock)
+             FROM   [ODS].Care.[ct_facilitymanifest](nolock)
              GROUP  BY sitecode)
 
-    MERGE [NDWH].[dbo].[dimfacility] AS a
+    MERGE [NDWH].[Dim].[dimfacility] AS a
     using (SELECT source_facility.*,
                   Cast(Format(site_abstraction.datesiteabstraction, 'yyyyMMdd')
                        AS
@@ -96,7 +96,7 @@ BEGIN
                     ELSE 0
                   END
                  
-		FROM [NDWH].[dbo].[dimfacility] a;
+		FROM [NDWH].[Dim].[dimfacility] a;
 
 		UPDATE a
 		SET isPKV =CASE
@@ -104,7 +104,7 @@ BEGIN
                     ELSE 0
                   END
 
-		FROM [NDWH].[dbo].[dimfacility] a;
+		FROM [NDWH].[Dim].[dimfacility] a;
 
 		UPDATE a
 		SET isHTS = CASE
@@ -112,6 +112,6 @@ BEGIN
                     ELSE 0
                   END
 
-		FROM [NDWH].[dbo].[dimfacility] a;
+		FROM [NDWH].[Dim].[dimfacility] a;
 
 END 

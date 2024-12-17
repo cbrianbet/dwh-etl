@@ -1,5 +1,5 @@
 -- clean TraceOutcome
 
-UPDATE [ODS].[dbo].[HTS_PartnerTracings]
+UPDATE [ODS].[HTS].[HTS_PartnerTracings]
     SET TraceOutcome = NULL
 WHERE TraceOutcome = 'null'

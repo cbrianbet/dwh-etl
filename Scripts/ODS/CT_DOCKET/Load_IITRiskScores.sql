@@ -1,5 +1,5 @@
 BEGIN
-			MERGE [ODS].[dbo].[CT_IITRiskScores] AS a
+			MERGE [ODS].[Care].[CT_IITRiskScores] AS a
 				USING(SELECT DISTINCT  
 							P.PatientCccNumber
 							,p.PatientPID As PatientPK
