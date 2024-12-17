@@ -329,6 +329,7 @@ SELECT  [SiteCode]
       ,BreastFeedingRelatedVisitDate
 	  ,PregnancyRelatedVisitDate
       ,[IsPBFW]
+	  
   FROM PBFW 
 
 fetch next from cursor_AsOfDates into @as_of_date
