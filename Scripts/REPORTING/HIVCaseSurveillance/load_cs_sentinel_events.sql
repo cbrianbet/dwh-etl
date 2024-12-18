@@ -1,8 +1,13 @@
 IF OBJECT_ID(N'[HIVCaseSurveillance].[dbo].[CsSentinelEvents]', N'U') IS NOT NULL 
     DROP TABLE [HIVCaseSurveillance].[dbo].[CsSentinelEvents];
 begin
- with 
-
+ with   MFL_partner_agency_combination as (
+    select 
+        distinct MFL_Code,
+         SDP,
+        SDP_Agency as Agency 
+    from ODS.care.All_EMRSites 
+ ),
  confirmed_reported_cases_and_art as (
         select 
                 ctpatients.PatientKey,
@@ -19,12 +24,15 @@ begin
                     when art_date.Date < confirmed_date.Date then confirmed_date.Date
                     else art_date.Date
                 end as StartARTDate,
-                DATEDIFF(year,ctpatients.DOB,confirmed_date.Date) as AgeatDiagnosis             
-        from NDWH.dbo.DimPatient as ctpatients
-            left join  NDWH.dbo.FACTART as art on ctpatients.patientkey=art.PatientKey
-            left join NDWH.dbo.DimDate as confirmed_date on confirmed_date.DateKey = ctpatients.DateConfirmedHIVPositiveKey
-            left join NDWH.dbo.DimDate as art_date on art_date.DateKey = art.StartARTDateKey
-            left join NDWH.dbo.DimAgeGroup as age on age.AgeGroupKey=art.AgeGroupKey
+                DATEDIFF(year,ctpatients.DOB,confirmed_date.Date) as AgeatDiagnosis 
+                      
+        from [NDWH].[Dim].[DimPatient] as ctpatients
+            left join  NDWH.Fact.FACTART as art on ctpatients.patientkey=art.PatientKey
+            left join [NDWH].[Dim].[DimDate] as confirmed_date on confirmed_date.DateKey = ctpatients.DateConfirmedHIVPositiveKey
+            left join [NDWH].[Dim].[DimDate] as art_date on art_date.DateKey = art.StartARTDateKey
+            left join [NDWH].[Dim].[DimAgeGroup]as age on age.AgeGroupKey=art.AgeGroupKey
+          
+           
           
             where DateConfirmedHIVPositiveKey is not null
             
@@ -35,17 +43,17 @@ begin
     PatientKey,
     BaselineCD4,
     BaselineCD4Date
-    from NDWH.dbo.FactCD4
+    from [NDWH].[Fact].[FactCD4]
     where BaselineCD4 is not null
  ),
  OtherCD4s As (
    Select 
    Patientkey,
-   OtherCD4s,
-   OtherCD4sDate,
-   OtherCD4Percent,
-   OtherCD4PercentDate
-  from NDWH.dbo.FactCD4
+   coalesce (secondCD4,LastCD4) as OtherCD4s,
+    coalesce (secondCD4Date,LastCD4Date)OtherCD4sDate,
+   LastCD4Percentage as OtherCD4Percent,
+   LastCD4Date as OtherCD4PercentDate
+  from [NDWH].[Fact].[FactCD4]
  
  ),
  BaselineWHO As (
@@ -53,7 +61,7 @@ begin
      Patientkey,
     WHOStageATART,
     AgeAtARTStart
-    from  NDWH.dbo.FactARTBaselines
+    from  NDWH.Fact.FACTARTBaselines
  ),
  Viralloads As (
   SELECT 
@@ -66,14 +74,13 @@ begin
     viralloads.TestResult,
     fac.FacilityKey
 FROM 
-    NDWH.dbo.FactOrderedViralLoads as viralloads
-    LEFT join NDWH.dbo.DimFacility fac on fac.FacilityKey = viralloads.FacilityKey
-    LEFT JOIN NDWH.dbo.DimAgency agency on agency.AgencyKey = viralloads.AgencyKey
-    LEFT JOIN NDWH.dbo.DimPatient pat on pat.PatientKey = viralloads.PatientKey
-    LEFT JOIN NDWH.dbo.DimPartner partner on partner.PartnerKey = viralloads.PartnerKey
-  
-    left join NDWH.dbo.DimDate as  ReportedbyDate on ReportedbyDate.DateKey = viralloads.ReportedbyDateKey
-    LEFT JOIN NDWH.dbo.DimDate as Orderedbydate on Orderedbydate.DateKey = viralloads.OrderedbyDateKey
+    NDWH.Fact.FactOrderedViralLoads as viralloads 
+    LEFT join NDWH.Dim.DimFacility fac on fac.FacilityKey = viralloads.FacilityKey
+    LEFT JOIN NDWH.Dim.DimAgency agency on agency.AgencyKey = viralloads.AgencyKey
+    LEFT JOIN [NDWH].[Dim].[DimPatient] pat on pat.PatientKey = viralloads.PatientKey
+    LEFT JOIN NDWH.Dim.DimPartner partner on partner.PartnerKey = viralloads.PartnerKey
+    left join [NDWH].[Dim].[DimDate] as  ReportedbyDate on ReportedbyDate.DateKey = viralloads.ReportedbyDateKey
+    LEFT JOIN [NDWH].[Dim].[DimDate] as Orderedbydate on Orderedbydate.DateKey = viralloads.OrderedbyDateKey
  ),
  InitialViralLoads As (
     SELECT
@@ -124,6 +131,74 @@ ThirdFollowupViralloads As (
     THEN 1 Else 0 End As IsSuppressedThirdFollowupViralloads
     from Viralloads
     where Rank=4
+),
+RegimenChanges as (
+  Select 
+  Patientkey,
+  Facilitykey,
+  StartRegimen,
+  CurrentRegimen,
+  case when StartRegimen = CurrentRegimen Then 0 Else 1 End as RegimenChanged
+  from NDWH.Fact.FACTART
+  where StartRegimen is not null
+),
+OptimizedRegimen as (
+  Select 
+    Patientkey,
+    Facilitykey,
+    StartRegimen,
+    CurrentRegimen,
+    case when  CurrentRegimen like '3TC+DTG+TDF' THEN 1
+    Else  0 END AS OptimizedRegimen
+  from NDWH.Fact.FACTART
+),
+
+ SecondLatestHighVls as (
+  SELECT
+  PatientKey,
+  FacilityKey,
+  cast (LatestVLDate2Key as date) as LatestVLDate2Key,
+  LatestVL2
+  from NDWH.Fact.FactViralLoads as secondlatestvls
+   LEFT JOIN Ndwh.Dim.Dimdate AS SecondVLDate
+                      ON SecondVLDate.Datekey = secondlatestvls.LatestVLDate2Key
+  where TRY_CAST(LatestVL2 as float) >=1000 
+    AND DATEDIFF(month, LatestVLDate2Key , GETDATE()) <= 26
+),
+ConsecutiveHighVls as  (
+  SELECT
+  latestvls.Patientkey,
+  latestvls.FacilityKey,
+  LatestVL1,
+  cast (LatestVLDate1Key as date ) as LatestVLDate
+  from NDWH.Fact.FactViralLoads as latestvls
+  inner join SecondLatestHighVls on SecondLatestHighVls.PatientKey=latestvls.PatientKey
+   LEFT JOIN Ndwh.Dim.Dimdate AS LatestVLDate
+                      ON LatestVLDate.Datekey = latestvls.LatestVLDate1Key
+    where TRY_CAST(LatestVL1 as float) >=1000 and  datediff(month, LatestVLDate1Key , eomonth(dateadd(mm,-1,getdate()))) <= 14
+
+),
+LatestSuppressedVL as (
+Select
+  latestvls.Patientkey,
+  latestvls.FacilityKey,
+  LatestVL1 as LatestVLSuppressed,
+  cast (LatestVLDate1Key as date ) as LatestVLDate
+  from NDWH.Fact.FactViralLoads as latestvls
+    LEFT JOIN Ndwh.Dim.Dimdate AS LatestVLDate
+                      ON latestvlDate.Datekey = latestvls.LatestVLDate1Key
+  where TRY_CAST(LatestVL2 as float) <1000 
+  OR Latestvl1 IN ( 'undetectable', 'NOT DETECTED',
+                                     '0 copies/ml',
+                                     'LDL',
+                                     'Less than Low Detectable Level')
+),
+Retained as (
+  Select
+  Patientkey,
+  FacilityKey,
+  case when artoutcomekey= 6 then 1 Else 0 End as PatientRetained
+  from NDWH.Fact.FACTART
 )
  select 
     confirmed_reported_cases_and_art.PatientKey,
@@ -145,36 +220,53 @@ ThirdFollowupViralloads As (
     case when  BaselineCD4 is not null and Try_CONVERT(FLOAT, BaselineCD4) >= 200 Then 1 Else 0 End as CD4Morethan200,
 CASE 
     WHEN 
-       (ISNUMERIC(OtherCD4s) = 1 AND TRY_CONVERT(float, OtherCD4s) IS NOT NULL AND TRY_CONVERT(float, OtherCD4s) < 200)
+       ((ISNUMERIC(OtherCD4s) = 1 AND TRY_CONVERT(float, OtherCD4s) IS NOT NULL AND TRY_CONVERT(float, OtherCD4s) < 200)
         OR 
-        (AgeatDiagnosis <= 5 AND ISNUMERIC(OtherCD4Percent) = 1 AND TRY_CONVERT(float, OtherCD4Percent) IS NOT NULL AND TRY_CONVERT(float, OtherCD4Percent) < 25)
+       (AgeatDiagnosis <= 5 AND ISNUMERIC(OtherCD4Percent) = 1 AND TRY_CONVERT(float, OtherCD4Percent) IS NOT NULL AND TRY_CONVERT(float, OtherCD4Percent) < 25))
+        AND whostageAtART IN (3, 4)
     THEN 1 
     ELSE 0 
-  END AS TreatmentFailure,
-    WHOStageATART,
-    AgeAtARTStart,
+END AS AHD,
+case when whostageAtART is null then 1 else 0 End as NotStaged,
+    BaselineWHO.WHOStageATART,
+  BaselineWHO.AgeAtARTStart,
    age.DATIMAgeGroup as ARTStartAgeGroup,
    case when InitialViralLoads.patientkey is not null then 1 Else 0 End as WithInitialViralLoad,
+   case when InitialViralLoads.patientkey is null then 1 Else 0 End as WithoutInitialViralLoad,
    coalesce(InitialViralLoads.IsSuppressedInitialViralload,0) As IsSuppressedInitialViralload,
+  case when IsSuppressedInitialViralload=0 Then 1 Else 0 End as IsNotSuppressedInitialViralload,
    case when FirstFollowupViralloads.patientkey is not null then 1 Else 0 End As WithFirstFollowupViralload,
    coalesce (FirstFollowupViralloads.IsSuppressedFirstFollowupViralloads,0) as IsSuppressedFirstFollowupViralloads,
    case when SecondFollowupViralloads.patientkey is not null then 1 Else 0 End As WithSecondFollowupViralloads,
    coalesce (SecondFollowupViralloads.IsSuppressedSecondFollowupViralloads,0) As IssuppressedSecondFollowupViralloads,
    case when ThirdFollowupViralloads.patientkey is not null then 1 Else 0 End As WithThirdFollowupViralloads,
-   coalesce(ThirdFollowupViralloads.IsSuppressedThirdFollowupViralloads,0) As IsSuppressedThirdFollowupViralloads
+   coalesce(ThirdFollowupViralloads.IsSuppressedThirdFollowupViralloads,0) As IsSuppressedThirdFollowupViralloads,
+   coalesce (RegimenChanged,0) as RegimenChanged,
+   case when RegimenChanged=0 Then 1 else 0 End as RegimenNotChanged,
+   OptimizedRegimen,
+   case when LatestVL1 is not null then 1 Else 0 End as TreatmentFailure,
+   case when LatestVLSuppressed is not null then 1 Else 0 End as LatestVLSuppressed,
+   case when LatestVLSuppressed is null then 1 Else 0 End as LatestVLNotSuppressed,
+   coalesce (PatientRetained,0) as PatientRetained,
+   case when PatientRetained=0 then 1 Else 0 End as PatientNotRetained
  into [HIVCaseSurveillance].[dbo].[CsSentinelEvents]
- from confirmed_reported_cases_and_art
+ from confirmed_reported_cases_and_art 
  left join BaselineCD4s on BaselineCD4s.PatientKey=confirmed_reported_cases_and_art.PatientKey
  left join BaselineWHO on BaselineWHO.patientkey=confirmed_reported_cases_and_art.PatientKey
- left join NDWH.dbo.DimAgeGroup age on age.AgeGroupKey = confirmed_reported_cases_and_art.AgeGroupKey
- left join NDWH.dbo.DimFacility as facility on facility.MFLCode = confirmed_reported_cases_and_art.SiteCode
+ left join [NDWH].[Dim].[DimAgeGroup]age on age.AgeGroupKey = confirmed_reported_cases_and_art.AgeGroupKey
+ left join NDWH.Dim.DimFacility as facility on facility.MFLCode = confirmed_reported_cases_and_art.SiteCode
  left join MFL_partner_agency_combination on MFL_partner_agency_combination.MFL_Code = confirmed_reported_cases_and_art.SiteCode
- left join NDWH.dbo.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
- left join NDWH.dbo.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
+ left join NDWH.Dim.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
+ left join NDWH.Dim.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
  left join OtherCD4s on OtherCD4s.Patientkey=confirmed_reported_cases_and_art.Patientkey
  left join InitialViralLoads on InitialViralLoads.patientkey=confirmed_reported_cases_and_art.PatientKey
  left join FirstFollowupViralloads on FirstFollowupViralloads.patientkey=confirmed_reported_cases_and_art.PatientKey
  left join SecondFollowupViralloads on SecondFollowupViralloads.patientkey=confirmed_reported_cases_and_art.PatientKey
  left join ThirdFollowupViralloads on ThirdFollowupViralloads.patientkey=confirmed_reported_cases_and_art.PatientKey
+ left join RegimenChanges on RegimenChanges.Patientkey=confirmed_reported_cases_and_art.PatientKey
+ left join OptimizedRegimen on OptimizedRegimen.Patientkey=confirmed_reported_cases_and_art.PatientKey
+ left join ConsecutiveHighVls on ConsecutiveHighVls.PatientKey=confirmed_reported_cases_and_art.PatientKey
+ left join LatestSuppressedVL on LatestSuppressedVL.PatientKey=confirmed_reported_cases_and_art.PatientKey
+ left join Retained on Retained.Patientkey=confirmed_reported_cases_and_art.PatientKey
  end
 
