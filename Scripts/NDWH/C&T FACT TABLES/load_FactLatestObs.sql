@@ -2,7 +2,7 @@
 IF OBJECT_ID(N'[NDWH].[Fact].[FactLatestObs]', N'U') IS NOT NULL 
 	DROP TABLE [NDWH].[Fact].[FactLatestObs];
 
-ALTER TABLE ODS.Dim.All_EMRSites  ALTER COLUMN SDP_Agency nvarchar(4000) ;
+ALTER TABLE ODS.Care.All_EMRSites  ALTER COLUMN SDP_Agency nvarchar(4000) ;
 
 BEGIN	
 with MFL_partner_agency_combination as (
