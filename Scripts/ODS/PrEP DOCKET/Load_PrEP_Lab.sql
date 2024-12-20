@@ -1,6 +1,6 @@
 
 BEGIN
-MERGE [ODS].[dbo].[PrEP_Lab] AS a
+MERGE [ODS].[PrEP].[PrEP_Lab] AS a
 	USING(SELECT	DISTINCT
 	        
 			   a.[RefId]
