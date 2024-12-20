@@ -59,7 +59,6 @@ WITH ReportedAsPregnant As (
 						,VisitDate					
 						,0 IsPBFW
 						from ods.Care.CT_PatientVisits 
-						from [ODS].[Care].[CT_PatientVisits] 
 						where  Pregnant='Yes' and cast(LMP as date) <>'1900-01-01' and LMP is not null and voided=0 and LMP <=@as_of_date 
 						and VisitDate <= @as_of_date
 						
@@ -185,7 +184,6 @@ ReportedAsBreastFeeding As (
 						,VisitDate	As BreastFeedingRelatedVisitDate			
 						,0 IsPBFW
 						from ods.Care.CT_PatientVisits 
-						from [ODS].[Care].[CT_PatientVisits] 
 						where  Breastfeeding='Yes'  and voided=0 and VisitDate <= @as_of_date
 						
 
@@ -234,10 +232,8 @@ IsBreastFeedingFromHeiDOB As( ---breastfeeding confirmed from MNCH
 						,BreastFeedingRelatedVisitDate					
 						,0 IsPBFW 
 				From MaxOrderedBreastFeedingAsOfDate                           
-				left join ods.MNCH.MNCH_MotherBabyPairs pairs
 				left join [ODS].[MNCH].[MNCH_MotherBabyPairs] pairs
 				on MaxOrderedBreastFeedingAsOfDate.SiteCode = pairs.SiteCode  and MaxOrderedBreastFeedingAsOfDate.PatientPK = pairs.MotherPatientPK
-				left join ods.MNCH.MNCH_Patient  Patient
 				left join [ODS].[MNCH].[MNCH_Patient]  Patient
 				on pairs.SiteCode = Patient.SiteCode 
 							and pairs.BabyPatientPK = Patient.PatientPK
