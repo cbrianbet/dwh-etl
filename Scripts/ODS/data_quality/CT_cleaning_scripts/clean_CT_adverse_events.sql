@@ -1,25 +1,25 @@
 -- clean AdverseEvent
-UPDATE [ODS].[DBO].[CT_AdverseEvents]
+UPDATE [ODS].[Care].[CT_AdverseEvents]
     SET AdverseEvent = lkp_adverse_events.target_name
-FROM [ODS].[DBO].[CT_AdverseEvents] AS adverse_events
-INNER JOIN ods.dbo.lkp_adverse_events ON lkp_adverse_events.source_name = adverse_events.AdverseEvent
+FROM [ODS].[Care].[CT_AdverseEvents] AS adverse_events
+INNER JOIN ods.lkp.lkp_adverse_events ON lkp_adverse_events.source_name = adverse_events.AdverseEvent
 
 GO
 
 -- clean AdverseEventStartDate
-UPDATE [ODS].[DBO].[CT_AdverseEvents]
+UPDATE [ODS].[Care].[CT_AdverseEvents]
     SET AdverseEventStartDate = NULL
 WHERE AdverseEventStartDate < CAST('1980-01-01' AS DATE) OR AdverseEventStartDate > GETDATE()
 
 -- clean AdverseEventEndDate
-UPDATE [ODS].[DBO].[CT_AdverseEvents]
+UPDATE [ODS].[Care].[CT_AdverseEvents]
     SET AdverseEventEndDate = NULL
 WHERE AdverseEventEndDate < CAST('1980-01-01' AS DATE) OR AdverseEventEndDate > GETDATE()
 
 GO
 
 -- clean Severity
-UPDATE [ODS].[DBO].[CT_AdverseEvents]
+UPDATE [ODS].[Care].[CT_AdverseEvents]
     SET Severity = CASE 
                     WHEN Severity IN ('Mild', 'Mild|Mild|Mild') THEN 'Mild'
                     WHEN Severity IN ('Moderate',  'Moderate|Moderate', 'Moderate|Moderate|Moderate') THEN 'Moderate'
@@ -30,16 +30,16 @@ WHERE Severity IN ('Moderate','Mild','Severe','Mild|Moderate','Fatal','Severe|Se
 GO
 
 -- clean AdverseEventRegimen
-UPDATE [ODS].[DBO].[CT_AdverseEvents]
+UPDATE [ODS].[Care].[CT_AdverseEvents]
     SET AdverseEventRegimen = lkp_regimen.target_name
-FROM [ODS].[DBO].[CT_AdverseEvents] AS adverse_events
-INNER JOIN ods.dbo.lkp_regimen ON lkp_regimen.source_name = adverse_events.AdverseEventRegimen
+FROM [ODS].[Care].[CT_AdverseEvents] AS adverse_events
+INNER JOIN ods.lkp.lkp_regimen ON lkp_regimen.source_name = adverse_events.AdverseEventRegimen
 
 GO
 
 
 -- clean AdverseEventActionTaken
-UPDATE [ODS].[DBO].[CT_AdverseEvents]
+UPDATE [ODS].[Care].[CT_AdverseEvents]
     SET AdverseEventActionTaken = CASE 
                                     WHEN AdverseEventActionTaken IN ('Medicine not changed', 'CONTINUE REGIMEN', 'CONTINUE REGIMEN|CONTINUE REGIMEN') THEN 'Drug not Changed'
                                     WHEN AdverseEventActionTaken = 'Dose reduced' THEN 'Drug Reduced'
@@ -53,7 +53,7 @@ WHERE AdverseEventActionTaken IN ('SUBSTITUTED DRUG','Medicine causing AE substi
 GO
 
 --- clean AdverseEventCause
-UPDATE [ODS].[DBO].[CT_AdverseEvents]
+UPDATE [ODS].[Care].[CT_AdverseEvents]
     SET AdverseEventCause = CASE 
                                 WHEN AdverseEventCause IN ('3TC/D4T','3TC/TDF/NVP','ABACAVIR','abacavirwhen she was using','ABC','ABC+3TC','abc/3tc/efv','AF2B','af2b- avonza','ALL ARV','ALUVIA','art','ARV','arvs','atanzanavir','atavanavir','ataz/rit','atazanavir','Atazanavir/Rironavir','atazanavir/ritonavir','ATV','ATV/r','ATVr','AZT','AZT+3TC+EFV','AZT/3TC/NVP','AZT/ATV','AZT/KALETRA','ctx/3tc/tdf/efv','D4T','D4T / 3TC / NVP','D4T/3TC','D4T/AZT','DDI','Dolotegravir','doluteglavir','dolutegravir','DTG','DTG Aurobindo','dultegravir','EFARIRENZ','EFAVIRENCE','Efavirens','efavirenz','efavirenze','efavirez','efervirence','efervirenz','efevurence','EFV','EFV 600MG','EFV/NVP','efv/rhze','HAART','KALETRA','lopinanavir','LOPINAVIR','LPV','LPV/r','lpvr','NVP','NVP/ABC','pep','TDF','tdf dtg','TDF/3TC/','tdf/3tc/dtg','tdf/3tc/efv','Tenoforvir','tenofovir','TLD','TLE ','TLE 400','TRIMUNE','ZIDOVUDINE','EFV','? NVP','? TLD','?ATV/r','3TC','3TC/3TC', 'D4T', 'EFAVIRENZ') THEN 'ARV'
                                 WHEN AdverseEventCause IN ('ART/TB', 'ARVS, CTX , IPT', 'CTX OR EFV', 'D4T/INH', 'INH/NVP', 'isoniazid and nevirapine', 'isoniazid efavirenz', 'NVP/CTX', 'tdf dtg ctx 3tc', 'inh, tdf,3tc,dtg, ctx') THEN 'ARV + OTHER DRUGS'
@@ -64,7 +64,7 @@ UPDATE [ODS].[DBO].[CT_AdverseEvents]
 GO
 
 -- clean AdverseEventClinicalOutcome
-UPDATE [ODS].[DBO].[CT_AdverseEvents]
+UPDATE [ODS].[Care].[CT_AdverseEvents]
     SET AdverseEventClinicalOutcome = CASE
                                         WHEN AdverseEventClinicalOutcome = 'Recovered/Resolved' THEN 'Recovered'
                                         WHEN AdverseEventClinicalOutcome = 'Recovering/Resolving' THEN 'Recovering'

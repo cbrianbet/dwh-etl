@@ -20,14 +20,14 @@ select
     count(tracing.PatientKey) as patients,
     CAST(GETDATE() AS DATE) AS LoadDate  
 into REPORTING.dbo.AggregateDefaulterTracingOutcome
-from NDWH.dbo.FactDefaulterTracing tracing
-left join NDWH.dbo.DimPatient as patient on patient.PatientKey = tracing.PatientKey
-left join NDWH.dbo.DimFacility as facility on facility.FacilityKey = tracing.FacilityKey
-left join NDWH.dbo.DimPartner as partner on partner.PartnerKey = tracing.PartnerKey
-left join NDWH.dbo.DimAgency as agency on agency.AgencyKey = tracing.AgencyKey
-left join NDWH.dbo.DimAgeGroup as agegroup on agegroup.AgeGroupKey = tracing.AgeGroupKey
-left join NDWH.dbo.DimDate as date on date.DateKey = tracing.VisitDateKey
-left join NDWH.dbo.DimDifferentiatedCare as diffcare on diffcare.DifferentiatedCareKey = tracing.DifferentiatedCareKey
+from NDWH.Fact.FactDefaulterTracing tracing
+left join NDWH.Dim.DimPatient as patient on patient.PatientKey = tracing.PatientKey
+left join NDWH.Dim.DimFacility as facility on facility.FacilityKey = tracing.FacilityKey
+left join NDWH.Dim.DimPartner as partner on partner.PartnerKey = tracing.PartnerKey
+left join NDWH.Dim.DimAgency as agency on agency.AgencyKey = tracing.AgencyKey
+left join NDWH.Dim.DimAgeGroup as agegroup on agegroup.AgeGroupKey = tracing.AgeGroupKey
+left join NDWH.Dim.DimDate as date on date.DateKey = tracing.VisitDateKey
+left join NDWH.Dim.DimDifferentiatedCare as diffcare on diffcare.DifferentiatedCareKey = tracing.DifferentiatedCareKey
 group by 
     facility.FacilityName,
     facility.County,

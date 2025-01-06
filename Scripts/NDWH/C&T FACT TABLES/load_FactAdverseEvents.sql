@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[NDWH].[dbo].[FactAdverseEvents]', N'U') IS NOT NULL 
-	DROP TABLE [NDWH].[dbo].[FactAdverseEvents];
+IF OBJECT_ID(N'[NDWH].[Fact].[FactAdverseEvents]', N'U') IS NOT NULL 
+	DROP TABLE [NDWH].[Fact].[FactAdverseEvents];
 BEGIN
 
 
@@ -8,7 +8,7 @@ with MFL_partner_agency_combination as (
 		distinct MFL_Code,
 		SDP ,
 	    SDP_Agency  as Agency
-	from ODS.dbo.All_EMRSites 
+	from ODS.Care.All_EMRSites 
 ),
 source_data as (
     select 
@@ -27,10 +27,10 @@ source_data as (
         AdverseEventClinicalOutcome,
         AdverseEventIsPregnant,
         datediff(yy, patient.DOB, last_encounter.LastEncounterDate) as AgeLastVisit
-    from ODS.dbo.CT_AdverseEvents as adverse_events
-    left join ODS.dbo.CT_Patient as patient on patient.PatientPK = adverse_events.PatientPK
+    from ODS.Care.CT_AdverseEvents as adverse_events
+    left join ODS.Care.CT_Patient as patient on patient.PatientPK = adverse_events.PatientPK
         and patient.SiteCode = adverse_events.SiteCode
-    left join ODS.dbo.Intermediate_LastPatientEncounter as last_encounter on last_encounter.PatientPK = adverse_events.PatientPK
+    left join ODS.[Intermediate].Intermediate_LastPatientEncounter as last_encounter on last_encounter.PatientPK = adverse_events.PatientPK
         and last_encounter.SiteCode = adverse_events.SiteCode
 )
 select 
@@ -51,21 +51,21 @@ select
     source_data.AdverseEventClinicalOutcome,
     source_data.AdverseEventIsPregnant,
     cast(getdate() as date) as LoadDate
-into [NDWH].[dbo].[FactAdverseEvents]
+into [NDWH].[Fact].[FactAdverseEvents]
 from source_data
-left join NDWH.dbo.DimFacility as facility on facility.MFLCode  = source_data.SiteCode
-left join NDWH.dbo.DimPatient as patient on patient.PatientPKHash = source_data.PatientPKHash
+left join NDWH.Dim.DimFacility as facility on facility.MFLCode  = source_data.SiteCode
+left join NDWH.Dim.DimPatient as patient on patient.PatientPKHash = source_data.PatientPKHash
      and patient.SiteCode = source_data.SiteCode
 left join MFL_partner_agency_combination on MFL_partner_agency_combination.MFL_Code = source_data.SiteCode
-left join NDWH.dbo.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
-left join NDWH.dbo.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
-left join NDWH.dbo.DimDate as adverse_event_start on adverse_event_start.Date = source_data.AdverseEventStartDate
-left join NDWH.dbo.DimDate as adverse_event_end on adverse_event_end.Date = source_data.AdverseEventEndDate
-left join NDWH.dbo.DimDate as visit on visit.Date = source_data.VisitDate
-left join NDWH.dbo.DimAgeGroup as age_group on age_group.Age = source_data.AgeLastVisit
+left join NDWH.Dim.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
+left join NDWH.Dim.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
+left join NDWH.Dim.DimDate as adverse_event_start on adverse_event_start.Date = source_data.AdverseEventStartDate
+left join NDWH.Dim.DimDate as adverse_event_end on adverse_event_end.Date = source_data.AdverseEventEndDate
+left join NDWH.Dim.DimDate as visit on visit.Date = source_data.VisitDate
+left join NDWH.Dim.DimAgeGroup as age_group on age_group.Age = source_data.AgeLastVisit
 WHERE patient.voided =0
     and source_data.AdverseEvent is not null;
 
-alter table NDWH.dbo.FactAdverseEvents add primary key(FactKey)
+alter table NDWH.Fact.FactAdverseEvents add primary key(FactKey)
 
 END

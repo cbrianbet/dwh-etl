@@ -19,7 +19,7 @@ INSERT INTO[ODS_logs].[dbo].[CT_AdverseEvent_Log]
 VALUES     (@AdverseEventStartDate,
             Getdate());
 
-MERGE [ODS].[dbo].[ct_adverseevents] AS a
+MERGE [ODS].[Care].[ct_adverseevents] AS a
 using(SELECT DISTINCT P.[patientcccnumber] AS PatientID,
                         P.[patientpid]       AS PatientPK,
                         F.NAME               AS FacilityName,

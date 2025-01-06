@@ -1,5 +1,5 @@
 BEGIN
-			MERGE [ODS].[dbo].[CT_ARTPatients]  AS a
+			MERGE [ODS].[Care].[CT_ARTPatients]  AS a
 				USING(SELECT  DISTINCT	PA.ID,
 										P.[PatientCccNumber] AS PatientID
 										,P.[PatientPID] AS PatientPK

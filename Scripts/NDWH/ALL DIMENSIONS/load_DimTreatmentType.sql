@@ -1,6 +1,6 @@
-MERGE [NDWH].[dbo].[DimTreatmentType] AS a
+MERGE [NDWH].[Dim].[DimTreatmentType] AS a
 		USING	(	SELECT DISTINCT TreatmentType as TreatmentType
-					FROM ODS.dbo.CT_PatientPharmacy
+					FROM ODS.Care.CT_PatientPharmacy
 					WHERE TreatmentType <> 'NULL' and TreatmentType <>''
 				) AS b 
 						ON(
@@ -19,4 +19,4 @@ MERGE [NDWH].[dbo].[DimTreatmentType] AS a
 										WHEN TreatmentType='Hepatitis B'				THEN 'Non-ART'
 										ELSE TreatmentType 
 									END
-		FROM [NDWH].[dbo].[DimTreatmentType] a;
+		FROM [NDWH].[Dim].[DimTreatmentType] a;

@@ -1,7 +1,7 @@
 BEGIN
 
-		--Truncate table [ODS].[dbo].[HTS_ClientTracing]
-		MERGE [ODS].[dbo].[HTS_ClientTracing] AS a
+		--Truncate table [ODS].[HTS].[HTS_ClientTracing]
+		MERGE [ODS].[HTS].[HTS_ClientTracing] AS a
 			USING(SELECT DISTINCT  a.[FacilityName]
 				  ,a.[SiteCode]
 				  ,a.[PatientPk]

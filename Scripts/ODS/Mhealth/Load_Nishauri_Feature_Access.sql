@@ -1,5 +1,5 @@
 ---- Loads Nishauri Feature Access data from MhealthCentral to ODS
-BEGIN MERGE [ODS].[dbo].[Mhealth_Nishauri_Feature_Access] AS a USING (
+BEGIN MERGE [ODS].[Mhealth].[Mhealth_Nishauri_Feature_Access] AS a USING (
   SELECT
     [PatientPK],
     [PatientPKHash],

@@ -9,7 +9,7 @@ BEGIN
 		INSERT INTO  [ODS_logs].[dbo].[CT_GbvScreening_Log](MaxVisitDate,LoadStartDateTime)
 		VALUES(@MaxVisitDate_Hist,GETDATE())
 	       ---- Refresh [ODS].[dbo].[CT_GbvScreening]
-			MERGE [ODS].[dbo].[CT_GbvScreening] AS a
+			MERGE [ODS].[Care].[CT_GbvScreening] AS a
 				USING(SELECT Distinct
 							P.[PatientCccNumber] AS PatientID
 							,P.[PatientPID] AS PatientPK

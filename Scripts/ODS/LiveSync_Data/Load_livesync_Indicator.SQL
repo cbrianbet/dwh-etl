@@ -1,6 +1,6 @@
 BEGIN
 
-		MERGE [ODS].[dbo].[livesync_Indicator] AS a
+		MERGE [ODS].[Care].[livesync_Indicator] AS a
 			USING(SELECT DISTINCT [id],[facilityCode],
 								  CAST([facilityName] AS NVARCHAR(150)) AS facilityName,CAST([name]AS NVARCHAR(150)) AS [Name],
 						          CAST([value] AS NVARCHAR(150)) AS [value],[indicatorDate],

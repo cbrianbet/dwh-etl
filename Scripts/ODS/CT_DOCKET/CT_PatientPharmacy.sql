@@ -11,7 +11,7 @@ BEGIN
 			INSERT INTO  [ODS_logs].[dbo].[CT_PharmacyVisit_Log](MaxDispenseDate,LoadStartDateTime)
 			VALUES(@DispenseDate,GETDATE())
 
-			MERGE [ODS].[dbo].[CT_PatientPharmacy] AS a
+			MERGE [ODS].[Care].[CT_PatientPharmacy] AS a
 				USING(SELECT Distinct
 							P.[PatientCccNumber] AS PatientID
 							,P.[PatientPID] AS PatientPK

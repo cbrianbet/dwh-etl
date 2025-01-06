@@ -10,7 +10,7 @@ BEGIN
 		VALUES( @OrderedbyDate,GETDATE())
 
 	       ---- Refresh [ODS].[dbo].[CT_PatientLabs]
-			MERGE [ODS].[dbo].[CT_PatientLabs] AS a
+			MERGE [ODS].[Care].[CT_PatientLabs] AS a
 				USING(SELECT distinct
 							 P.[PatientCccNumber] AS PatientID
 							 ,P.[PatientPID] AS PatientPK

@@ -1,7 +1,7 @@
 BEGIN
 
 	       ---- Refresh [ODS].[dbo].[CT_Relationships]
-			MERGE [ODS].[dbo].[CT_Relationships] AS a
+			MERGE [ODS].[Care].[CT_Relationships] AS a
 				USING(SELECT distinct P.[PatientPID] AS PatientPK
 							,P.[PatientCccNumber] AS PatientID
 							,P.[Emr]

@@ -1,12 +1,12 @@
-MERGE [NDWH].[dbo].[DimHTSTraceOutcome] AS a
+MERGE [NDWH].[Dim].[DimHTSTraceOutcome] AS a
 		USING	(	SELECT DISTINCT TracingOutcome AS TraceOutcome
-					FROM ODS.dbo.HTS_ClientTracing 
+					FROM ODS.HTS.HTS_ClientTracing 
 					WHERE  TracingOutcome <> 'null' AND TracingOutcome <> '' AND TracingOutcome IS NOT NULL
 				
 					UNION
 
 					SELECT DISTINCT TraceOutcome 
-					FROM ODS.dbo.HTS_PartnerTracings
+					FROM ODS.HTS.HTS_PartnerTracings
 					WHERE  TraceOutcome <> 'null' AND TraceOutcome <> ''AND TraceOutcome IS NOT NULL
 				) AS b 
 						ON(
@@ -24,7 +24,7 @@ MERGE [NDWH].[dbo].[DimHTSTraceOutcome] AS a
 									WHEN source_data.TraceOutcome IN ('Contact Not Reached', 'Contacted and not Reached') THEN 'Contact Not Reached'
 									ELSE source_data.TraceOutcome
 								END 
-		FROM [NDWH].[dbo].[DimHTSTraceOutcome] source_data;
+		FROM [NDWH].[Dim].[DimHTSTraceOutcome] source_data;
 
 		
 

@@ -1,7 +1,7 @@
 truncate table [ods].[dbo].[all_EMRSites];
 		
 
-	MERGE [ods].[dbo].[all_EMRSites] AS a
+	MERGE [ods].[Care].[all_EMRSites] AS a
 	USING(SELECT DISTINCT	MFL_Code
 							,[Facility_Name]
 							,County

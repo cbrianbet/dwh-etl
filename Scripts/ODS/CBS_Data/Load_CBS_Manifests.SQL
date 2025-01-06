@@ -1,4 +1,4 @@
-MERGE [ODS].[dbo].[CBS_FacilityManifest] AS a
+MERGE [ODS].[Care].[CBS_FacilityManifest] AS a
 	USING( SELECT DISTINCT [Id]
 				  ,[SiteCode],[Name],[Sent],[Recieved],[DateLogged],[DateArrived],[Status]
 				  ,[StatusDate],[FacilityId],[ManifestType],[EmrId],[EmrName],[EmrSetup]

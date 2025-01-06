@@ -1,14 +1,14 @@
-IF OBJECT_ID(N'[ODS].[DBO].[lkp_htsStrategy]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[DBO].[lkp_htsStrategy];
+IF OBJECT_ID(N'[ODS].[lkp].[lkp_htsStrategy]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[lkp].[lkp_htsStrategy];
 BEGIN
             -- create table statement
-	CREATE TABLE [ODS].[DBO].[lkp_htsStrategy](
+	CREATE TABLE [ODS].[lkp].[lkp_htsStrategy](
 		Source_htsStrategy VARCHAR(100) NOT NULL PRIMARY KEY WITH (IGNORE_DUP_KEY = ON),
 		Target_htsStrategy VARCHAR(100) NOT NULL,
 		DateImported DATE NOT NULL
 	)
 	-- insert table
-	INSERT INTO [ODS].[DBO].[lkp_htsStrategy](
+	INSERT INTO [ODS].[lkp].[lkp_htsStrategy](
 				Source_htsStrategy,
 				Target_htsStrategy,
 				DateImported

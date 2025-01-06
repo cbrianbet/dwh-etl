@@ -1,15 +1,15 @@
-IF OBJECT_ID(N'[ODS].[DBO].[lkp_education_level]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[DBO].[lkp_education_level];
+IF OBJECT_ID(N'[ODS].[lkp].[lkp_education_level]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[lkp].[lkp_education_level];
 BEGIN
 		-- create statement
-		CREATE TABLE [ODS].[DBO].[lkp_education_level](
+		CREATE TABLE [ODS].[lkp].[lkp_education_level](
 			source_name VARCHAR(50) NOT NULL PRIMARY KEY WITH (IGNORE_DUP_KEY = ON),
 			target_name VARCHAR(50) NOT NULL,
 			date_created DATE NOT NULL
 			)
 
 		--insert statement
-		INSERT INTO [ODS].[DBO].[lkp_education_level](
+		INSERT INTO [ODS].[lkp].[lkp_education_level](
 			source_name, 
 			target_name,
 			date_created

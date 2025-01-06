@@ -3,6 +3,6 @@ registered in the EMR. Indentified using the patientCCCNumber */
 
 UPDATE a
     SET a.ReferralpatientPK = p.PatientPK
-FROM [ODS].[dbo].[Mhealth_FacilityReferral_Patient] a
-    JOIN [ODS].[dbo].[CT_Patient] p
+FROM [ODS].[Mhealth].[Mhealth_FacilityReferral_Patient] a
+    JOIN [ODS].[Mhealth].[CT_Patient] p
 ON  a.PatientID = p.PatientID;

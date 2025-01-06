@@ -12,7 +12,7 @@ BEGIN
 
 	       ---- Refresh [ODS].[dbo].[CT_EnhancedAdherenceCounselling]
 		   --truncate table[ODS].[dbo].[CT_EnhancedAdherenceCounselling]
-			MERGE [ODS].[dbo].[CT_EnhancedAdherenceCounselling] AS a
+			MERGE [ODS].[Care].[CT_EnhancedAdherenceCounselling] AS a
 				USING(SELECT Distinct
 							P.[PatientCccNumber] AS PatientID
 							,P.[PatientPID] AS PatientPK

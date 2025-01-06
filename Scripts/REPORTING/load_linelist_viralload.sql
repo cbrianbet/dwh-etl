@@ -22,11 +22,11 @@ SELECT DISTINCT
 	PBFW_ValidVL,
     CAST(GETDATE() AS DATE) AS LoadDate 
 INTO REPORTING.dbo.LineListViralLoad
-FROM NDWH.dbo.FactViralLoads vl
-INNER join NDWH.dbo.DimAgeGroup age on age.AgeGroupKey=vl.AgeGroupKey
-INNER join NDWH.dbo.DimFacility f on f.FacilityKey = vl.FacilityKey
-INNER JOIN NDWH.dbo.DimAgency a on a.AgencyKey = vl.AgencyKey
-INNER JOIN NDWH.dbo.DimPatient pat on pat.PatientKey = vl.PatientKey
-INNER JOIN NDWH.dbo.DimPartner p on p.PartnerKey = vl.PartnerKey
+FROM NDWH.Fact.FactViralLoads vl
+INNER join NDWH.Dim.DimAgeGroup age on age.AgeGroupKey=vl.AgeGroupKey
+INNER join NDWH.Dim.DimFacility f on f.FacilityKey = vl.FacilityKey
+INNER JOIN NDWH.Dim.DimAgency a on a.AgencyKey = vl.AgencyKey
+INNER JOIN NDWH.Dim.DimPatient pat on pat.PatientKey = vl.PatientKey
+INNER JOIN NDWH.Dim.DimPartner p on p.PartnerKey = vl.PartnerKey
 
 GO

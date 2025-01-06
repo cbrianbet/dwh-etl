@@ -8,7 +8,7 @@ BEGIN
 		INSERT INTO  [ODS_Logs].[dbo].[CT_DefaulterTracing_Log](MaxVisitDate,LoadStartDateTime)
 		VALUES(@MaxVisitDate_Hist,GETDATE())
 	       ---- Refresh [ODS].[dbo].[CT_DefaulterTracing]
-			MERGE [ODS].[dbo].[CT_DefaulterTracing] AS a
+			MERGE [ODS].[Care].[CT_DefaulterTracing] AS a
 				USING(SELECT distinct P.[PatientPID] AS PatientPK
 						  ,P.[PatientCccNumber] AS PatientID
 						  ,P.[Emr]

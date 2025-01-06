@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[NDWH].[dbo].[FactHTSEligibilityextract]', N'U') IS NOT NULL 
-	DROP TABLE [NDWH].[dbo].[FactHTSEligibilityextract];
+IF OBJECT_ID(N'[NDWH].[Fact].[FactHTSEligibilityextract]', N'U') IS NOT NULL 
+	DROP TABLE [NDWH].[Fact].[FactHTSEligibilityextract];
 
 BEGIN
 
@@ -8,7 +8,7 @@ BEGIN
             distinct MFL_Code,
             SDP,
             SDP_Agency  as Agency
-        from ODS.dbo.All_EMRSites 
+        from ODS.Care.All_EMRSites 
     ),
     source_data as (
         select 
@@ -76,7 +76,7 @@ BEGIN
             HTSStrategy,
             HTSEntryPoint,
             CurrentlyOnPrep
-        from ODS.dbo.HTS_EligibilityExtract
+        from ODS.HTS.HTS_EligibilityExtract
     )
     select 
         Factkey = IDENTITY(INT, 1, 1),
@@ -145,20 +145,20 @@ BEGIN
         source_data.CurrentlyOnPrep,
         source_data.HTSEntryPoint,
         cast(getdate() as date) as LoadDate
-    into NDWH.dbo.FactHTSEligibilityextract
+    into NDWH.Fact.FactHTSEligibilityextract
     from source_data
-    left join NDWH.dbo.DimPatient as patient on patient.PatientPKHash = source_data.PatientPKHash
+    left join NDWH.Dim.DimPatient as patient on patient.PatientPKHash = source_data.PatientPKHash
         and patient.SiteCode = source_data.SiteCode
-    left join NDWH.dbo.DimFacility as facility on facility.MFLCode = source_data.SiteCode
+    left join NDWH.Dim.DimFacility as facility on facility.MFLCode = source_data.SiteCode
     left join MFL_partner_agency_combination on MFL_partner_agency_combination.MFL_Code = source_data.SiteCode
-    left join NDWH.dbo.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
-    left join NDWH.dbo.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
-    left join NDWH.dbo.DimDate as VisitDate on VisitDate.Date = source_data.VisitDate
-    left join NDWH.dbo.DimDate as DateTestedSelf on DateTestedSelf.Date = source_data.DateTestedSelf
-    left join NDWH.dbo.DimDate as DateTestedProvider on DateTestedProvider.Date = source_data.DateTestedProvider
+    left join NDWH.Dim.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
+    left join NDWH.Dim.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
+    left join NDWH.Dim.DimDate as VisitDate on VisitDate.Date = source_data.VisitDate
+    left join NDWH.Dim.DimDate as DateTestedSelf on DateTestedSelf.Date = source_data.DateTestedSelf
+    left join NDWH.Dim.DimDate as DateTestedProvider on DateTestedProvider.Date = source_data.DateTestedProvider
 	WHERE patient.voided =0;
 
 
-    alter table NDWH.dbo.FactHTSEligibilityextract add primary key(FactKey);
+    alter table NDWH.Fact.FactHTSEligibilityextract add primary key(FactKey);
 
 END

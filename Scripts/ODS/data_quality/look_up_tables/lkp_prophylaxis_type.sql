@@ -1,14 +1,14 @@
-IF OBJECT_ID(N'[ODS].[DBO].[lkp_prophylaxis_type]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[DBO].[lkp_prophylaxis_type];
+IF OBJECT_ID(N'[ODS].[lkp].[lkp_prophylaxis_type]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[lkp].[lkp_prophylaxis_type];
 BEGIN
 		-- create table statement
-		CREATE TABLE [ODS].[DBO].[lkp_prophylaxis_type](
+		CREATE TABLE [ODS].[lkp].[lkp_prophylaxis_type](
 			source_name VARCHAR(50) NOT NULL PRIMARY KEY WITH (IGNORE_DUP_KEY = ON),
 			target_name VARCHAR(50) NOT NULL,
 			date_created DATE NOT NULL
 		)
 		-- insert to table statement
-		INSERT INTO [ODS].[DBO].[lkp_prophylaxis_type](
+		INSERT INTO [ODS].[lkp].[lkp_prophylaxis_type](
 				   source_name,
 				   target_name,
 				   date_created

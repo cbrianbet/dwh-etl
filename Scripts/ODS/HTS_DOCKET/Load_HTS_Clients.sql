@@ -1,6 +1,6 @@
 
 BEGIN
-			MERGE [ODS].[dbo].[HTS_clients] AS a
+			MERGE [ODS].[HTS].[HTS_clients] AS a
 				USING(SELECT  DISTINCT [HtsNumber]
 					  ,a.[Emr]
 					  ,a.PatientPK
@@ -68,7 +68,7 @@ BEGIN
 		a.[SiteCode],            
 		ROW_NUMBER() OVER (PARTITION BY a.[PatientPk],a.[SiteCode]
 		ORDER BY a.[PatientPk],a.[SiteCode] desc) Row_Num
-        FROM [ODS].[dbo].[HTS_clients]a)
+        FROM [ODS].[HTS].[HTS_clients]a)
 
 delete from cte where Row_Num>1 
 	END

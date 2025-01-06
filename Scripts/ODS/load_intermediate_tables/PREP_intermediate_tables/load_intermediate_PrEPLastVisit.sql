@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[ODS].[dbo].[Intermediate_PrepLastVisit]', N'U') IS NOT NULL 
-DROP TABLE [ODS].[dbo].[Intermediate_PrepLastVisit];
+IF OBJECT_ID(N'[ODS].[Intermediate].[Intermediate_PrepLastVisit]', N'U') IS NOT NULL 
+DROP TABLE [ODS].[Intermediate].[Intermediate_PrepLastVisit];
 
 BEGIN
 
@@ -56,13 +56,13 @@ BEGIN
             TreatedForHepC,
             NextAppointment,
             ClinicalNotes
-        from ODS.DBO.PrEP_Visits
+        from ODS.PrEP.PrEP_Visits
         where VisitDate is not null
     )
     select 
         source_data.*,cast( '' as nvarchar(100)) PatientPKHash,
         cast(getdate() as date) as LoadDate
-    into  [ODS].[dbo].[Intermediate_PrepLastVisit]
+    into  [ODS].[Intermediate].[Intermediate_PrepLastVisit]
     from  source_data
     where num = 1;
 

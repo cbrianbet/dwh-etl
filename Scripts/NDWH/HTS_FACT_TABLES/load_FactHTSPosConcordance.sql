@@ -1,6 +1,6 @@
 
-IF OBJECT_ID(N'[NDWH].[dbo].FactHTSPosConcordance', N'U') IS NOT NULL 		
-	drop table [NDWH].[dbo].FactHTSPosConcordance
+IF OBJECT_ID(N'[NDWH].[Fact].FactHTSPosConcordance', N'U') IS NOT NULL 		
+	drop table [NDWH].[Fact].FactHTSPosConcordance
 GO
 
 WITH HTSPos AS (
@@ -8,7 +8,7 @@ WITH HTSPos AS (
                      SiteCode,
                     SUM(CASE WHEN FinalTestResult = 'Positive' THEN 1 ELSE 0 END) AS HTSPos_total,
                     TestDate
-                FROM ODS.dbo.Intermediate_EncounterHTSTests link
+                FROM ODS.[Intermediate].Intermediate_EncounterHTSTests link
                 where link.TestDate  between  DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0) and DATEADD(MONTH, DATEDIFF(MONTH, -1, GETDATE())-1, -1) and FinalTestResult='Positive' and SiteCode is not null and TestType in ('Initial Test', 'Initial')
                 GROUP BY SiteCode, TestDate
             ),
@@ -18,7 +18,7 @@ WITH HTSPos AS (
 		distinct MFL_Code,
 		SDP,
 	    SDP_Agency as Agency
-	from ODS.dbo.All_EMRSites 
+	from ODS.Care.All_EMRSites 
 ),
 
 NDW_HTSPos As (Select 
@@ -27,8 +27,8 @@ Facility_Name,
 SDP as PartnerName,
 emr.County,
 count (*) as HTSPos_total
-from ODS.dbo.Intermediate_EncounterHTSTests as hts_encounter
-left join ODS.dbo.ALL_EMRSites as emr on emr.MFL_Code = hts_encounter.SiteCode
+from ODS.[Intermediate].Intermediate_EncounterHTSTests as hts_encounter
+left join ODS.Care.ALL_EMRSites as emr on emr.MFL_Code = hts_encounter.SiteCode
 WHERE  TestDate  between  DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0) and DATEADD(MONTH, DATEDIFF(MONTH, -1, GETDATE())-1, -1) and FinalTestResult='Positive' and SiteCode is not null and TestType in ('Initial Test', 'Initial')
    Group by SiteCode, Facility_Name, SDP, County	
 
@@ -39,7 +39,7 @@ WHERE  TestDate  between  DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0) and
                    DateRecieved as DateUploaded,
                     [SiteCode],
                     ROW_NUMBER()OVER(Partition by Sitecode Order by DateRecieved Desc) as Num
-                FROM ods.dbo.CT_FacilityManifest m
+                FROM ods.Care.CT_FacilityManifest m
                 ),
             Upload As (
 				SELECT distinct
@@ -55,7 +55,7 @@ WHERE  TestDate  between  DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0) and
                     ,[value]
                     ,statusDate
                     ,indicatorDate
-                FROM ODS.dbo.livesync_Indicator
+                FROM ODS.Care.livesync_Indicator
                 where stage like '%EMR' and name like '%HTS_TESTED_POS' and indicatorDate=EOMONTH(DATEADD(mm,-1,GETDATE())) and facilityCode is not null
             ),
             Facilityinfo AS (
@@ -64,7 +64,7 @@ WHERE  TestDate  between  DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0) and
                     County,
                     SDP,
                     EMR
-                from ODS.dbo.All_EMRSites
+                from ODS.Care.All_EMRSites
             ),
             DHIS2_HTSPos AS (
                 SELECT
@@ -73,7 +73,7 @@ WHERE  TestDate  between  DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0) and
                     [County],
                     Positive_Total,
                     ReportMonth_Year
-                FROM [ODS].[dbo].HTS_DHIS2
+                FROM [ODS].[HTS].HTS_DHIS2
                WHERE ReportMonth_Year =CONVERT(VARCHAR(6), DATEADD(MONTH, -1, GETDATE()), 112) and ISNUMERIC(SiteCode) >0
             ),
             LatestEMR AS (
@@ -91,7 +91,7 @@ WHERE  TestDate  between  DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0) and
                 Sitecode,
                  DwapiVersion,
                  Docket
-                        From ODS.dbo.CT_FacilityManifestCargo 
+                        From ODS.Care.CT_FacilityManifestCargo 
             ) ,
             Summary As (Select
                 coalesce (DHIS2_HTSPos.SiteCode, NDW_HTSPos.sitecode,LatestEMR.facilityCode ) As MFLCode,
@@ -140,12 +140,12 @@ WHERE  TestDate  between  DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0) and
             EOMONTH(DATEADD(mm,-1,GETDATE())) as Reporting_Month,
             dwapi.DwapiVersion,
            Cast(getdate() as date) as LoadDate
-        into NDWH.dbo.FactHTSPosConcordance
+        into NDWH.Fact.FactHTSPosConcordance
         from Summary
-left join NDWH.dbo.DimFacility as facility on facility.MFLCode = Summary.MFLCode
+left join NDWH.Dim.DimFacility as facility on facility.MFLCode = Summary.MFLCode
 left join MFL_partner_agency_combination on MFL_partner_agency_combination.MFL_Code = Summary.MFLCode
-left join NDWH.dbo.DimPartner as partner on partner.PartnerName = Summary.SDP
-left join NDWH.dbo.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
+left join NDWH.Dim.DimPartner as partner on partner.PartnerName = Summary.SDP
+left join NDWH.Dim.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
 left join DWAPI on DWAPI.SiteCode=Summary.MFLCode
  ORDER BY Percent_variance_EMR_DWH DESC
 

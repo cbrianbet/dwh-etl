@@ -7,7 +7,7 @@
 
 						 ROW_NUMBER() OVER (PARTITION BY PatientPK,Sitecode,visitID,visitDate ORDER BY
 						PatientPK,Sitecode,visitID,visitDate) Row_Num
-						FROM [ODS].[dbo].[CT_CervicalCancerScreening](NoLock)
+						FROM [ODS].[Care].[CT_CervicalCancerScreening](NoLock)
 						)
 						delete from cte 
 						Where Row_Num >1 ;
