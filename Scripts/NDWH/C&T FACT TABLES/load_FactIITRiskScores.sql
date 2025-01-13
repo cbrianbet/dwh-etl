@@ -1,6 +1,6 @@
 
-IF OBJECT_ID(N'[NDWH].[dbo].[FactIITRiskScores]', N'U') IS NOT NULL 
-	DROP TABLE [NDWH].[dbo].[FactIITRiskScores];
+IF OBJECT_ID(N'[NDWH].[fact].[FactIITRiskScores]', N'U') IS NOT NULL 
+	DROP TABLE [NDWH].[fact].[FactIITRiskScores];
 BEGIN
 
 
