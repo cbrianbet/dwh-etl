@@ -1,4 +1,4 @@
-truncate table [ods].[dbo].[all_EMRSites];
+truncate table [ods].[care].[all_EMRSites];
 		
 
 	MERGE [ods].[Care].[all_EMRSites] AS a
@@ -54,7 +54,7 @@ truncate table [ods].[dbo].[all_EMRSites];
 						
 						ROW_NUMBER() OVER (PARTITION BY MFL_Code ORDER BY
 					MFL_Code) Row_Num
-					FROM [ods].[dbo].[all_EMRSites]
+					FROM [ods].[care].[all_EMRSites]
 					)
 					delete from cte 
 					Where Row_Num >1 ;
