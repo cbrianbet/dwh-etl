@@ -55,7 +55,7 @@ select
     RiskScore as LatestRiskScore,
     RiskCategory as LatestRiskCategory,
     art.ARTOutcomeKey
-	into NDWH.dbo.FactIITRiskScores
+	into NDWH.fact.FactIITRiskScores
 from iit_risk_scores_ordering as risk_scores
 left join NDWH.Dim.DimPatient as patient on patient.PatientPKHash = risk_scores.PatientPKHash
     and patient.SiteCode = risk_scores.SiteCode
