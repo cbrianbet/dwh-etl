@@ -1,7 +1,7 @@
 
 BEGIN
---truncate table [ODS].[dbo].[PrEP_BehaviourRisk]
-MERGE [ODS].[dbo].[PrEP_BehaviourRisk] AS a
+--truncate table [ODS].[PrEP].[PrEP_BehaviourRisk]
+MERGE [ODS].[PrEP].[PrEP_BehaviourRisk] AS a
 	USING(SELECT distinct
 	   A.ID
       ,a.[RefId]
