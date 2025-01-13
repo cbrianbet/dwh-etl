@@ -1,6 +1,6 @@
 
-IF OBJECT_ID(N'[NDWH].[Fact].[FactIITRiskScores]', N'U') IS NOT NULL 
-	DROP TABLE [NDWH].[Fact].[FactIITRiskScores];
+IF OBJECT_ID(N'[NDWH].[dbo].[FactIITRiskScores]', N'U') IS NOT NULL 
+	DROP TABLE [NDWH].[dbo].[FactIITRiskScores];
 BEGIN
 
 
@@ -34,13 +34,13 @@ appointments_from_last_visit as (
         lastencounter.SiteCode,
         lastencounter.LastEncounterDate as lastencounterDate,
         lastencounter.NextAppointmentDate as NextAppointment
-    from ODS.[Intermediate].Intermediate_LastPatientEncounter as lastencounter
+    from ODS.Intermediate.Intermediate_LastPatientEncounter as lastencounter
 ),
 active_clients as (
     select 
         PatientPk,
         SiteCode
-    from ODS.[Intermediate].Intermediate_ARTOutcomes
+    from ODS.Intermediate.Intermediate_ARTOutcomes
     where ARTOutcome = 'V'
 )
 select 
@@ -53,13 +53,14 @@ select
     evaluation.DateKey as RiskEvaluationDateKey,
     appointment.DateKey as LastVisitAppointmentGivenDateKey,
     RiskScore as LatestRiskScore,
-    RiskCategory as LatestRiskCategory
-	into NDWH.Fact.FactIITRiskScores
+    RiskCategory as LatestRiskCategory,
+    art.ARTOutcomeKey
+	into NDWH.dbo.FactIITRiskScores
 from iit_risk_scores_ordering as risk_scores
-inner join active_clients on active_clients.PatientPK = risk_scores.PatientPK
-    and active_clients.SiteCode = risk_scores.SiteCode
 left join NDWH.Dim.DimPatient as patient on patient.PatientPKHash = risk_scores.PatientPKHash
     and patient.SiteCode = risk_scores.SiteCode
+left join NDWH.Fact.FACTART as art on art.PatientKey=Patient.Patientkey
+left join NDWH.Dim.DimARTOutcome as outcome on outcome.ARTOutcomeKey=art.ARTOutcomeKey
 left join NDWH.Dim.DimFacility as facility on facility.MFLCode = risk_scores.SiteCode
 left join MFL_partner_agency_combination on MFL_partner_agency_combination.MFL_Code = risk_scores.SiteCode
 left join NDWH.Dim.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
@@ -71,6 +72,6 @@ left join appointments_from_last_visit on appointments_from_last_visit.PatientPK
 left join NDWH.Dim.DimDate as appointment on appointment.Date = appointments_from_last_visit.NextAppointment
 where rank = 1 and patient.voided = 0
 
-alter table NDWH.Fact.FactIITRiskScores add primary key(FactKey)
+alter table NDWH.dbo.FactIITRiskScores add primary key(FactKey)
 
 END
