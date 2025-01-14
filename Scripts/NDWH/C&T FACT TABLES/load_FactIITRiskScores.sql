@@ -73,6 +73,6 @@ left join appointments_from_last_visit on appointments_from_last_visit.PatientPK
 left join NDWH.Dim.DimDate as appointment on appointment.Date = appointments_from_last_visit.NextAppointment
 where rank = 1 and patient.voided = 0
 and   cast(RiskEvaluationDateKey as date)>'2024-01-31'
-alter table NDWH.dbo.FactIITRiskScores add primary key(FactKey)
+alter table NDWH.fact.FactIITRiskScores add primary key(FactKey)
 
 END
