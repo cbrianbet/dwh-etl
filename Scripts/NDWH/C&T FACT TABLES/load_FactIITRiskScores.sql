@@ -27,6 +27,7 @@ iit_risk_scores_ordering as (
     from ODS.Care.CT_IITRiskScores as scores 
     left join ODS.Care.CT_Patient as patient on patient.PatientPK = scores.PatientPK
         and patient.SiteCode = scores.PatientPK
+    where RiskEvaluationDate >= '2024-02-01'
 ),
 appointments_from_last_visit as (
     select 
