@@ -36,13 +36,6 @@ appointments_from_last_visit as (
         lastencounter.LastEncounterDate as lastencounterDate,
         lastencounter.NextAppointmentDate as NextAppointment
     from ODS.Intermediate.Intermediate_LastPatientEncounter as lastencounter
-),
-active_clients as (
-    select 
-        PatientPk,
-        SiteCode
-    from ODS.Intermediate.Intermediate_ARTOutcomes
-    where ARTOutcome = 'V'
 )
 select 
     Factkey = IDENTITY(INT, 1, 1),
