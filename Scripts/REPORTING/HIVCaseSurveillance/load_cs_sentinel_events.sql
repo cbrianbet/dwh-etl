@@ -205,6 +205,8 @@ Retained as (
     Gender,
     AgeLastVisit,
     SiteCode,
+    County,
+    subCounty,
     SDP as PartnerName,
     AgencyName,
     NewCaseReported,
