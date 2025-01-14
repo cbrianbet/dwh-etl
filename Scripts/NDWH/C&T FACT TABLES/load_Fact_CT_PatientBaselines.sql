@@ -44,10 +44,10 @@ BEGIN
             PatientPKHash,
             SiteCode,
             CASE 
-                WHEN CAST(REPLACE(TestResult, ',', '') AS FLOAT) >= 1000.00 THEN 'UNSUPPRESSED' 
-                WHEN CAST(REPLACE(TestResult, ',', '') AS FLOAT) BETWEEN 200.00 AND 999.00 THEN 'High Risk LLV'
-                WHEN CAST(REPLACE(TestResult, ',', '') AS FLOAT) BETWEEN 50.00 AND 199.00 THEN 'Low Risk LLV'
-                WHEN CAST(REPLACE(TestResult, ',', '') AS FLOAT) < 50 THEN 'LDL'
+                WHEN try_CAST(REPLACE(TestResult, ',', '') AS FLOAT) >= 1000.00 THEN 'UNSUPPRESSED' 
+                WHEN try_CAST(REPLACE(TestResult, ',', '') AS FLOAT) BETWEEN 200.00 AND 999.00 THEN 'High Risk LLV'
+                WHEN try_CAST(REPLACE(TestResult, ',', '') AS FLOAT) BETWEEN 50.00 AND 199.00 THEN 'Low Risk LLV'
+                WHEN try_CAST(REPLACE(TestResult, ',', '') AS FLOAT) < 50 THEN 'LDL'
                 ELSE
                     CASE
                         WHEN TestResult IN ('Undetectable', 'NOT DETECTED', '0 copies/ml', 'LDL', 'Less than Low Detectable Level') THEN 'LDL' 
@@ -63,6 +63,7 @@ BEGIN
         partner.PartnerKey,
         agency.AgencyKey,
         adherence,
+        BaselineVLOutcomes,
         CAST(GETDATE() AS DATE) AS LoadDate
     INTO NDWH.Fact.FactCTPatientsBaselines
     FROM CT_Patients
@@ -73,7 +74,8 @@ BEGIN
     LEFT JOIN NDWH.Dim.DimPartner AS partner ON partner.PartnerName = MFL_partner_agency_combination.SDP
     LEFT JOIN NDWH.Dim.DimAgency AS agency ON agency.AgencyName = MFL_partner_agency_combination.Agency
     LEFT JOIN Baseline_Adherence ON Baseline_Adherence.PatientPKHash = CT_Patients.PatientPKHash 
-        AND Baseline_Adherence.SiteCode = CT_Patients.SiteCode;
+        AND Baseline_Adherence.SiteCode = CT_Patients.SiteCode
+    left join Baseline_Vls on Baseline_Vls.PatientPKHash=CT_Patients.patientpkhash and Baseline_Vls.SiteCode=CT_Patients.sitecode
 
     ALTER TABLE NDWH.Fact.FactCTPatientsBaselines ADD PRIMARY KEY(FactKey);
 END
