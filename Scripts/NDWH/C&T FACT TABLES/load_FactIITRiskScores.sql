@@ -4,6 +4,9 @@ IF OBJECT_ID(N'[NDWH].[Fact].[FactIITRiskScores]', N'U') IS NOT NULL
 BEGIN
 
 
+-- Setting the start date when valid IIT Risk scores where generated
+DECLARE @ValidStartDate DATE = '2024-02-01';
+
 with MFL_partner_agency_combination as (
 	select 
 		distinct MFL_Code,
@@ -27,7 +30,7 @@ iit_risk_scores_ordering as (
     from ODS.Care.CT_IITRiskScores as scores 
     left join ODS.Care.CT_Patient as patient on patient.PatientPK = scores.PatientPK
         and patient.SiteCode = scores.PatientPK
-    where RiskEvaluationDate >= '2024-02-01'
+    where RiskEvaluationDate >= @ValidStartDate
 ),
 appointments_from_last_visit as (
     select 
