@@ -48,14 +48,14 @@ select
 	Longitude,
 	SubCounty, 
 	County,
-	HIVRiskCategory as LatesHIVRiskCategory,
+	HIVRiskCategory as LatestHIVRiskCategory,
 	count(distinct PatientKey) as CountOfClients,
 	sum(count(distinct PatientKey)) over(partition by MFLCode) as TotalClientsInFacility,
     sum(count(distinct PatientKey)) over(partition by SubCounty) as TotalClientsInSubCounty,
 	sum(count(distinct PatientKey)) over(partition by County) as TotalClientsInCounty
 into REPORTING.dbo.AggregateHTSRiskScoresLastThreeMonths
 from source_data
-where num = 1 and (HIVRiskCategory is not null or HIVRiskCategory <> '')
+where num = 1 and (HIVRiskCategory is not null and HIVRiskCategory <> '')
 group by 
 	FacilityName,
 	MFLCode,
