@@ -104,7 +104,9 @@ Select Confirmed_reported_cases_and_art.Patientkey,
        End               As WithBaselineCD4,
        Whostageatart,
        Ageatartstart,
-       Age.Datimagegroup As ARTStartAgeGroup
+       Age.Datimagegroup As ARTStartAgeGroup,
+       Adherence,
+      Baselinevloutcomes
 Into   [Hivcasesurveillance].[Dbo].[Cslinkage]
 From   Confirmed_reported_cases_and_art
        Left Join Baselinecd4s
