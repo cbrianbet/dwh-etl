@@ -44,17 +44,18 @@ BEGIN
             PatientPKHash,
             SiteCode,
             CASE 
-                WHEN try_CAST(REPLACE(TestResult, ',', '') AS FLOAT) >= 1000.00 THEN 'UNSUPPRESSED' 
-                WHEN try_CAST(REPLACE(TestResult, ',', '') AS FLOAT) BETWEEN 200.00 AND 999.00 THEN 'High Risk LLV'
-                WHEN try_CAST(REPLACE(TestResult, ',', '') AS FLOAT) BETWEEN 50.00 AND 199.00 THEN 'Low Risk LLV'
-                WHEN try_CAST(REPLACE(TestResult, ',', '') AS FLOAT) < 50 THEN 'LDL'
+                WHEN try_CAST(REPLACE(FirstVL, ',', '') AS FLOAT) >= 1000.00 THEN 'UNSUPPRESSED' 
+                WHEN try_CAST(REPLACE(FirstVL, ',', '') AS FLOAT) BETWEEN 200.00 AND 999.00 THEN 'High Risk LLV'
+                WHEN try_CAST(REPLACE(FirstVL, ',', '') AS FLOAT) BETWEEN 50.00 AND 199.00 THEN 'Low Risk LLV'
+                WHEN try_CAST(REPLACE(FirstVL, ',', '') AS FLOAT) < 50 THEN 'LDL'
                 ELSE
                     CASE
-                        WHEN TestResult IN ('Undetectable', 'NOT DETECTED', '0 copies/ml', 'LDL', 'Less than Low Detectable Level') THEN 'LDL' 
+                        WHEN FirstVL IN ('Undetectable', 'NOT DETECTED', '0 copies/ml', 'LDL', 'Less than Low Detectable Level') THEN 'LDL' 
                         ELSE NULL 
                     END 
             END AS BaselineVLOutcomes
-        FROM ODS.Intermediate.Intermediate_BaseLineViralLoads
+        FROM NDWH.Fact.FactViralLoads as vls
+        left join NDWH.Dim.DimPatient as pat on pat.PatientKey=vls.PatientKey
     )
     SELECT 
         FactKey = IDENTITY(INT, 1, 1),
