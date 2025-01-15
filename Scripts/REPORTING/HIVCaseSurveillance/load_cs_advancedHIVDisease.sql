@@ -46,17 +46,18 @@ With Visitdata As (
         County,
         Subcounty,
         Visits.Patientkey,
-        Whostage,
+        Whostage,        
+        Visits.ScreenedForChronicIllness,
         Gender,
         Try_convert(Date, Visitdatekey) As VisitDate,
         Eomonth(Try_convert(Date, Visitdatekey)) As AsofDate,
         Datediff(Year, Try_convert(Date, Pat.Dob), Try_convert(Date, Eomonth(Visitdatekey))) As Age
     From 
-        Ndwh.Dbo.Facthistoricalvisits As Visits
-        Left Join Ndwh.Dbo.Dimpatient As Pat On Pat.Patientkey = Visits.Patientkey
-        Left Join Ndwh.Dbo.Dimfacility As Facility On Facility.Facilitykey = Visits.Facilitykey
-        Left Join Ndwh.Dbo.Dimpartner As Partner On Partner.Partnerkey = Visits.Partnerkey
-        Left Join Ndwh.Dbo.Dimagency As Agency On Agency.Agencykey = Visits.Agencykey
+        NDWH.fact.Facthistoricalvisits As Visits
+        Left Join NDWH.Dim.Dimpatient As Pat On Pat.Patientkey = Visits.Patientkey
+        Left Join NDWH.Dim.Dimfacility As Facility On Facility.Facilitykey = Visits.Facilitykey
+        Left Join NDWH.Dim.Dimpartner As Partner On Partner.Partnerkey = Visits.Partnerkey
+        Left Join NDWH.Dim.Dimagency As Agency On Agency.Agencykey = Visits.Agencykey
     Where  
         Visits.Patientkey Is Not Null and  Visitdatekey <= @as_of_date
 ), Rankedvisits As (
@@ -70,7 +71,8 @@ With Visitdata As (
         Asofdate,
         VisitDate,
         Gender,
-        Visitdata.Whostage,
+        Visitdata.Whostage,        
+        Visitdata.ScreenedForChronicIllness,
         Age,
         Row_number() Over (
             Partition By Patientkey
@@ -89,6 +91,7 @@ With Visitdata As (
         Asofdate,
         VisitDate,
         Whostage,
+        ScreenedForChronicIllness,
         Gender,
         Age
     From   
@@ -101,7 +104,7 @@ With Visitdata As (
         Lastcd4,
         Lastcd4date
     From   
-        Ndwh.Dbo.Factcd4
+        Ndwh.fact.Factcd4
 )
 insert into [HIVCaseSurveillance].[dbo].[Cslinelistadvancehivdisease]
  
@@ -115,6 +118,7 @@ Select
     County,
     Subcounty,
     Whostage,
+    ScreenedForChronicIllness,
     Visits.Gender,
     Eomonth(Dateconfirmed.Date) As CohortYearMonth,
     Visits.Age,
@@ -141,9 +145,9 @@ Select
 From   
     Latestvisits As Visits
     Left Join Cd4s On Cd4s.Patientkey = Visits.Patientkey
-    Left Join Ndwh.Dbo.Dimpatient As Pat On Pat.Patientkey = Visits.Patientkey
-    Left Join Ndwh.Dbo.Dimdate As Dateconfirmed On Dateconfirmed.Datekey = Pat.Dateconfirmedhivpositivekey
-    Left Join Ndwh.Dbo.Dimagegroup Age On Age.Age = Visits.Age
+    Left Join NDWH.Dim.Dimpatient As Pat On Pat.Patientkey = Visits.Patientkey
+    Left Join NDWH.Dim.Dimdate As Dateconfirmed On Dateconfirmed.Datekey = Pat.Dateconfirmedhivpositivekey
+    Left Join NDWH.Dim.Dimagegroup Age On Age.Age = Visits.Age
    
    fetch next from cursor_AsOfDates into @as_of_date
 

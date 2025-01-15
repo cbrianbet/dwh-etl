@@ -33,11 +33,16 @@ select
     VisitDate.DateKey As VisitDateKey,
     NextAppointmentDate.DateKey As NextAppointmentDateKey,
 	WHOStage,
+	CASE
+		WHEN chronicIllness.PatientPKHash IS NOT NULL THEN 1
+		ELSE 0
+	END As ScreenedForChronicIllness,
 	cast(getdate() as date) as LoadDate
 into NDWH.fact.FactHistoricalVisits
 from UniqueVisits as  visits
 inner join ODS.Care.CT_ARTPatients as art on art.PatientPKHash=visits.PatientPKHash and art.SiteCode=visits.SiteCode
 inner join NDWH.Dim.DimPatient as patient on visits.PatientPKHash = patient.PatientPKHash and visits.SiteCode = patient.SiteCode
+left join ODS.Care.CT_AllergiesChronicIllness as chronicIllness on visits.PatientPKHash=chronicIllness.PatientPKHash and visits.SiteCode=chronicIllness.SiteCode
 left join NDWH.Dim.DimFacility as facility on facility.MFLCode = visits.SiteCode
 left join MFL_partner_agency_combination on MFL_partner_agency_combination.MFL_Code = visits.SiteCode
 left join NDWH.Dim.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
@@ -45,7 +50,7 @@ left join NDWH.Dim.DimAgency as agency on agency.AgencyName = MFL_partner_agency
 left join NDWH.Dim.DimDate as VisitDate on VisitDate.Date=visits.VisitDate
 left join NDWH.Dim.DimDate as StartARTDate on StartARTDate.Date=art.StartARTDate
 left join NDWH.Dim.DimDate as NextAppointmentDate on NextAppointmentDate.Date=visits.NextAppointmentDate
-WHERE Visits.voided =0 and Visits.NUM=1 and VisitDate >= EOMONTH(DATEADD(MONTH, -11, GETDATE())) 
+WHERE Visits.voided =0 and Visits.NUM=1 and visits.VisitDate >= EOMONTH(DATEADD(MONTH, -11, GETDATE())) 
 
 
 alter table NDWH.fact.FactHistoricalVisits add primary key(FactKey);
