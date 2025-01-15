@@ -641,7 +641,43 @@ InitiatedCMTreatment as (
 							from MaxOrderedCSFCrAg CSFCrAg
 							inner join Fluconazole on CSFCrAg.PatientPKHash=Fluconazole.PatientPKHash and CSFCrAg.SiteCode=Fluconazole.SiteCode
 							where TestResult='1.00'
-						)
+						),
+CT_PatientVisits AS (
+        SELECT DISTINCT 
+            ROW_NUMBER() OVER(PARTITION BY CT_PatientVisits.SiteCode, CT_PatientVisits.PatientPKHash ORDER BY VisitDate ASC) AS rank,
+            CT_PatientVisits.PatientPKHash,
+            CT_PatientVisits.SiteCode,
+            CT_PatientVisits.Adherence,
+            CT_PatientVisits.AdherenceCategory
+        FROM ODS.Care.CT_PatientVisits
+    ),
+Baseline_Adherence AS (
+        SELECT 
+            PatientPKHash,
+            SiteCode,
+            Adherence,
+            AdherenceCategory
+        FROM CT_PatientVisits
+        WHERE rank = 1 AND AdherenceCategory IN ('ARV Adherence', 'ART', 'ARVAdherence', 'ARV', 'ART|CTX')
+    ),
+Baseline_Vls AS (
+        SELECT
+            PatientPKHash,
+            SiteCode,
+            CASE 
+                WHEN try_CAST(REPLACE(FirstVL, ',', '') AS FLOAT) >= 1000.00 THEN 'UNSUPPRESSED' 
+                WHEN try_CAST(REPLACE(FirstVL, ',', '') AS FLOAT) BETWEEN 200.00 AND 999.00 THEN 'High Risk LLV'
+                WHEN try_CAST(REPLACE(FirstVL, ',', '') AS FLOAT) BETWEEN 50.00 AND 199.00 THEN 'Low Risk LLV'
+                WHEN try_CAST(REPLACE(FirstVL, ',', '') AS FLOAT) < 50 THEN 'LDL'
+                ELSE
+                    CASE
+                        WHEN FirstVL IN ('Undetectable', 'NOT DETECTED', '0 copies/ml', 'LDL', 'Less than Low Detectable Level') THEN 'LDL' 
+                        ELSE NULL 
+                    END 
+            END AS BaselineVLOutcomes
+        FROM NDWH.Fact.FactViralLoads as vls
+        left join NDWH.Dim.DimPatient as pat on pat.PatientKey=vls.PatientKey
+)
   select
             Factkey = IDENTITY(INT, 1, 1),
             pat.PatientKey,
@@ -706,6 +742,8 @@ InitiatedCMTreatment as (
             case when PreemtiveCMTheraphy.PatientPKHash is not null then 1 Else 0 End as PreemtiveCMTheraphy,
             case when InitiatedCMTreatment.PatientPKHash is not null then 1 Else 0 End as InitiatedCMTreatment,
             case when MaxOrderedOrderedOnTBDrugs.Patientpkhash is not null then 1 Else 0 End as OnTBTreatment,
+            Adherence,
+           BaselineVLOutcomes,
             cast(getdate() as date) as LoadDate
 INTO NDWH.Fact.FACTART 
 from  CombinedPatientAndPBFW Patient
@@ -736,6 +774,8 @@ left join swithced_to_second_line_in_last_12_monhts on swithced_to_second_line_i
   left join PreemtiveCMTheraphy on PreemtiveCMTheraphy.PatientPKHash=Patient.PatientPKHash and PreemtiveCMTheraphy.SiteCode=Patient.SiteCode
   left join InitiatedCMTreatment on InitiatedCMTreatment.PatientPKHash=Patient.PatientPKHash and InitiatedCMTreatment.SiteCode=Patient.SiteCode
   left join MaxOrderedOrderedOnTBDrugs on MaxOrderedOrderedOnTBDrugs.Patientpkhash=Patient.Patientpkhash and MaxOrderedOrderedOnTBDrugs.sitecode=Patient.sitecode
+  left join Baseline_Adherence on Baseline_Adherence.PatientPKHash=Patient.PatientPKHash and Baseline_Adherence.SiteCode=Patient.SiteCode
+  left join Baseline_Vls on Baseline_Vls.PatientPKHash=Patient.PatientPKHash and Baseline_Vls.SiteCode=Patient.SiteCode
 WHERE pat.voided =0 ;
 alter table NDWH.Fact.FactART add primary key(FactKey)
 END
