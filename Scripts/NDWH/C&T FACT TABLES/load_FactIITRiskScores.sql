@@ -1,4 +1,3 @@
-
 IF OBJECT_ID(N'[NDWH].[fact].[FactIITRiskScores]', N'U') IS NOT NULL 
 	DROP TABLE [NDWH].[fact].[FactIITRiskScores];
     
@@ -69,7 +68,7 @@ left join appointments_from_last_visit on appointments_from_last_visit.PatientPK
     and appointments_from_last_visit.SiteCode = risk_scores.SiteCode
 left join NDWH.Dim.DimDate as appointment on appointment.Date = appointments_from_last_visit.NextAppointment
 where rank = 1 and patient.voided = 0
-and   cast(evaluation.DateKey as date)>'2024-01-31'
+    and RiskCategory IN ( 'Low', 'Medium', 'High')
 alter table NDWH.fact.FactIITRiskScores add primary key(FactKey)
 
 END
