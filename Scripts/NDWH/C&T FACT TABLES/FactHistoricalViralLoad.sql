@@ -210,7 +210,6 @@ Select	SiteCode,
 		Emr,
 		Project   
 	from Combined
-
 )
 
 insert into ndwh.dbo.FactViralLoad_Hist(PatientKey,
