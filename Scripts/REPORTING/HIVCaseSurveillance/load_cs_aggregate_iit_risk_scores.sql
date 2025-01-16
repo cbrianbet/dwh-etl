@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[REPORTING].[dbo].[AggregateIITRiskScores]', N'U') IS NOT NULL 			
-	DROP TABLE [REPORTING].[dbo].[AggregateIITRiskScores]
+IF OBJECT_ID(N'[REPORTING].[dbo].[CSAggregateIITRiskScores]', N'U') IS NOT NULL 			
+	DROP TABLE [REPORTING].[dbo].[CSAggregateIITRiskScores]
 GO
 
 BEGIN
@@ -55,7 +55,7 @@ BEGIN
 		sum(count(distinct PatientKey)) over(partition by MFLCode) as TotalClientsInFacility,
 		sum(count(distinct PatientKey)) over(partition by SubCounty) as TotalClientsInSubCounty,
 		sum(count(distinct PatientKey)) over(partition by County) as TotalClientsInCounty
-	into REPORTING.dbo.AggregateIITRiskScores
+	into REPORTING.dbo.CSAggregateIITRiskScores
 	from source_data
 	where (LatestRiskCategory is not null or LatestRiskCategory <> '')
 	group by 

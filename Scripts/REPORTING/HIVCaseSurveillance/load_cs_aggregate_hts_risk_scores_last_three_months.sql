@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[REPORTING].[dbo].[AggregateHTSRiskScoresLastThreeMonths]', N'U') IS NOT NULL 			
-	DROP TABLE [REPORTING].[dbo].[AggregateHTSRiskScoresLastThreeMonths]
+IF OBJECT_ID(N'[REPORTING].[dbo].[CSAggregateHTSRiskScoresLastThreeMonths]', N'U') IS NOT NULL 			
+	DROP TABLE [REPORTING].[dbo].[CSAggregateHTSRiskScoresLastThreeMonths]
 GO
 
 BEGIN
@@ -53,7 +53,7 @@ select
 	sum(count(distinct PatientKey)) over(partition by MFLCode) as TotalClientsInFacility,
     sum(count(distinct PatientKey)) over(partition by SubCounty) as TotalClientsInSubCounty,
 	sum(count(distinct PatientKey)) over(partition by County) as TotalClientsInCounty
-into REPORTING.dbo.AggregateHTSRiskScoresLastThreeMonths
+into REPORTING.dbo.CSAggregateHTSRiskScoresLastThreeMonths
 from source_data
 where num = 1 and (HIVRiskCategory is not null and HIVRiskCategory <> '')
 group by 
