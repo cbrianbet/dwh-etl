@@ -33,15 +33,16 @@ BEGIN
                               cast(Getdate() AS DATE)
                                 AS LoadDate,
                               coalesce(replace(patients.DateConfirmedHIVPositive,'-',''), replace(art.StartARTDate,'-',''),replace(patients.RegistrationAtCCC,'-','')) as DateConfirmedHIVPositiveKey,
-								     patients.voided
-             FROM   ods.dbo.ct_patient AS patients
-                    LEFT JOIN ods.dbo.ct_patientbaselines AS baselines
+								     patients.voided,
+                             case when art.StartARTDate is not null then 1 else 0 end as EveronART
+             FROM   ods.Care.ct_patient AS patients
+                    LEFT JOIN ods.Care.ct_patientbaselines AS baselines
                            ON patients.patientpkhash = baselines.patientpkhash
                               AND patients.sitecode = baselines.sitecode and baselines.voided=0
-                    LEFT JOIN ods.dbo.intermediate_artoutcomes AS outcomes
+                    LEFT JOIN ods.[intermediate].intermediate_artoutcomes AS outcomes
                            ON outcomes.patientpkhash = patients.patientpkhash
                               AND outcomes.sitecode = patients.sitecode
-                    LEFT JOIN ODS.dbo.CT_ARTPatients as art on art.PatientPKHash = patients.PatientPKHash
+                    LEFT JOIN ODS.Care.CT_ARTPatients as art on art.PatientPKHash = patients.PatientPKHash
                         AND art.SiteCode = patients.SiteCode
             ),
          hts_patient_source
@@ -54,7 +55,7 @@ BEGIN
                              maritalstatus,
                              nupihash,
 							 clients.voided
-             FROM   ods.dbo.hts_clients AS clients
+             FROM   ods.HTS.hts_clients AS clients
 
             ),
          prep_patient_source
@@ -68,7 +69,7 @@ BEGIN
                              clienttype,
                              maritalstatus
 							 ,voided
-             FROM   ods.dbo.prep_patient),
+             FROM   ods.PrEP.prep_patient),
 
          pmtct_patient_source
          AS (SELECT DISTINCT patientpkhash,
@@ -84,7 +85,7 @@ BEGIN
                              AS
                              FirstEnrollmentAtMnchDateKey
 							 ,voided
-             FROM   ods.dbo.mnch_patient),
+             FROM   ods.MNCH.mnch_patient),
          combined_data_ct_hts
          AS (SELECT COALESCE(ct_patient_source.patientpkhash,
                     hts_patient_source.patientpkhash) AS
@@ -113,6 +114,7 @@ BEGIN
                     ct_patient_source.datebaselinewhokey,
                     ct_patient_source.istxcurr,
                     ct_patient_source.DateConfirmedHIVPositiveKey,
+                    ct_patient_source.EveronART,
                     hts_patient_source.htsnumberhash,
                     Cast(Getdate() AS DATE)
                        AS LoadDate
@@ -155,6 +157,7 @@ BEGIN
                     combined_data_ct_hts.datebaselinewhokey,
                     combined_data_ct_hts.istxcurr,
                     combined_data_ct_hts.DateConfirmedHIVPositiveKey,
+                    combined_data_ct_hts.EverOnART,
                     combined_data_ct_hts.htsnumberhash,
                     prep_patient_source.prepnumber,
                     Cast(Format(prep_patient_source.prepenrollmentdate,
@@ -201,6 +204,7 @@ BEGIN
                     combined_data_ct_hts_prep.datebaselinewhokey,
                     combined_data_ct_hts_prep.istxcurr,
                     combined_data_ct_hts_prep.DateConfirmedHIVPositiveKey,
+                    combined_data_ct_hts_prep.EverOnART,
                     combined_data_ct_hts_prep.htsnumberhash,
                     combined_data_ct_hts_prep.prepenrollmentdatekey,
                     combined_data_ct_hts_prep.prepnumber,
@@ -228,7 +232,7 @@ BEGIN
                              ushauri.maritalstatus,
                              ushauri.nupihash,
                              ushauri.SiteType
-             FROM   [ODS].[dbo].[Mhealth_Ushauri_Patient] AS ushauri
+             FROM   [ODS].[Mhealth].[Mhealth_Ushauri_Patient] AS ushauri
                 where ushauri.PatientPKHash is null and SiteCode is not null
 
               ) ,
@@ -239,7 +243,7 @@ BEGIN
                 Sitecode,
                 PaedsDisclosure,
                 PwP
-              from ODS.dbo.CT_PatientVisits as visits
+              from ODS.Care.CT_PatientVisits as visits
                 WHERE PwP LIKE '%|disclosure|%'
                     OR PwP LIKE 'disclosure|%'
                     OR PwP LIKE '%|disclosure'
@@ -271,6 +275,7 @@ BEGIN
          combined_data_ct_hts_prep_pmtct.datebaselinewhokey As datebaselinewhokey,
          combined_data_ct_hts_prep_pmtct.istxcurr As istxcurr,
          combined_data_ct_hts_prep_pmtct.DateConfirmedHIVPositiveKey,
+         combined_data_ct_hts_prep_pmtct.EverOnART,
          combined_data_ct_hts_prep_pmtct.htsnumberhash,
          NUll As sitetype,
          LatestDisclosure.Disclosure,
@@ -299,9 +304,10 @@ BEGIN
 			Null datebaselinewhokey,
 			Null istxcurr,
 			Null DateConfirmedHIVPositiveKey,
+         Null EverOnART,
 			Null htsnumberhash,
 			sitetype,
-            LatestDisclosure.Disclosure,
+         LatestDisclosure.Disclosure,
 			Null LoadDate,
 			Null Voided,
 			Null PrepNumber,
@@ -315,7 +321,7 @@ BEGIN
   
   )
 
-    MERGE NDWH.[dbo].[DimPatient] AS a
+    MERGE NDWH.[Dim].[DimPatient] AS a
     using (SELECT combined_data_ct_hts_prep_pmtct_Ushauri.patientidhash,
                   combined_data_ct_hts_prep_pmtct_Ushauri.patientpkhash,
                   combined_data_ct_hts_prep_pmtct_Ushauri.htsnumberhash,
@@ -339,7 +345,8 @@ BEGIN
                   combined_data_ct_hts_prep_pmtct_Ushauri.prepenrollmentdatekey,
                   combined_data_ct_hts_prep_pmtct_Ushauri.istxcurr,
                   combined_data_ct_hts_prep_pmtct_Ushauri.DateConfirmedHIVPositiveKey,
-				  combined_data_ct_hts_prep_pmtct_Ushauri.Disclosure,
+                  combined_data_ct_hts_prep_pmtct_Ushauri.EverOnART,
+				      combined_data_ct_hts_prep_pmtct_Ushauri.Disclosure,
                   combined_data_ct_hts_prep_pmtct_Ushauri.patientmnchidhash,
                   combined_data_ct_hts_prep_pmtct_Ushauri.firstenrollmentatmnchdatekey,
                   combined_data_ct_hts_prep_pmtct_Ushauri.loaddate,
@@ -364,10 +371,11 @@ BEGIN
              enrollmentwhokey,
              datebaselinewhokey,
              baselinewhokey,
-			 PrepEnrollmentDateKey,
+			    PrepEnrollmentDateKey,
              istxcurr,
              DateConfirmedHIVPositiveKey,
-			 disclosure,
+             EverOnART,
+			    disclosure,
              loaddate,
 			 voided)
       VALUES(patientidhash,
@@ -387,7 +395,8 @@ BEGIN
              PrepEnrollmentDateKey,
              istxcurr,
              DateConfirmedHIVPositiveKey,
-			 disclosure,
+             EverOnART,
+			    disclosure,
              loaddate,
 			 voided)
     WHEN matched THEN
@@ -405,5 +414,6 @@ BEGIN
 				 a.PrepEnrollmentDateKey = b.PrepEnrollmentDateKey,
 				 a.voided				= b.voided,
 				 a.DateConfirmedHIVPositiveKey = b.DateConfirmedHIVPositiveKey,
+             a.EverOnART = b.EverOnART,
 				 a.Disclosure = b.Disclosure;
 END

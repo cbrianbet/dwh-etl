@@ -11,7 +11,7 @@ BEGIN
 		INSERT INTO  [ODS_Logs].[dbo].[CT_Visit_Log](MaxVisitDate,LoadStartDateTime)
 		VALUES(@VisitDate,GETDATE());
 
-			MERGE [ODS].[dbo].[CT_PatientVisits] AS a
+			MERGE [ODS].[Care].[CT_PatientVisits] AS a
 				USING(SELECT distinct   P.[PatientCccNumber] AS PatientID
 										,P.[PatientPID] AS PatientPK
 										,F.[Name] AS FacilityName

@@ -1,6 +1,6 @@
-MERGE [NDWH].[dbo].[DimAgency] AS a
+MERGE [NDWH].[Dim].[DimAgency] AS a
 		USING(SELECT DISTINCT [SDP_Agency] AS AgencyName
-				FROM ODS.dbo.All_EMRSites
+				FROM ODS.Care.All_EMRSites
 				WHERE [SDP_Agency] <> 'NULL' AND [SDP_Agency] <> '') AS b 
 						ON(
 							a.AgencyName = b.AgencyName

@@ -19,13 +19,13 @@ SELECT DISTINCT
     Sum(pat.isTXCurr) As TXCurr,
     cast(getdate() as date) as LoadDate
 INTO [REPORTING].[dbo].[AggregateDSD]
-FROM NDWH.dbo.FactART as art
-LEFT JOIN NDWH.dbo.FactLatestObs as lob on lob.Patientkey = art.PatientKey
-LEFT JOIN NDWH.dbo.DimAgeGroup age on age.AgeGroupKey = art.AgeGroupKey
-LEFT JOIN NDWH.dbo.DimFacility f on f.FacilityKey = art.FacilityKey
-LEFT JOIN NDWH.dbo.DimAgency a on a.AgencyKey = art.AgencyKey
-LEFT JOIN NDWH.dbo.DimPatient pat on pat.PatientKey = art.PatientKey
-LEFT JOIN NDWH.dbo.DimPartner p on p.PartnerKey = art.PartnerKey
+FROM NDWH.Fact.FactART as art
+LEFT JOIN NDWH.Fact.FactLatestObs as lob on lob.Patientkey = art.PatientKey
+LEFT JOIN NDWH.Dim.DimAgeGroup age on age.AgeGroupKey = art.AgeGroupKey
+LEFT JOIN NDWH.Dim.DimFacility f on f.FacilityKey = art.FacilityKey
+LEFT JOIN NDWH.Dim.DimAgency a on a.AgencyKey = art.AgencyKey
+LEFT JOIN NDWH.Dim.DimPatient pat on pat.PatientKey = art.PatientKey
+LEFT JOIN NDWH.Dim.DimPartner p on p.PartnerKey = art.PartnerKey
 WHERE pat.IsTXCurr = 1
 GROUP BY 
     MFLCode, 

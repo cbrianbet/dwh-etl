@@ -1,5 +1,5 @@
-If Object_id(N'[NDWH].[dbo].[FactModulesuptake]', N'U') Is Not Null
-  Drop Table [Ndwh].[Dbo].[FactModulesuptake];
+If Object_id(N'[NDWH].[Fact].[FactModulesuptake]', N'U') Is Not Null
+  Drop Table [Ndwh].[Fact].[FactModulesuptake];
 
 Begin
     With Sites
@@ -16,27 +16,27 @@ Begin
                     [InfrastructureType],
                     [KEPH_Level]
                     
-             From   [ODS].[dbo].[ALL_EMRSites]
+             From   [ODS].Care.[ALL_EMRSites]
              ),
          Otz
          As (Select 
                    Distinct Sitecode,
                   case when Sitecode is not null then 1 Else 0 End as isOTZ
-             From   Ods.Dbo.Ct_otz Otz
+             From   Ods.Care.Ct_otz Otz
              Where  Datediff(Month, Visitdate, Eomonth(Dateadd(Mm, -1, Getdate())))<= 12
             ),
          Ovc
          As (Select 
                   Distinct Sitecode,
                   case when Sitecode is not null then 1 Else 0 End as isOVC
-             From   Ods.Dbo.Ct_ovc Ovc
+             From   Ods.Care.Ct_ovc Ovc
              Where  Datediff(Month, Visitdate, Eomonth( Dateadd(Mm, -1, Getdate()))) <= 12
              ),
          Hts
          As (Select 
                   Distinct Sitecode,
                   case when Sitecode is not null then 1 Else 0 End as isHTS
-             From   Ods.Dbo.Hts_clienttests Tests
+             From   Ods.HTS.Hts_clienttests Tests
              Where  Datediff(Month, Testdate, Eomonth(Dateadd(Mm, -1, Getdate())
                                               )) <= 12
             ),
@@ -44,8 +44,8 @@ Begin
          As (Select 
                   Distinct prep.Sitecode,
                   case when prep.SiteCode is not null then 1 Else 0 End as isPrep
-             From   Ods.Dbo.Prep_visits Prep
-                    Full Join Ods.Dbo.Prep_behaviourrisk Beha
+             From   Ods.PrEP.Prep_visits Prep
+                    Full Join Ods.PrEP.Prep_behaviourrisk Beha
                            On Beha.Sitecode = Prep.Sitecode
              Where  Datediff(Month, Prep.Visitdate, Eomonth( Dateadd(Mm, -1, Getdate()))) <= 12
              ),
@@ -53,24 +53,24 @@ Begin
          As (Select Patientpkhash,
                     Sitecode,
                     Visitdate
-             From   Ods.Dbo.Mnch_ancvisits
+             From   Ods.Mnch.Mnch_ancvisits
              Union
              Select Patientpkhash,
                     Sitecode,
                     Visitdate
-             From   Ods.Dbo.Mnch_matvisits
+             From   Ods.Mnch.Mnch_matvisits
              Union
              Select Patientpkhash,
                     Sitecode,
                     Visitdate
-             From   Ods.Dbo.Mnch_pncvisits),
+             From   Ods.Mnch.Mnch_pncvisits),
          Pmtct
          As (Select 
                  Distinct Sitecode,
                   case when Sitecode is not null then 1 Else 0 End as isPMTCT
 
              From   Combined_dataset
-                    Left Join Ods.Dbo.All_emrsites As Sites
+                    Left Join Ods.Care.All_emrsites As Sites
                            On Sites.Mfl_code = Combined_dataset.Sitecode
              Where  Datediff(Month, Visitdate, Eomonth(Dateadd(Mm, -1, Getdate())))<= 12
              ),
@@ -78,14 +78,14 @@ Begin
          As (Select 
                   Distinct Sitecode,
                   case when Sitecode is not null then 1 Else 0 End as isIITML
-             From   Ods.Dbo.Ct_iitriskscores Iit
+             From   Ods.Care.Ct_iitriskscores Iit
              Where  Datediff(Month, Riskevaluationdate, Eomonth(Dateadd(Mm, -1, Getdate()))) <= 12
              ),
          Htsml
          As (Select 
                   Distinct Sitecode,
                   case when Sitecode is not null then 1 Else 0 End as isHTSML
-             From   Ods.Dbo.Hts_eligibilityextract Htsml
+             From   Ods.HTS.Hts_eligibilityextract Htsml
              Where  Datediff(Month, Visitdate, Eomonth( Dateadd(Mm, -1, Getdate())))  <= 12 and HIVRiskCategory is not null
              ),
          Summary
@@ -143,12 +143,12 @@ Begin
            [Owner],
            [InfrastructureType],
            [KEPH_Level]
-    Into   Ndwh.Dbo.FactModulesuptake
+    Into   Ndwh.Fact.FactModulesuptake
     From   Summary
-           Left join NDWH.dbo.DimFacility as fac on fac.MFLCode=Summary.MFL_Code
-           Left Join NDWH.dbo.DimPartner as partner on partner.partnername=Summary.SDP
-           Left join NDWH.dbo.DimAgency agency on agency.AgencyName=Summary.SDP_Agency
+           Left join NDWH.Dim.DimFacility as fac on fac.MFLCode=Summary.MFL_Code
+           Left Join NDWH.Dim.DimPartner as partner on partner.partnername=Summary.SDP
+           Left join NDWH.Dim.DimAgency agency on agency.AgencyName=Summary.SDP_Agency
           
-    Alter Table Ndwh.Dbo.FactModulesuptake Add Primary Key(Factkey);
+    Alter Table Ndwh.Fact.FactModulesuptake Add Primary Key(Factkey);
 End 
 

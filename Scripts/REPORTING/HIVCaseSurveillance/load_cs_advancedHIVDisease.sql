@@ -73,8 +73,8 @@ With Visitdata As (
         Visitdata.Whostage,
         Age,
         Row_number() Over (
-            Partition By Patientkey, Asofdate
-            Order By Asofdate Desc
+            Partition By Patientkey
+            Order By VisitDate Desc
         ) As VisitRank
     From   
         Visitdata
@@ -150,8 +150,6 @@ From
 end
 
 --free up objects
---drop table #months;
---close cursor_AsOfDates;
---deallocate cursor_AsOfDates
---drop table  Hivcasesurveillance.Dbo.Cslinelistadvancehivdisease;
-
+drop table #months;
+close cursor_AsOfDates;
+deallocate cursor_AsOfDates

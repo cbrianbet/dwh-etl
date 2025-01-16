@@ -1,5 +1,5 @@
 BEGIN
-			MERGE [ODS].[dbo].[CT_CervicalCancerScreening] AS a
+			MERGE [ODS].[Care].[CT_CervicalCancerScreening] AS a
 				USING(SELECT DISTINCT 
 						f.code AS SiteCode,p.PatientPID AS PatientPK,p.PatientCccNumber AS PatientID,ccs.[Emr],ccs.[Project],ccs.[Voided],ccs.[Processed]
 						  ,ccs.[Id],[FacilityName],[VisitID],[VisitDate],[VisitType],[ScreeningMethod],[TreatmentToday]

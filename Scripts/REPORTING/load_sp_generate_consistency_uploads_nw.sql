@@ -27,7 +27,7 @@ FROM (
 		f.county,
 		f.AgencyName agency,
 		f.PartnerName partner
-	FROM NDWH.dbo.fact_manifest fm 
+	FROM NDWH.Fact.fact_manifest fm 
 		JOIN REPORTING.dbo.all_EMRSites f ON fm.facilityId = f.MFLCode
 	WHERE fm.docketid = @docketName AND fm.timeId BETWEEN DATEADD (MONTH, -1, DATEADD ( DAY, 1,EOMONTH ( DATEADD(MONTH, -2, @PERIOD))) ) AND EOMONTH( @PERIOD ) 
 ) X

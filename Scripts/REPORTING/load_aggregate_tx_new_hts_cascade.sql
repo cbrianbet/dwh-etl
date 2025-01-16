@@ -20,14 +20,14 @@ WITH HTS_DATASET AS (
         SUM(Tested) AS Tested,
         SUM(Positive) AS Positive,
         SUM(Linked) AS Linked
-    FROM NDWH.dbo.FactHTSClientTests hts
-    LEFT JOIN NDWH.dbo.DimFacility f ON f.FacilityKey = hts.FacilityKey
-    LEFT JOIN NDWH.dbo.DimAgency a ON a.AgencyKey = hts.AgencyKey
-    LEFT JOIN NDWH.dbo.DimPatient pat ON pat.PatientKey = hts.PatientKey
-    LEFT JOIN NDWH.dbo.DimAgeGroup age ON age.AgeGroupKey = hts.AgeGroupKey
-    LEFT JOIN NDWH.dbo.DimPartner p ON p.PartnerKey = hts.PartnerKey
-    LEFT JOIN NDWH.dbo.FactHTSClientLinkages link ON link.PatientKey = hts.PatientKey
-    LEFT JOIN NDWH.dbo.DimDate d ON d.DateKey = hts.DateTestedKey
+    FROM NDWH.Fact.FactHTSClientTests hts
+    LEFT JOIN NDWH.Dim.DimFacility f ON f.FacilityKey = hts.FacilityKey
+    LEFT JOIN NDWH.Dim.DimAgency a ON a.AgencyKey = hts.AgencyKey
+    LEFT JOIN NDWH.Dim.DimPatient pat ON pat.PatientKey = hts.PatientKey
+    LEFT JOIN NDWH.Dim.DimAgeGroup age ON age.AgeGroupKey = hts.AgeGroupKey
+    LEFT JOIN NDWH.Dim.DimPartner p ON p.PartnerKey = hts.PartnerKey
+    LEFT JOIN NDWH.Fact.FactHTSClientLinkages link ON link.PatientKey = hts.PatientKey
+    LEFT JOIN NDWH.Dim.DimDate d ON d.DateKey = hts.DateTestedKey
     WHERE TestType IN ('Initial Test', 'Initial')
     GROUP BY 
         MFLCode, 
@@ -56,13 +56,13 @@ TXNEW_DATASET AS (
         startDate.Year,
         startDate.Month,
         COUNT(*) AS TXNew
-    FROM NDWH.dbo.FactArt AS art
-    LEFT JOIN NDWH.dbo.DimFacility AS facility ON facility.FacilityKey = art.FacilityKey
-    LEFT JOIN NDWH.dbo.DimPartner AS partner ON partner.PartnerKey = art.PartnerKey
-    LEFT JOIN NDWH.dbo.DimPatient AS patient ON patient.PatientKey = art.PatientKey
-    LEFT JOIN NDWH.dbo.DimAgeGroup AS age_group ON age_group.AgeGroupKey = art.AgeGroupKey
-    LEFT JOIN NDWH.dbo.DimAgency AS agency ON agency.AgencyKey = art.AgencyKey    
-    LEFT JOIN NDWH.dbo.DimDate AS startDate ON startDate.DateKey = art.StartARTDateKey
+    FROM NDWH.Fact.FactArt AS art
+    LEFT JOIN NDWH.Dim.DimFacility AS facility ON facility.FacilityKey = art.FacilityKey
+    LEFT JOIN NDWH.Dim.DimPartner AS partner ON partner.PartnerKey = art.PartnerKey
+    LEFT JOIN NDWH.Dim.DimPatient AS patient ON patient.PatientKey = art.PatientKey
+    LEFT JOIN NDWH.Dim.DimAgeGroup AS age_group ON age_group.AgeGroupKey = art.AgeGroupKey
+    LEFT JOIN NDWH.Dim.DimAgency AS agency ON agency.AgencyKey = art.AgencyKey    
+    LEFT JOIN NDWH.Dim.DimDate AS startDate ON startDate.DateKey = art.StartARTDateKey
     GROUP BY 
         facility.MFLCode,
         facility.FacilityName,

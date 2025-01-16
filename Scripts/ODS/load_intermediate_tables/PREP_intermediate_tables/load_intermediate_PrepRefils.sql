@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[ODS].[dbo].[Intermediate_PrepRefills]', N'U') IS NOT NULL 
-DROP TABLE [ODS].[dbo].[Intermediate_PrepRefills];
+IF OBJECT_ID(N'[ODS].[Intermediate].[Intermediate_PrepRefills]', N'U') IS NOT NULL 
+DROP TABLE [ODS].[Intermediate].[Intermediate_PrepRefills];
 
 BEGIN
 With PrepPatients AS (
@@ -8,7 +8,7 @@ With PrepPatients AS (
       ,Patients.PatientPk
       ,Patients.PrepEnrollmentDate  
       ,Patients.SiteCode
-    FROM ODS.dbo.PrEP_Patient Patients
+    FROM ODS.PrEP.PrEP_Patient Patients
     where Patients.PrepNumber is not null
   ),
   prep_refills_ordered as (
@@ -20,7 +20,7 @@ With PrepPatients AS (
       ,HtsNumber
       ,RegimenPrescribed
       ,DispenseDate
-    from ODS.dbo.PrEP_Pharmacy 
+    from ODS.PrEP.PrEP_Pharmacy 
   ),
 PrepRefil1stMonth As (
   select  
@@ -39,8 +39,8 @@ PrepRefil1stMonth As (
       Else 'No '
       End as Tested
   from prep_refills_ordered as  Refil
-  left join ODS.dbo.PrEP_Patient Patients on Refil.PrepNumber=Patients.PrepNumber and Refil.PatientPk=Patients.PatientPk and Refil.SiteCode=Patients.SiteCode
-  left join ODS.dbo.HTS_ClientTests Tests on Refil.PatientPk=Tests.PatientPk and Refil.SiteCode=Tests.SiteCode and Refil.DispenseDate=Tests.TestDate
+  left join ODS.PrEP.PrEP_Patient Patients on Refil.PrepNumber=Patients.PrepNumber and Refil.PatientPk=Patients.PatientPk and Refil.SiteCode=Patients.SiteCode
+  left join ODS.HTS.HTS_ClientTests Tests on Refil.PatientPk=Tests.PatientPk and Refil.SiteCode=Tests.SiteCode and Refil.DispenseDate=Tests.TestDate
   where Refil.PrepNumber is not null 
       and DATEDIFF(dd, Patients.PrepEnrollmentDate, Refil.DispenseDate) between 30 and 37
       and Refil.RowNumber = 1
@@ -61,9 +61,9 @@ PrepRefil1stMonth As (
           when Tests.FinalTestResult in ('Inconclusive','Negative','Positive') THEN 'Yes' 
           Else 'No '
         End as Tested
-      FROM ODS.dbo.PrEP_Pharmacy Refil
-      left join ODS.dbo.PrEP_Patient Patients on Refil.PrepNumber=Patients.PrepNumber and Refil.PatientPk=Patients.PatientPk and Refil.SiteCode=Patients.SiteCode
-      left join ODS.dbo.HTS_ClientTests Tests on Refil.PatientPk=Tests.PatientPk and Refil.SiteCode=Tests.SiteCode and Refil.DispenseDate=Tests.TestDate
+      FROM ODS.PrEP.PrEP_Pharmacy Refil
+      left join ODS.PrEP.PrEP_Patient Patients on Refil.PrepNumber=Patients.PrepNumber and Refil.PatientPk=Patients.PatientPk and Refil.SiteCode=Patients.SiteCode
+      left join ODS.HTS.HTS_ClientTests Tests on Refil.PatientPk=Tests.PatientPk and Refil.SiteCode=Tests.SiteCode and Refil.DispenseDate=Tests.TestDate
       left join PrepRefil1stMonth on PrepRefil1stMonth.PatientPk = Refil.PatientPk and PrepRefil1stMonth.SiteCode = Refil.SiteCode
       where Refil.PrepNumber is not null and DATEDIFF(dd, PrepRefil1stMonth.DispenseDate, Refil.DispenseDate) between 60 and 67
   )
@@ -82,7 +82,7 @@ PrepRefil1stMonth As (
       ,PrepRefil3rdMonth.TestDate As TestDateMonth3
       ,PrepRefil3rdMonth.DispenseDate As DispenseDateMonth3
 	  ,cast(getdate() as date) as LoadDate
-  INTO ODS.dbo.Intermediate_PrepRefills
+  INTO ODS.[Intermediate].Intermediate_PrepRefills
   from PrepPatients
   LEFT JOIN PrepRefil1stMonth on PrepPatients.PatientPk=PrepRefil1stMonth.PatientPk and PrepPatients.SiteCode=PrepRefil1stMonth.SiteCode 
   LEFT JOIN PrepRefil3rdMonth on PrepPatients.PatientPk=PrepRefil3rdMonth.PatientPk and PrepPatients.SiteCode=PrepRefil3rdMonth.SiteCode 

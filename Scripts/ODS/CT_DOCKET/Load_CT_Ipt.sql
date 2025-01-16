@@ -1,5 +1,3 @@
-
-
 BEGIN
 
 			DECLARE @MaxVisitDate_Hist			DATETIME,
@@ -13,7 +11,7 @@ BEGIN
 		VALUES(@VisitDate,GETDATE());
 
 	       ---- Refresh [ODS].[dbo].[CT_Ipt]
-			MERGE [ODS].[dbo].[CT_Ipt] AS a
+			MERGE [ODS].[Care].[CT_Ipt] AS a
 				USING(SELECT Distinct
 						 P.[PatientCccNumber] AS PatientID
 						,P.[PatientPID] AS PatientPK
@@ -61,7 +59,7 @@ BEGIN
 										END
 						,IE.[Adherence]
 						,IE.Hepatoxicity
-						,IE.PeripheralNeruopath
+						,IE.[PeripheralNeuropathy]
 						,IE.Rash
 					FROM [DWAPICentral].[dbo].[PatientExtract](NoLock) P
 						INNER JOIN [DWAPICentral].[dbo].[IptExtract](NoLock) IE ON IE.[PatientId] = P.ID
@@ -138,7 +136,7 @@ BEGIN
 								,VoidingSource
 								,[Adherence]
 								,Hepatoxicity
-								,PeripheralNeruopath
+								,[PeripheralNeuropathy]
 								,Rash
 								,LoadDate
 							)
@@ -181,7 +179,7 @@ BEGIN
 								,VoidingSource
 								,[Adherence]
 								,Hepatoxicity
-								,PeripheralNeruopath
+								,[PeripheralNeuropathy]
 								,Rash
 								,Getdate()
 							)
@@ -217,7 +215,7 @@ BEGIN
 						a.voided				= b.voided
 						,a.[Adherence]          = b.[Adherence]
 						,a.Hepatoxicity         = b.Hepatoxicity
-						,a.PeripheralNeruopath   = b.PeripheralNeruopath
+						,a.[PeripheralNeuropathy]   = b.[PeripheralNeuropathy]
 						,a.Rash          = b.Rash;
 
 

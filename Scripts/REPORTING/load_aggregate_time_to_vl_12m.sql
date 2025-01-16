@@ -22,13 +22,13 @@ SELECT DISTINCT
             OVER (PARTITION BY EOMONTH(date.Date)) AS MedianTimeToFirstVL_AsOfDate,
     CAST(GETDATE() AS DATE) AS LoadDate 
 INTO [REPORTING].dbo.AggregateTimeToVL12M
-FROM NDWH.dbo.FactViralLoads it
-INNER join NDWH.dbo.DimAgeGroup g on g.AgeGroupKey=it.AgeGroupKey
-INNER join NDWH.dbo.DimFacility f on f.FacilityKey = it.FacilityKey
-INNER JOIN NDWH.dbo.DimAgency a on a.AgencyKey = it.AgencyKey
-INNER JOIN NDWH.dbo.DimPatient pat on pat.PatientKey = it.PatientKey
-INNER JOIN NDWH.dbo.DimPartner p on p.PartnerKey = it.PartnerKey
-INNER JOIN NDWH.dbo.FactART art on art.PatientKey = it.PatientKey
-INNER JOIN NDWH.dbo.DimDate as date on date.DateKey = art.StartARTDateKey
+FROM NDWH.Fact.FactViralLoads it
+INNER join NDWH.Dim.DimAgeGroup g on g.AgeGroupKey=it.AgeGroupKey
+INNER join NDWH.Dim.DimFacility f on f.FacilityKey = it.FacilityKey
+INNER JOIN NDWH.Dim.DimAgency a on a.AgencyKey = it.AgencyKey
+INNER JOIN NDWH.Dim.DimPatient pat on pat.PatientKey = it.PatientKey
+INNER JOIN NDWH.Dim.DimPartner p on p.PartnerKey = it.PartnerKey
+INNER JOIN NDWH.Fact.FactART art on art.PatientKey = it.PatientKey
+INNER JOIN NDWH.Dim.DimDate as date on date.DateKey = art.StartARTDateKey
 WHERE DateDIFF(MONTH,StartARTDateKey,GETDATE()) <=12 AND TimetoFirstVL IS NOT NULL
 ORDER BY county desc

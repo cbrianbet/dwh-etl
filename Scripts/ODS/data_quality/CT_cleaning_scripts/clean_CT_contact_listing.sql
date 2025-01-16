@@ -1,5 +1,5 @@
 -- clean ContactAge
-UPDATE [ODS].[DBO].[CT_ContactListing]
+UPDATE [ODS].[Care].[CT_ContactListing]
     SET ContactAge = 999
 WHERE ContactAge < 0 OR ContactAge > 120
 
@@ -7,7 +7,7 @@ GO
 
 
 -- clean ContactSex
-UPDATE [ODS].[DBO].[CT_ContactListing]
+UPDATE [ODS].[Care].[CT_ContactListing]
     SET ContactSex = CASE 
                         WHEN ContactSex = 'U' THEN 'Undefined'
                         WHEN ContactSex = 'M' THEN 'Male'
@@ -18,7 +18,7 @@ WHERE ContactSex IN ('U', 'M', 'F')
 GO
 
 -- clean RelationshipWithPatient
-UPDATE [ODS].[DBO].[CT_ContactListing]
+UPDATE [ODS].[Care].[CT_ContactListing]
     SET RelationshipWithPatient = CASE 
                                     WHEN RelationshipWithPatient IN ('Daughter', 'Son') THEN 'Child'
                                     WHEN RelationshipWithPatient = 'Co-wife' THEN 'Sexual Partner'
@@ -32,7 +32,7 @@ GO
 
 
 -- clean IPVScreeningOutcome
-UPDATE [ODS].[DBO].[CT_ContactListing]
+UPDATE [ODS].[Care].[CT_ContactListing]
     SET IPVScreeningOutcome = CASE 
                                 WHEN IPVScreeningOutcome = '0' THEN 'False'
                                 WHEN IPVScreeningOutcome = 'No' THEN 'False'
@@ -41,16 +41,6 @@ UPDATE [ODS].[DBO].[CT_ContactListing]
                             END
  WHERE IPVScreeningOutcome IN ('0', 'No', 'Yes', '1065', '1066')
 
- GO 
-
- -- clean KnowledgeOfHivStatus   
- UPDATE [ODS].[DBO].[CT_ContactListing]
-    SET KnowledgeOfHivStatus = CASE 
-                                WHEN KnowledgeOfHivStatus IN ('Negative', 'Yes', 'Positive', 'Exposed Infant', 'Exposed', '664', '703') THEN 'Yes'  
-                                WHEN KnowledgeOfHivStatus IN ('No', 'Unknown', '1067', '0') THEN 'No'
-                            END
-WHERE KnowledgeOfHivStatus IN ('Negative', 'Yes', 'Positive', 'Exposed Infant', 'Exposed', '664', '703', 'No', 'Unknown', '1067', '0')                
-
-GO
+ GO
 
 

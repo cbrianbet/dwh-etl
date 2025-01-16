@@ -1,6 +1,6 @@
 BEGIN
 
-			MERGE [ODS].[dbo].[Mhealth_Ushauri_PatientAppointments] AS a
+			MERGE [ODS].[Mhealth].[Mhealth_Ushauri_PatientAppointments] AS a
 				USING(SELECT Distinct
 						PatientPK,Null As PatientPKHash,SiteCode,SiteType,PatientID,Null As PatientIDHash, NUPI,PartnerName,FacilityID,FacilityName,
 						DOB_Date As DOB,Gender,MaritalStatus,PatientResidentCounty,PatientResidentLocation,PatientResidentSubCounty,

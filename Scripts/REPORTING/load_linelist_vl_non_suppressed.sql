@@ -25,12 +25,12 @@ SELECT DISTINCT
 		else aro.ARTOutcomeDescription
 	end as ARTOutcomeDescription
 INTO [REPORTING].[dbo].[LineListVLNonSuppressed]
-FROM NDWH.dbo.FactViralLoads it
-INNER join NDWH.dbo.DimAgeGroup g on g.AgeGroupKey=it.AgeGroupKey
-INNER join NDWH.dbo.DimFacility f on f.FacilityKey = it.FacilityKey
-INNER JOIN NDWH.dbo.DimAgency a on a.AgencyKey = it.AgencyKey
-INNER JOIN NDWH.dbo.DimPatient pat on pat.PatientKey = it.PatientKey
-INNER JOIN NDWH.dbo.DimPartner p on p.PartnerKey = it.PartnerKey
-INNER JOIN NDWH.dbo.FactART art on art.PatientKey = it.PatientKey
-INNER JOIN NDWH.dbo.DimARTOutcome aro on aro.ARTOutcomeKey = art.ARTOutcomeKey
+FROM NDWH.Fact.FactViralLoads it
+INNER join NDWH.Dim.DimAgeGroup g on g.AgeGroupKey=it.AgeGroupKey
+INNER join NDWH.Dim.DimFacility f on f.FacilityKey = it.FacilityKey
+INNER JOIN NDWH.Dim.DimAgency a on a.AgencyKey = it.AgencyKey
+INNER JOIN NDWH.Dim.DimPatient pat on pat.PatientKey = it.PatientKey
+INNER JOIN NDWH.Dim.DimPartner p on p.PartnerKey = it.PartnerKey
+INNER JOIN NDWH.Fact.FactART art on art.PatientKey = it.PatientKey
+INNER JOIN NDWH.Dim.DimARTOutcome aro on aro.ARTOutcomeKey = art.ARTOutcomeKey
 WHERE ValidVLResultCategory1 in ('>1000', '200-999')

@@ -14,6 +14,7 @@ with initial_data as (
         partenr.PartnerName,
         agency.AgencyName,
         DATIMAgeGroup as Agegroup,
+        cast(patient.EveronART as int) as EveronART,
         elicitation.Tested
     from  [NDWH].[dbo].[FactContactElicitation] as elicitation 
     left join NDWH.dbo.DimPatient as patient on patient.PatientKey = elicitation.IndexPatientKey --joining on IndexPatientKey to get details of the index client
@@ -35,7 +36,9 @@ select
     AgencyName,
     PartnerName,
     count(FactKey) as NoElicited,
-    sum(Tested) as NoTested
+    sum(Tested) as NoTested,
+    count(distinct case when EverOnART = 1 then IndexPatientKey end) as NoOfIndexLinkedToTX,
+    count(distinct case when EverOnART = 0 then IndexPatientKey end) as NoOffIndexNotLinkedToTX
 into HIVCaseSurveillance.dbo.CSAggregateIndexEliciation
 from initial_data
 group by

@@ -24,13 +24,13 @@ SELECT
     sum(case when VaccinationStatus in ('Fully Vaccinated','Not Vaccinated','Partially Vaccinated') then 1 else 0 end) as Screened,
     cast(getdate() as date) as LoadDate
 INTO REPORTING.dbo.AggregateCovid 
-FROM NDWH.dbo.FactArt as art
-LEFT JOIN NDWH.dbo.FactCovid as cov on cov.PatientKey = art.PatientKey
-LEFT join NDWH.dbo.DimFacility f on f.FacilityKey = art.FacilityKey
-LEFT JOIN NDWH.dbo.DimAgency a on a.AgencyKey = art.AgencyKey
-LEFT JOIN NDWH.dbo.DimPatient pat on pat.PatientKey = art.PatientKey
-LEFT join NDWH.dbo.DimAgeGroup age on age.AgeGroupKey = art.AgeGroupKey
-LEFT JOIN NDWH.dbo.DimPartner p on p.PartnerKey = cov.PartnerKey
+FROM NDWH.Fact.FactArt as art
+LEFT JOIN NDWH.Fact.FactCovid as cov on cov.PatientKey = art.PatientKey
+LEFT join NDWH.Dim.DimFacility f on f.FacilityKey = art.FacilityKey
+LEFT JOIN NDWH.Dim.DimAgency a on a.AgencyKey = art.AgencyKey
+LEFT JOIN NDWH.Dim.DimPatient pat on pat.PatientKey = art.PatientKey
+LEFT join NDWH.Dim.DimAgeGroup age on age.AgeGroupKey = art.AgeGroupKey
+LEFT JOIN NDWH.Dim.DimPartner p on p.PartnerKey = cov.PartnerKey
 WHERE age.Age >= 12 AND pat.IsTXCurr = 1 
 GROUP BY 
     MFLCode,

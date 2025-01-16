@@ -1,6 +1,6 @@
-MERGE [NDWH].[dbo].[DimVaccinationStatus] AS a
+MERGE [NDWH].[Dim].[DimVaccinationStatus] AS a
 		USING	(	SELECT DISTINCT VaccinationStatus
-					FROM ODS.dbo.CT_Covid
+					FROM ODS.Care.CT_Covid
 					WHERE 	VaccinationStatus <> '' AND 
 							VaccinationStatus IS NOT NULL
 				) AS b 

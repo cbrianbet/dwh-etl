@@ -1,7 +1,7 @@
 ---- Loads Nishauri Profile data from MhealthCentral to ODS
-BEGIN MERGE [ODS].[dbo].[Mhealth_Nishauri_Profile] AS a USING (
+BEGIN MERGE [ODS].[Mhealth].[Mhealth_Nishauri_Profile] AS a USING (
   SELECT
-    DISTINCT [PatientPK],
+    [PatientPK],
     [PatientPKHash],
     [PartnerName],
     [SiteCode],
@@ -24,12 +24,49 @@ BEGIN MERGE [ODS].[dbo].[Mhealth_Nishauri_Profile] AS a USING (
     [DOB_Date],
     [DateCreated_Date]
   FROM
-    [MhealthCentral].[dbo].[Nishauri_Profile] (NOLOCK)
-) AS b ON (a.[PatientID] = b.[PatientID])
+    (
+      SELECT
+        DISTINCT [PatientPK],
+        [PatientPKHash],
+        [PartnerName],
+        [SiteCode],
+        [SiteType],
+        [PatientID],
+        [PatientIDHash],
+        [FacilityID],
+        [Emr],
+        [Project],
+        [FacilityName],
+        [Gender],
+        [MaritalStatus],
+        [PatientResidentCounty],
+        [PatientResidentLocation],
+        [PatientResidentSubCounty],
+        [PatientResidentSubLocation],
+        [PatientResidentVillage],
+        [PatientResidentWard],
+        [PKV],
+        [DOB_Date],
+        [DateCreated_Date],
+        ROW_NUMBER() OVER (
+          PARTITION BY [PatientPK],
+          [SiteCode]
+          ORDER BY
+            [DateCreated_Date] DESC
+        ) AS rn
+      FROM
+        [MhealthCentral].[dbo].[Nishauri_Profile] (NOLOCK)
+    ) AS sub
+  WHERE
+    sub.rn = 1
+) AS b ON (
+  a.[SiteCode] = b.[SiteCode]
+  AND a.[PatientPK] = b.[PatientPK]
+)
 WHEN NOT MATCHED THEN
 INSERT
   (
-    [Ushauri_PatientPK],
+    [PatientPK],
     [PatientPKHash],
     [PartnerName],
     [SiteCode],
@@ -50,8 +87,7 @@ INSERT
     [PatientResidentWard],
     [PKV],
     [DOB],
-    [DateCreated],
-    [LoadDate]
+    [DateCreated]
   )
 VALUES
   (
@@ -76,15 +112,12 @@ VALUES
     b.[PatientResidentWard],
     b.[PKV],
     b.[DOB_Date],
-    b.[DateCreated_Date],
-    GETDATE()
+    b.[DateCreated_Date]
   )
   WHEN MATCHED THEN
 UPDATE
 SET
-  a.[PatientPKHash] = b.[PatientPKHash],
   a.[PartnerName] = b.[PartnerName],
-  a.[SiteCode] = b.[SiteCode],
   a.[SiteType] = b.[SiteType],
   a.[FacilityID] = b.[FacilityID],
   a.[Emr] = b.[Emr],
@@ -98,7 +131,6 @@ SET
   a.[PatientResidentSubLocation] = b.[PatientResidentSubLocation],
   a.[PatientResidentVillage] = b.[PatientResidentVillage],
   a.[PatientResidentWard] = b.[PatientResidentWard],
-  a.[PKV] = b.[PKV],
   a.[DOB] = b.[DOB_Date],
   a.[DateCreated] = b.[DateCreated_Date];
 

@@ -11,7 +11,7 @@ BEGIN
 		VALUES(@MaxCovid19AssessmentDate_Hist,GETDATE())
 
 	       ---- Refresh [ODS].[dbo].[CT_Covid]
-			MERGE [ODS].[dbo].[CT_Covid] AS a
+			MERGE [ODS].[Care].[CT_Covid] AS a
 				USING(SELECT distinct P.[PatientPID] AS PatientPK
 							,P.[PatientCccNumber] AS PatientID
 							,P.[Emr]

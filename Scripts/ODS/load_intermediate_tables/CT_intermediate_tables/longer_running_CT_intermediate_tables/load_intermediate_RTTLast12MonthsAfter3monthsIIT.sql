@@ -1,5 +1,5 @@
 --truncate table first
-truncate table ODS.dbo.Intermediate_RTTLast12MonthsAfter3monthsIIT
+truncate table ODS.[Intermediate].Intermediate_RTTLast12MonthsAfter3monthsIIT
 
 
 --declare start and end dates i.e. within the last 12 months form reporting period
@@ -49,7 +49,7 @@ with clinical_visits_as_of_date as (
         VisitDate,
         NextAppointmentDate,
         CurrentRegimen as RegimenAsof  
-    from  ODS.dbo.CT_PatientVisits
+    from  ODS.Care.CT_PatientVisits
     where SiteCode > 0
     and VisitDate <= @as_of_date
 ),
@@ -63,7 +63,7 @@ with clinical_visits_as_of_date as (
         SiteCode,
         DispenseDate,
         ExpectedReturn
-    from ODS.dbo.CT_PatientPharmacy
+    from ODS.Care.CT_PatientPharmacy
     where SiteCode > 0 
     and DispenseDate <= @as_of_date
     ),
@@ -202,7 +202,7 @@ last_and_second_last_encounters_combined as (
         left join second_last_encounter on   second_last_encounter.PatientPK=last_encounter.PatientPK
         and second_last_encounter.SiteCode=last_encounter.SiteCode
 )
-insert into ODS.dbo.Intermediate_RTTLast12MonthsAfter3monthsIIT
+insert into ODS.[Intermediate].Intermediate_RTTLast12MonthsAfter3monthsIIT
 select 
     last_and_second_last_encounters_combined.PatientIDHash as PatientIDHash,
     last_and_second_last_encounters_combined.PatientPKhash,

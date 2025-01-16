@@ -1,6 +1,6 @@
-MERGE [NDWH].[dbo].[DimTestKitName] AS a
+MERGE [NDWH].[Dim].[DimTestKitName] AS a
 		USING	(	SELECT DISTINCT TestKitName1 AS TestKitName 
-					FROM ODS.dbo.HTS_TestKits
+					FROM ODS.Hts.HTS_TestKits
 					WHERE 	TestKitName1 IS NOT NULL AND 
 							TestKitName1 <> '' AND 
 							TestKitName1 <> 'null'
@@ -8,7 +8,7 @@ MERGE [NDWH].[dbo].[DimTestKitName] AS a
         			UNION
 
 					SELECT DISTINCT TestKitName2 AS TestKitName 
-					FROM ODS.dbo.HTS_TestKits
+					FROM ODS.Hts.HTS_TestKits
  					WHERE 	TestKitName2 IS NOT NULL AND 
 							TestKitName2 <> '' AND 
 							TestKitName2 <> 'null'

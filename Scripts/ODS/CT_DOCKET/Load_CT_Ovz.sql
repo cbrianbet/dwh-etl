@@ -11,7 +11,7 @@ BEGIN
 					VALUES(@MaxVisitDate_Hist,GETDATE())
 
 	       ---- Refresh [ODS].[dbo].[CT_Ovc]
-			MERGE [ODS].[dbo].[CT_Ovc] AS a
+			MERGE [ODS].[Care].[CT_Ovc] AS a
 				USING(SELECT Distinct
 								P.[PatientCccNumber] AS PatientID
 								,P.[PatientPID] AS PatientPK

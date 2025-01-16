@@ -18,13 +18,13 @@ SELECT DISTINCT
     COUNT(CONCAT(it.PatientKey,'-',it.FacilityKey)) as patients_startedART,
     cast(getdate() as date) as LoadDate
 INTO REPORTING.dbo.AggregateTxNew 
-FROM NDWH.dbo.FactART it
-INNER join NDWH.dbo.DimAgeGroup age on age.Age=it.AgeAtARTStart
-INNER join NDWH.dbo.DimFacility f on f.FacilityKey = it.FacilityKey
-INNER JOIN NDWH.dbo.DimAgency a on a.AgencyKey = it.AgencyKey
-INNER JOIN NDWH.dbo.DimPatient pat on pat.PatientKey = it.PatientKey
-INNER JOIN NDWH.dbo.DimPartner p on p.PartnerKey = it.PartnerKey
-INNER JOIN NDWH.dbo.DimDate as date on date.DateKey = it.StartARTDateKey
+FROM NDWH.Fact.FactART it
+INNER join NDWH.Dim.DimAgeGroup age on age.Age=it.AgeAtARTStart
+INNER join NDWH.Dim.DimFacility f on f.FacilityKey = it.FacilityKey
+INNER JOIN NDWH.Dim.DimAgency a on a.AgencyKey = it.AgencyKey
+INNER JOIN NDWH.Dim.DimPatient pat on pat.PatientKey = it.PatientKey
+INNER JOIN NDWH.Dim.DimPartner p on p.PartnerKey = it.PartnerKey
+INNER JOIN NDWH.Dim.DimDate as date on date.DateKey = it.StartARTDateKey
 GROUP BY 
     MFLCode, 
     f.FacilityName, 

@@ -1,4 +1,4 @@
-MERGE [ODS].[dbo].[CT_FacilityManifest] AS a
+MERGE [ODS].[Care].[CT_FacilityManifest] AS a
 	USING( SELECT DISTINCT 
 			ID,Emr,Project,Voided,Processed,SiteCode,PatientCount,DateRecieved,[Name],EmrName,EmrSetup,UploadMode,[Start],[End],Tag
 		   FROM [DWAPICentral].[dbo].[FacilityManifest](NoLock)

@@ -1,7 +1,7 @@
 ---- Loads Nishauri Feature Access data from MhealthCentral to ODS
-BEGIN MERGE [ODS].[dbo].[Mhealth_Nishauri_Feature_Access] AS a USING (
+BEGIN MERGE [ODS].[Mhealth].[Mhealth_Nishauri_Feature_Access] AS a USING (
   SELECT
-    DISTINCT [PatientPK],
+    [PatientPK],
     [PatientPKHash],
     [PartnerName],
     [SiteCode],
@@ -13,7 +13,6 @@ BEGIN MERGE [ODS].[dbo].[Mhealth_Nishauri_Feature_Access] AS a USING (
     [Project],
     [FacilityName],
     [Gender],
-    [DOB],
     [MaritalStatus],
     [PatientResidentCounty],
     [PatientResidentLocation],
@@ -21,18 +20,61 @@ BEGIN MERGE [ODS].[dbo].[Mhealth_Nishauri_Feature_Access] AS a USING (
     [PatientResidentSubLocation],
     [PatientResidentVillage],
     [PatientResidentWard],
-    [FeatureAccessDate],
+    [DateCreated],
     [PKV],
     [FeatureAccess],
     [DOB_Date],
     [FeatureAccessDate_Date]
   FROM
-    [MhealthCentral].[dbo].[Nishauri_Feature_Access] (NOLOCK)
-) AS b ON (a.[PatientID] = b.[PatientID])
+    (
+      SELECT
+        DISTINCT [PatientPK],
+        [PatientPKHash],
+        [PartnerName],
+        [SiteCode],
+        [SiteType],
+        [PatientID],
+        [PatientIDHash],
+        [FacilityID],
+        [Emr],
+        [Project],
+        [FacilityName],
+        [Gender],
+        [MaritalStatus],
+        [PatientResidentCounty],
+        [PatientResidentLocation],
+        [PatientResidentSubCounty],
+        [PatientResidentSubLocation],
+        [PatientResidentVillage],
+        [PatientResidentWard],
+        [DateCreated],
+        [PKV],
+        [FeatureAccess],
+        [DOB_Date],
+        [FeatureAccessDate_Date],
+        ROW_NUMBER() OVER (
+          PARTITION BY [PatientPK],
+          [SiteCode],
+          [FeatureAccessDate_Date],
+          [FeatureAccess]
+          ORDER BY
+            [DateCreated] DESC
+        ) AS rn
+      FROM
+        [MhealthCentral].[dbo].[Nishauri_Feature_Access] (NOLOCK)
+    ) AS sub
+  WHERE
+    sub.rn = 1
+) AS b ON (
+  a.[SiteCode] = b.[SiteCode]
+  AND a.[PatientPK] = b.[PatientPK]
+  AND a.[FeatureAccessDate] = b.[FeatureAccessDate_Date]
+  AND a.[FeatureAccess] = b.[FeatureAccess]
+)
 WHEN NOT MATCHED THEN
 INSERT
   (
-    [UshauriPatientPK],
+    [PatientPK],
     [PatientPKHash],
     [PartnerName],
     [SiteCode],
@@ -51,6 +93,7 @@ INSERT
     [PatientResidentSubLocation],
     [PatientResidentVillage],
     [PatientResidentWard],
+    [DateCreated],
     [PKV],
     [FeatureAccess],
     [DOB],
@@ -77,18 +120,16 @@ VALUES
     b.[PatientResidentSubLocation],
     b.[PatientResidentVillage],
     b.[PatientResidentWard],
+    b.[DateCreated],
     b.[PKV],
     b.[FeatureAccess],
-    b.[FeatureAccessDate],
     b.[DOB_Date],
     b.[FeatureAccessDate_Date]
   )
   WHEN MATCHED THEN
 UPDATE
 SET
-  a.[PatientPKHash] = b.[PatientPKHash],
   a.[PartnerName] = b.[PartnerName],
-  a.[SiteCode] = b.[SiteCode],
   a.[SiteType] = b.[SiteType],
   a.[PatientIDHash] = b.[PatientIDHash],
   a.[FacilityID] = b.[FacilityID],
@@ -103,7 +144,7 @@ SET
   a.[PatientResidentSubLocation] = b.[PatientResidentSubLocation],
   a.[PatientResidentVillage] = b.[PatientResidentVillage],
   a.[PatientResidentWard] = b.[PatientResidentWard],
-  a.[PKV] = b.[PKV],
+  a.[DateCreated] = b.[DateCreated],
   a.[FeatureAccess] = b.[FeatureAccess],
   a.[DOB] = b.[DOB_Date],
   a.[FeatureAccessDate] = b.[FeatureAccessDate_Date];

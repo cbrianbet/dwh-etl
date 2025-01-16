@@ -21,14 +21,14 @@ SELECT
     Sum(Linked) as LinkedClients,
      CAST(GETDATE() AS DATE) AS LoadDate 
 INTO REPORTING.dbo.AggregateHTSTeststrategy
-FROM NDWH.dbo.FactHTSClientTests hts
-LEFT JOIN NDWH.dbo.DimFacility f on f.FacilityKey = hts.FacilityKey
-LEFT JOIN NDWH.dbo.DimAgency a on a.AgencyKey = hts.AgencyKey
-LEFT JOIN NDWH.dbo.DimPatient pat on pat.PatientKey = hts.PatientKey
-LEFT JOIN NDWH.dbo.DimAgeGroup age on age.AgeGroupKey=hts.AgeGroupKey
-LEFT JOIN NDWH.dbo.DimPartner p on p.PartnerKey = hts.PartnerKey
-LEFT JOIN NDWH.dbo.FactHTSClientLinkages link on link.PatientKey = hts.PatientKey
-LEFT JOIN NDWH.dbo.DimDate d on d.DateKey = hts.DateTestedKey
+FROM NDWH.Fact.FactHTSClientTests hts
+LEFT JOIN NDWH.Dim.DimFacility f on f.FacilityKey = hts.FacilityKey
+LEFT JOIN NDWH.Dim.DimAgency a on a.AgencyKey = hts.AgencyKey
+LEFT JOIN NDWH.Dim.DimPatient pat on pat.PatientKey = hts.PatientKey
+LEFT JOIN NDWH.Dim.DimAgeGroup age on age.AgeGroupKey=hts.AgeGroupKey
+LEFT JOIN NDWH.Dim.DimPartner p on p.PartnerKey = hts.PartnerKey
+LEFT JOIN NDWH.Fact.FactHTSClientLinkages link on link.PatientKey = hts.PatientKey
+LEFT JOIN NDWH.Dim.DimDate d on d.DateKey = hts.DateTestedKey
 WHERE TestType in ('Initial Test', 'Initial')
 GROUP BY 
     MFLCode, 

@@ -1,12 +1,12 @@
-IF Object_id(N'[NDWH].[dbo].[FactUshauriAppointments]', N'U') IS NOT NULL
-  DROP TABLE [Ndwh].[Dbo].[FactUshauriAppointments];
+IF Object_id(N'[NDWH].[Fact].[FactUshauriAppointments]', N'U') IS NOT NULL
+  DROP TABLE [Ndwh].[Fact].[FactUshauriAppointments];
 
 BEGIN
     WITH Mfl_partner_agency_combination
          AS (SELECT DISTINCT Mfl_code,
                              Sdp,
                              Sdp_agency AS Agency
-             FROM   Ods.Dbo.All_emrsites)
+             FROM   Ods.Care.All_emrsites)
 
     SELECT FactKey = IDENTITY(Int, 1, 1),
            Facility.Facilitykey,
@@ -54,51 +54,51 @@ BEGIN
            Datereturnedtocare.Datekey    AS DateReturnedToCareDateKey,
            Daysdefaulted,
            Nupihash
-    INTO   NDWH.dbo.FactUshauriAppointments
-    FROM   [ODS].[dbo].[Mhealth_Ushauri_PatientAppointments] AS Apt
-           LEFT JOIN Ndwh.Dbo.Dimfacility AS Facility
+    INTO   NDWH.[Fact].FactUshauriAppointments
+    FROM   [ODS].[Mhealth].[Mhealth_Ushauri_PatientAppointments] AS Apt
+           LEFT JOIN Ndwh.Dim.Dimfacility AS Facility
                   ON Facility.Mflcode = Apt.Sitecode
            LEFT JOIN Mfl_partner_agency_combination
                   ON Mfl_partner_agency_combination.Mfl_code = Apt.Sitecode
-           LEFT JOIN Ndwh.Dbo.Dimpartner AS Partner
+           LEFT JOIN Ndwh.Dim.Dimpartner AS Partner
                   ON Partner.Partnername = Mfl_partner_agency_combination.Sdp
-           LEFT JOIN Ndwh.Dbo.Dimpatient AS Patient
+           LEFT JOIN Ndwh.Dim.Dimpatient AS Patient
                   ON Patient.Patientpkhash = Apt.Patientpkhash
                      AND Patient.Sitecode = Apt.Sitecode
-           LEFT JOIN Ndwh.Dbo.Dimagency AS Agency
+           LEFT JOIN Ndwh.Dim.Dimagency AS Agency
                   ON Agency.Agencyname = Mfl_partner_agency_combination.Agency
-           LEFT JOIN Ndwh.Dbo.Dimagegroup AS Age_group
+           LEFT JOIN Ndwh.Dim.Dimagegroup AS Age_group
                   ON Age_group.Agegroupkey = DATEDIFF(YEAR, Apt.Dob, Appointmentdate)
-           LEFT JOIN Ndwh.Dbo.Dimdate AS As_of
+           LEFT JOIN Ndwh.Dim.Dimdate AS As_of
                   ON As_of.Date = Apt.Appointmentdate
-           LEFT JOIN Ndwh.Dbo.Dimdate AS Appointment
+           LEFT JOIN Ndwh.Dim.Dimdate AS Appointment
                   ON Appointment.Date = Apt.Appointmentdate
-           LEFT JOIN Ndwh.Dbo.Dimdate AS Attended
+           LEFT JOIN Ndwh.Dim.Dimdate AS Attended
                   ON Attended.Date = Apt.Dateattended
-           LEFT JOIN Ndwh.Dbo.Dimdate AS Fourweeksdate
+           LEFT JOIN Ndwh.Dim.Dimdate AS Fourweeksdate
                   ON Fourweeksdate.Date =
                      Fourweeksmssenddate
-           LEFT JOIN Ndwh.Dbo.Dimdate AS Threeweeksdate
+           LEFT JOIN Ndwh.Dim.Dimdate AS Threeweeksdate
                   ON Threeweeksdate.Date =
                      Threeweeksmssenddate
-           LEFT JOIN Ndwh.Dbo.Dimdate AS Twoweeksdate
+           LEFT JOIN Ndwh.Dim.Dimdate AS Twoweeksdate
                   ON Twoweeksdate.Date =
                      Twoweeksmssenddate
-           LEFT JOIN Ndwh.Dbo.Dimdate AS Oneweeksdate
+           LEFT JOIN Ndwh.Dim.Dimdate AS Oneweeksdate
                   ON Oneweeksdate.Date =
                     Apt.Oneweeksmssenddate
-           LEFT JOIN Ndwh.Dbo.Dimdate AS Onedaydate
+           LEFT JOIN Ndwh.Dim.Dimdate AS Onedaydate
                   ON Onedaydate.Date = Apt.Onedaysmssenddate
-           LEFT JOIN Ndwh.Dbo.Dimdate AS Missedappointmentdate
+           LEFT JOIN Ndwh.Dim.Dimdate AS Missedappointmentdate
                   ON Missedappointmentdate.Date =
                     Apt.Missedappointmentsmssenddate
-           LEFT JOIN Ndwh.Dbo.Dimdate AS Tracingdate
+           LEFT JOIN Ndwh.Dim.Dimdate AS Tracingdate
                   ON Tracingdate.Date =
                     Apt.Tracingoutcomedate
-           LEFT JOIN Ndwh.Dbo.Dimdate AS Datereturnedtocare
+           LEFT JOIN Ndwh.Dim.Dimdate AS Datereturnedtocare
                   ON Datereturnedtocare.Date =
                      Apt.Datereturnedtocare
 
-    ALTER TABLE Ndwh.Dbo.FactUshauriAppointments
+    ALTER TABLE Ndwh.[Fact].FactUshauriAppointments
       ADD PRIMARY KEY(Factkey);
 END

@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[ODS].[dbo].[Intermediate_LastOTZVisit]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[dbo].[Intermediate_LastOTZVisit];
+IF OBJECT_ID(N'[ODS].[Intermediate].[Intermediate_LastOTZVisit]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[Intermediate].[Intermediate_LastOTZVisit];
 BEGIN
 	with source_LastOTZVisit as (
 		select 
@@ -24,7 +24,7 @@ BEGIN
 			Remarks,
 			TransitionAttritionReason,
 			OutcomeDate
-		from ODS.dbo.CT_Otz
+		from ODS.Care.CT_Otz
 		WHERE  VOIDED=0
 	)
 	select 
@@ -50,7 +50,7 @@ BEGIN
 		ModulesCompletedToday_OTZ_Beyond,	
 		OutcomeDate,	
 		cast(getdate() as date) as LoadDate
-	INTO [ODS].[dbo].[Intermediate_LastOTZVisit]
+	INTO [ODS].[Intermediate].[Intermediate_LastOTZVisit]
 	from source_LastOTZVisit
 	where rank = 1
 END

@@ -1,5 +1,5 @@
 ---------------Update Client Tested As ------------------------------------
- UPDATE ODS.[dbo].[HTS_ClientTests] SET ClientTestedAs =  CASE 
+ UPDATE ODS.[HTS].[HTS_ClientTests] SET ClientTestedAs =  CASE 
             WHEN ClientTestedAs  in ('C: Couple (includes polygamous)','Couple') THEN 'Couple'        
             WHEN ClientTestedAs in ('I: Individual','Individual')  THEN 'Individual'
            ELSE 'NULL'    
@@ -8,18 +8,18 @@ Go
 ------------------Update Entry Point----------------------------------------------
 
 UPDATE M  SET  M.EntryPoint= T.target_name  
-from [ODS].[DBO].[HTS_ClientTests] M 
-INNER JOIN [ODS].[dbo].[lkp_patient_source] T  
+from [ODS].[HTS].[HTS_ClientTests] M 
+INNER JOIN [ODS].[lkp].[lkp_patient_source] T  
 ON M.EntryPoint = T.source_name
 GO
 -----------------Update Test Strategy-------------------------------------------
 UPDATE M  SET  M.TestStrategy= T.Target_htsStrategy  
-from [ODS].[DBO].[HTS_ClientTests] M 
-INNER JOIN [ODS].[dbo].[lkp_htsStrategy] T  
+from [ODS].[HTS].[HTS_ClientTests] M 
+INNER JOIN [ODS].[lkp].[lkp_htsStrategy] T  
 ON M.TestStrategy = T.Source_htsStrategy
 GO
 ---------------------Update TB Screening --------------------------------------------
- UPDATE ODS.[dbo].[HTS_ClientTests] SET TbScreening =  CASE 
+ UPDATE ODS.[HTS].[HTS_ClientTests] SET TbScreening =  CASE 
             WHEN TbScreening in ('No Signs','No TB','No TB signs','Yes') THEN 'No Signs'    
             WHEN TbScreening in ('On TB Treatment','INH','TB Rx','TBRx') THEN 'On TB Treatment'  
             WHEN TbScreening in ('Presumed TB','PrTB') THEN 'Presumed TB'   
@@ -28,7 +28,7 @@ GO
                 END
 
   -------------------------------------Update ClientSelfTested --------------------------------------------
- UPDATE ODS.[dbo].[HTS_ClientTests] SET ClientSelfTested =  CASE 
+ UPDATE ODS.[HTS].[HTS_ClientTests] SET ClientSelfTested =  CASE 
             WHEN ClientSelfTested in ('1','Yes') THEN 'Yes'    
             WHEN ClientSelfTested in ('0', 'No') THEN 'No'  
             WHEN ClientSelfTested in ('NA') THEN 'NA'               
@@ -36,39 +36,39 @@ GO
                 END
   ---------------------------------Update Couple Discordant --------------------------------------------
 
- UPDATE ODS.[dbo].[HTS_ClientTests] SET CoupleDiscordant =  CASE 
+ UPDATE ODS.[HTS].[HTS_ClientTests] SET CoupleDiscordant =  CASE 
             WHEN CoupleDiscordant ='Yes' THEN 'Yes'    
             WHEN CoupleDiscordant ='No' THEN 'No'  
             WHEN CoupleDiscordant in ('NA','') THEN 'NULL'               
           ELSE     'NULL'
                 END
 ---------------------Update Test Type --------------------------------------------
- UPDATE ODS.[dbo].[HTS_ClientTests] SET TestType =  CASE 
+ UPDATE ODS.[HTS].[HTS_ClientTests] SET TestType =  CASE 
             WHEN TestType in ('Initial','Initial Test') THEN 'Initial Test'    
             WHEN TestType in ('Repeat','Repeat Test') THEN 'Repeat Test'   
             WHEN TestType ='Retest' THEN 'Retest'                 
           ELSE     'NULL'
                 END
 ----------------------------Update Consent------------------------------
- UPDATE ODS.[dbo].[HTS_ClientTests] SET Consent =  CASE 
+ UPDATE ODS.[HTS].[HTS_ClientTests] SET Consent =  CASE 
             WHEN Consent ='No' THEN 'No'    
             WHEN Consent ='Yes' THEN 'Yes'   
             WHEN Consent in ('NULL','') THEN 'NULL'                 
           ELSE     'NULL'
                 END
 ----------------------------Update Setting------------------------------
- UPDATE ODS.[dbo].[HTS_ClientTests] SET Setting =  CASE 
+ UPDATE ODS.[HTS].[HTS_ClientTests] SET Setting =  CASE 
             WHEN Setting in ('Facility','Tent') THEN 'Facility'    
             WHEN Setting in ('Community','Medical Camp') THEN 'Community'                  
           ELSE     'NULL'
                 END
 ---------------------------------Update Approach-----------------------------------
-                 UPDATE ODS.[dbo].[HTS_ClientTests] SET Approach =  CASE 
+                 UPDATE ODS.[HTS].[HTS_ClientTests] SET Approach =  CASE 
             WHEN Approach in ('CITC','Client Initiated Testing (CITC)') THEN 'Client Initiated Testing (CITC)'    
             WHEN Approach in ('PITC','Provider Initiated Testing(PITC)') THEN 'Provider Initiated Testing(PITC)'                  
           ELSE     'NULL'
                 END
   
  ---------------------------------Update MonthssinceLastTest-----------------------------------
-                 UPDATE ODS.[dbo].[HTS_ClientTests] SET MonthsSinceLastTest =  NULL 
+                 UPDATE ODS.[HTS].[HTS_ClientTests] SET MonthsSinceLastTest =  NULL 
                 Where MonthsSinceLastTest > 1540 

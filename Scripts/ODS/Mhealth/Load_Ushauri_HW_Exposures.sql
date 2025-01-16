@@ -1,7 +1,7 @@
 ---- Loads Ushauri_HW_Exposures data from MhealthCentral to ODS
--- truncate table [ODS].[dbo].[Mhealth_Ushauri_HWExposure]
+-- truncate table [ODS].[Mhealth].[Mhealth_Ushauri_HWExposure]
 BEGIN
-  MERGE [ODS].[dbo].[Mhealth_Ushauri_HWExposure]
+  MERGE [ODS].[Mhealth].[Mhealth_Ushauri_HWExposure]
   AS a
   USING (
 			SELECT DISTINCT

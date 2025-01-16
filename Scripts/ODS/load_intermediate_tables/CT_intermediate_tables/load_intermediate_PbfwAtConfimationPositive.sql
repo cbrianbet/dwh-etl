@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[ODS].[dbo].[Intermediate_PbfwAtConfimationPositive]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[dbo].[Intermediate_PbfwAtConfimationPositive];
+IF OBJECT_ID(N'[ODS].[Intermediate].[Intermediate_PbfwAtConfimationPositive]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[Intermediate].[Intermediate_PbfwAtConfimationPositive];
 BEGIN
 	with pregnant_or_breastfeeding_visit_dates_ordering as (
 		select 
@@ -7,7 +7,7 @@ BEGIN
            SiteCode,
            VisitDate,
            row_number() over(partition by PatientPK, SiteCode order by VisitDate asc) as rnk
-        from ODS.dbo.CT_PatientVisits
+        from ODS.Care.CT_PatientVisits
         where (Pregnant in ('YES',  'Y') or Breastfeeding = 'Yes')  	  
 		and  VOIDED = 0
 	),
@@ -20,8 +20,8 @@ BEGIN
 				coalesce(replace(Patients.DateConfirmedHIVPositive,'-',''), replace(ART.StartARTDate,'-',''),replace(Patients.RegistrationAtCCC,'-','')), -- coalescing to get as much data as possible
 				VisitDate) BETWEEN 0 and 2 THEN 1 ELSE 0 END as PbfwAtConfirmedPositive
 		from pregnant_or_breastfeeding_visit_dates_ordering as visits
-	    INNER JOIN ODS.dbo.CT_Patient Patients ON  visits.PatientPK=Patients.PatientPK AND Patients.SiteCode=visits.SiteCode
-	 	INNER JOIN ODS.dbo.CT_ARTPatients ART ON ART.PatientPK=Patients.PatientPK AND Patients.SiteCode=ART.SiteCode
+	    INNER JOIN ODS.Care.CT_Patient Patients ON  visits.PatientPK=Patients.PatientPK AND Patients.SiteCode=visits.SiteCode
+	 	INNER JOIN ODS.Care.CT_ARTPatients ART ON ART.PatientPK=Patients.PatientPK AND Patients.SiteCode=ART.SiteCode
         WHERE Patients.Gender = 'Female' and
         	visits.rnk = 1 and
 	  		Patients.VOIDED = 0 and
@@ -35,7 +35,7 @@ BEGIN
 			pregnant_or_breastfeeding_visit_dates_check.SiteCode,
             pregnant_or_breastfeeding_visit_dates_check.PbfwAtConfirmedPositive,
 			cast(getdate() as date) as LoadDate
-	into [ODS].[dbo].[Intermediate_PbfwAtConfimationPositive]
+	into [ODS].[Intermediate].[Intermediate_PbfwAtConfimationPositive]
 	from  pregnant_or_breastfeeding_visit_dates_check
     where  pregnant_or_breastfeeding_visit_dates_check.PbfwAtConfirmedPositive = 1
 END

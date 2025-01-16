@@ -1,6 +1,6 @@
 BEGIN
 
-			MERGE [ODS].[dbo].[Mhealth_Ushauri_HEI] AS a
+			MERGE [ODS].[Mhealth].[Mhealth_Ushauri_HEI] AS a
 				USING(SELECT Distinct
 						PatientPK As UshauriPatientPK,PatientPKHash As UshauriPatientPKHash,PartnerName,SiteCode,SiteType,Emr,Project,
 						FacilityName,PatientMNCH_ID,PatientHEI_ID,[1stDNAPCRDate],[2ndDNAPCRDate],

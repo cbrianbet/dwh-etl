@@ -1,7 +1,7 @@
 
 BEGIN
  
-MERGE [ODS].[dbo].[PrEP_Pharmacy] AS a
+MERGE [ODS].[PrEP].[PrEP_Pharmacy] AS a
 	USING(SELECT distinct
 				   a.[Id]
 				  ,a.[RefId]

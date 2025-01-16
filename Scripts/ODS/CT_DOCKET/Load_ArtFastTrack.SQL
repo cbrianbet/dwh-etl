@@ -1,5 +1,5 @@
 BEGIN ---- Refresh [ODS].[dbo].[CT_ArtFastTrack] 
-MERGE [ODS].[dbo].[CT_ArtFastTrack] AS a USING(
+MERGE [ODS].[Care].[CT_ArtFastTrack] AS a USING(
 	SELECT  Distinct F.Code AS SiteCode
 		,P.PatientPID AS PatientPK
 		,P.PatientcccNumber AS PatientID

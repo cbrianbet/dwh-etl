@@ -1,7 +1,7 @@
 BEGIN
 
-		--Truncate table [ODS].[dbo].[HTS_ClientTracing]
-		MERGE [ODS].[dbo].[HTS_ClientTracing] AS a
+		--Truncate table [ODS].[HTS].[HTS_ClientTracing]
+		MERGE [ODS].[HTS].[HTS_ClientTracing] AS a
 			USING(SELECT DISTINCT  a.[FacilityName]
 				  ,a.[SiteCode]
 				  ,a.[PatientPk]
@@ -11,11 +11,16 @@ BEGIN
 				  ,[TracingType]
 				  ,[TracingDate]
 				  ,[TracingOutcome]
+				  ,a.voided
 				  ,a.RecordUUID
 			  FROM [HTSCentral].[dbo].[HtsClientTracing] (NoLock)a
 			INNER JOIN [HTSCentral].[dbo].Clients (NoLock) Cl
 			on a.PatientPk = Cl.PatientPk and a.SiteCode = Cl.SiteCode
-				Inner join ( select innerCT.sitecode,innerCT.patientPK,innerCT.htsNumber,innerCT.voided,max(ID)As MaxID,max(Dateextracted)MaxDateextracted
+				Inner join ( select innerCT.sitecode,
+									innerCT.patientPK,
+									innerCT.htsNumber,
+									innerCT.voided,
+									max(ID)As MaxID,max(Dateextracted)MaxDateextracted
 				from [HTSCentral].[dbo].[HtsClientTracing] innerCT
 									group by innerCT.sitecode,innerCT.patientPK,innerCT.htsNumber,innerCT.voided
 						  )tn
@@ -36,6 +41,7 @@ BEGIN
 			and a.TracingType  = b.TracingType
 			and a.TracingOutcome = b.TracingOutcome
 			and a.FacilityName  = b.FacilityName
+			and a.voided   = b.voided
 			)
 	WHEN NOT MATCHED THEN 
 		INSERT(FacilityName,SiteCode,PatientPk,HtsNumber,Emr,Project,TracingType,TracingDate,TracingOutcome,RecordUUID,LoadDate)  
@@ -43,7 +49,6 @@ BEGIN
 
 	WHEN MATCHED THEN
 		UPDATE SET 
-				a.[FacilityName]	=b.[FacilityName],
 				
 				a.[TracingType]		=b.[TracingType],
 				a.[TracingDate]		=b.[TracingDate],
