@@ -1,7 +1,7 @@
 
 BEGIN
---truncate table [ODS].[dbo].[PrEP_CareTermination]
-MERGE [ODS].[dbo].[PrEP_CareTermination] AS a
+--truncate table [ODS].[PrEP].[PrEP_CareTermination]
+MERGE [ODS].[PrEP].[PrEP_CareTermination] AS a
 	USING(SELECT distinct a.[Id]
 				  ,a.[RefId]
 				  ,a.[Created]
