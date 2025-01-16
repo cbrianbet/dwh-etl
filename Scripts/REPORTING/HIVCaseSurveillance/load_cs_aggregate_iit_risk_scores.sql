@@ -55,7 +55,7 @@ BEGIN
 		sum(count(distinct PatientKey)) over(partition by MFLCode) as TotalClientsInFacility,
 		sum(count(distinct PatientKey)) over(partition by SubCounty) as TotalClientsInSubCounty,
 		sum(count(distinct PatientKey)) over(partition by County) as TotalClientsInCounty
-	into REPORTING.dbo.CSAggregateIITRiskScores
+	into HIVCaseSurveillance.dbo.CSAggregateIITRiskScores
 	from source_data
 	where (LatestRiskCategory is not null or LatestRiskCategory <> '')
 	group by 

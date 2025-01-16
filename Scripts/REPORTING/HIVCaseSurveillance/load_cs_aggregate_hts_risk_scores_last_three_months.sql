@@ -53,7 +53,7 @@ select
 	sum(count(distinct PatientKey)) over(partition by MFLCode) as TotalClientsInFacility,
     sum(count(distinct PatientKey)) over(partition by SubCounty) as TotalClientsInSubCounty,
 	sum(count(distinct PatientKey)) over(partition by County) as TotalClientsInCounty
-into REPORTING.dbo.CSAggregateHTSRiskScoresLastThreeMonths
+into HIVCaseSurveillance.dbo.CSAggregateHTSRiskScoresLastThreeMonths
 from source_data
 where num = 1 and (HIVRiskCategory is not null and HIVRiskCategory <> '')
 group by 
