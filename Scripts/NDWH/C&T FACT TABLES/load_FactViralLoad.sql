@@ -1,13 +1,13 @@
 
-IF OBJECT_ID(N'[NDWH].[dbo].[FactViralLoads]', N'U') IS NOT NULL 
-	DROP TABLE [NDWH].[dbo].[FactViralLoads];
+IF OBJECT_ID(N'[NDWH].[Fact].[FactViralLoads]', N'U') IS NOT NULL 
+	DROP TABLE [NDWH].[Fact].[FactViralLoads];
 BEGIN
 	with MFL_partner_agency_combination as (
 		select 
 			distinct MFL_Code,
 			SDP,
 			[SDP_Agency]  as Agency
-		from ODS.dbo.All_EMRSites 
+		from ODS.Care.All_EMRSites 
 	),
 	 eligible_for_VL as (
 		 select 
@@ -18,7 +18,7 @@ BEGIN
 		 		when datediff(month,StartARTDate, getdate()) >=3 then 1
 				when DATEDIFF(MONTH, StartARTDate, getdate()) <3 then 0
 			end as EligibleVL
-		from ODS.dbo.CT_ARTPatients
+		from ODS.Care.CT_ARTPatients
 	 ),
 	 valid_vl as (
 		/*clients who are 24 yrs and below have a valid VL that is within the last 6 months from reporting period*/
@@ -28,8 +28,8 @@ BEGIN
 			 viral_loads.PatientPK,
 			 OrderedbyDate,
 			 Replace(TestResult ,',','') as TestResult	 
-		from ODS.dbo.Intermediate_LatestViralLoads as viral_loads
-		left join ODS.dbo.CT_ARTPatients as art_patient on art_patient.PatientPK = viral_loads.PatientPK
+		from ODS.[Intermediate].Intermediate_LatestViralLoads as viral_loads
+		left join ODS.Care.CT_ARTPatients as art_patient on art_patient.PatientPK = viral_loads.PatientPK
 			and art_patient.SiteCode = viral_loads.SiteCode
 		where datediff(month, OrderedbyDate, eomonth(dateadd(mm,-1,getdate()))) <= 6
 		and coalesce(art_patient.AgeLastVisit,
@@ -42,8 +42,8 @@ BEGIN
 			 viral_loads.PatientPK,
 			 OrderedbyDate,
 			 Replace(TestResult ,',','') as TestResult	 
-		from ODS.dbo.Intermediate_LatestViralLoads as viral_loads
-		left join ODS.dbo.CT_ARTPatients as art_patient on art_patient.PatientPK = viral_loads.PatientPK
+		from ODS.[Intermediate].Intermediate_LatestViralLoads as viral_loads
+		left join ODS.Care.CT_ARTPatients as art_patient on art_patient.PatientPK = viral_loads.PatientPK
 			and art_patient.SiteCode = viral_loads.SiteCode
 		where datediff(month, OrderedbyDate, eomonth(dateadd(mm,-1,getdate()))) <= 12
 		and coalesce(art_patient.AgeLastVisit,
@@ -57,13 +57,13 @@ BEGIN
 			 pbfw.PatientPK,
 			 viral_loads.OrderedbyDate,
 			 Replace(viral_loads.TestResult ,',','') as TestResult	 
-		from ODS.dbo.Intermediate_PregnantAndBreastFeeding as pbfw
-		left join ODS.dbo.Intermediate_LatestViralLoads as viral_loads on viral_loads.PatientPK = pbfw.PatientPK
+		from ODS.[Intermediate].Intermediate_PregnantAndBreastFeeding as pbfw
+		left join ODS.[Intermediate].Intermediate_LatestViralLoads as viral_loads on viral_loads.PatientPK = pbfw.PatientPK
 			and viral_loads.SiteCode = pbfw.SiteCode
-		left join ODS.dbo.CT_ARTPatients as art_patient on art_patient.PatientPK = pbfw.PatientPK
+		left join ODS.Care.CT_ARTPatients as art_patient on art_patient.PatientPK = pbfw.PatientPK
 			and art_patient.SiteCode = pbfw.SiteCode
 		where datediff(month, OrderedbyDate, eomonth(dateadd(mm,-1,getdate()))) <= 6
-		and  pbfw.AsOfDate = (select max(AsOfDate) from ODS.dbo.Intermediate_PregnantAndBreastFeeding)
+		and  pbfw.AsOfDate = (select max(AsOfDate) from ODS.[Intermediate].Intermediate_PregnantAndBreastFeeding)
      ),
 	 PBFW_valid_vl_indicators as (
 		select 
@@ -161,23 +161,54 @@ BEGIN
 			[_12MonthVLSup],
 			[_18MonthVLSup],
 			[_24MonthVLSup]
-		from ODS.dbo.Intermediate_ViralLoadsIntervals
+		from ODS.[Intermediate].Intermediate_ViralLoadsIntervals
 	 ),
 	 first_vl as (
 		select 
 			PatientPK,
 			SiteCode,
 	 		replace(TestResult, ',', '') as FirstVL,
-			OrderedbyDate as FirstVLDate 
-		from ODS.dbo.Intermediate_BaseLineViralLoads	
+			OrderedbyDate as FirstVLDate ,
+              Case  WHEN (Isnumeric( TestResult) = 1 AND Cast(Replace( TestResult, ',', '') AS Float) < 200.00)
+         OR TestResult IN ('undetectable', 'NOT DETECTED', '0 copies/ml', 'LDL', 'Less than Low Detectable Level') 
+    THEN 1 Else 0
+    End As IsSuppressedInitialViralload
+		from ODS.[Intermediate].Intermediate_BaseLineViralLoads	
+     ),
+     second_vl as (
+		select 
+			PatientPK,
+			SiteCode,
+	 		replace(TestResult, ',', '') as SecondVL,
+			OrderedbyDate as SecondVLDate ,
+             Case  WHEN (Isnumeric( TestResult) = 1 AND Cast(Replace( TestResult, ',', '') AS Float) < 200.00)
+         OR TestResult IN ('undetectable', 'NOT DETECTED', '0 copies/ml', 'LDL', 'Less than Low Detectable Level') 
+    THEN 1 Else 0
+    End As IsSuppressedSecondFollowupViralloads
+		from ODS.[Intermediate].Intermediate_OrderedViralLoads	
+        where rank=2
 	 ),
+Third_Vl as (
+		select 
+			PatientPK,
+			SiteCode,
+	 		replace(TestResult, ',', '') as ThirdVL,
+			OrderedbyDate as SecondVLDate ,
+             Case  WHEN (Isnumeric( TestResult) = 1 AND Cast(Replace( TestResult, ',', '') AS Float) < 200.00)
+         OR TestResult IN ('undetectable', 'NOT DETECTED', '0 copies/ml', 'LDL', 'Less than Low Detectable Level') 
+    THEN 1 Else 0
+    End As IsSuppressedThirdFollowupViralloads
+		from ODS.[Intermediate].Intermediate_OrderedViralLoads	
+        where rank=3
+),
+
 	last_vl as (
 		select 
 			PatientPK,
 			SiteCode,
 	 		replace(TestResult, ',', '') as LastVL,
 			OrderedbyDate as LastVLDate 	
-		from ODS.dbo.Intermediate_LatestViralLoads
+		from ODS.[Intermediate].Intermediate_LatestViralLoads
 	),
 	time_to_first_vl as (
 		select
@@ -189,8 +220,8 @@ BEGIN
 					when OrderedbyDate >= art_patients.StartARTDate then datediff(day, art_patients.StartARTDate, baseline.OrderedbyDate)
 				end
 		end as TimetoFirstVL
-	from ODS.dbo.Intermediate_BaseLineViralLoads as baseline
-	left join ODS.dbo.CT_ARTPatients as art_patients on art_patients.PatientPK = baseline.PatientPK
+	from ODS.[Intermediate].Intermediate_BaseLineViralLoads as baseline
+	left join ODS.Care.CT_ARTPatients as art_patients on art_patients.PatientPK = baseline.PatientPK
 		and art_patients.SiteCode = baseline.SiteCode
 	),
 	time_to_first_vl_group as (
@@ -213,7 +244,7 @@ BEGIN
 			TestResult as LatestVL1,
 			OrderedbyDate as LatestVLDate1,
 			rank
-		from ODS.dbo.Intermediate_OrderedViralLoads
+		from ODS.[Intermediate].Intermediate_OrderedViralLoads
 		where rank = 1
 	),
 	latest_VL_2 as (
@@ -223,7 +254,7 @@ BEGIN
 			TestResult as LatestVL2,
 			OrderedbyDate as LatestVLDate2,
 			rank
-		from ODS.dbo.Intermediate_OrderedViralLoads
+		from ODS.[Intermediate].Intermediate_OrderedViralLoads
 		where rank = 2
 	),
 	latest_VL_3 as (
@@ -233,7 +264,7 @@ BEGIN
 			TestResult as LatestVL3,
 			OrderedbyDate as LatestVLDate3,
 			rank
-		from ODS.dbo.Intermediate_OrderedViralLoads
+		from ODS.[Intermediate].Intermediate_OrderedViralLoads
 		where rank = 3
 	),
 
@@ -242,7 +273,7 @@ SecondLatestVL As (SELECT
     SiteCode,
     TestResult,
     orderedbydate as SecondLatestVLDate
-FROM ODS.dbo.Intermediate_OrderedViralLoads 
+FROM ODS.[Intermediate].Intermediate_OrderedViralLoads 
 WHERE rank = 2
 AND (
    TRY_CAST(REPLACE(TestResult, ',', '') AS FLOAT) >= 200.00
@@ -254,7 +285,7 @@ RepeatVL As (Select
     vls.TestResult,
     SecondLatestVLDate
  from SecondLatestVL
- inner join ODS.dbo.Intermediate_OrderedViralLoads vls  on SecondLatestVL.patientpk=vls.PatientPK and SecondLatestVL.Sitecode=Vls.SiteCode
+ inner join ODS.[Intermediate].Intermediate_OrderedViralLoads vls  on SecondLatestVL.patientpk=vls.PatientPK and SecondLatestVL.Sitecode=Vls.SiteCode
  where rank=1  AND DATEDIFF(MONTH, orderedbydate, SecondLatestVLDate) <= 6 
 ),
 
@@ -279,7 +310,7 @@ RepeatVlUnSupp as (Select
 		select 
 	 		pbfw.SiteCode,
 			pbfw.PatientPK
-		from ODS.dbo.Intermediate_Pbfw as pbfw
+		from ODS.[Intermediate].Intermediate_Pbfw as pbfw
  ),
 	combined_viral_load_dataset as (
 		select
@@ -312,6 +343,12 @@ RepeatVlUnSupp as (Select
 			patient_viral_load_intervals.[_24MonthVLSup],
 			first_vl.FirstVL,
 			first_vl.FirstVLDate,
+            IsSuppressedInitialViralload,
+            second_vl.SecondVL,
+            second_vl.SecondVLDate,
+            IsSuppressedSecondFollowupViralloads,
+            Third_Vl.ThirdVL,
+            IsSuppressedThirdFollowupViralloads,
 			last_vl.LastVL,
 			last_vl.LastVLDate,
 			time_to_first_vl.TimetoFirstVL,
@@ -333,8 +370,8 @@ RepeatVlUnSupp as (Select
                case when RepeatVlUnSupp.PatientPk is not null then 1 Else 0 End as RepeatUnSuppressed,
 			datediff(yy, patient.DOB, last_encounter.LastEncounterDate) as AgeLastVisit,
 			 cast(getdate() as date) as LoadDate
-		from ODS.dbo.CT_Patient as patient
-		inner join ODS.dbo.CT_ARTPatients art on art.PatientPK = patient.Patientpk 
+		from ODS.Care.CT_Patient as patient
+		inner join ODS.Care.CT_ARTPatients art on art.PatientPK = patient.Patientpk 
 			and art.SiteCode = patient.SiteCode
 		left join eligible_for_VL on eligible_for_VL.PatientPK = patient.PatientPK
 			and eligible_for_VL.SiteCode = patient.SiteCode
@@ -344,6 +381,10 @@ RepeatVlUnSupp as (Select
 			and patient_viral_load_intervals.SiteCode = patient.SiteCode
 		left join first_vl on first_vl.PatientPK = patient.PatientPK
 			and first_vl.SiteCode = patient.SiteCode
+        left join second_vl on second_vl.PatientPK = patient.PatientPK
+			and second_vl.SiteCode = patient.SiteCode
+        left join Third_Vl on Third_Vl.PatientPK = patient.PatientPK
+			and Third_Vl.SiteCode = patient.SiteCode
 		left join last_vl on last_vl.PatientPK = patient.PatientPK
 			and last_vl.SiteCode = patient.SiteCode
 		left join time_to_first_vl_group on time_to_first_vl_group.PatientPK = patient.PatientPK
@@ -356,7 +397,7 @@ RepeatVlUnSupp as (Select
 			and latest_VL_2.SiteCode = patient.SiteCode	
 		left join latest_VL_3 on latest_VL_3.PatientPK = patient.PatientPK
 			and latest_VL_3.SiteCode = patient.SiteCode	
-		left join ODS.dbo.Intermediate_LastPatientEncounter as last_encounter on patient.PatientPK = last_encounter.PatientPK
+		left join ODS.[Intermediate].Intermediate_LastPatientEncounter as last_encounter on patient.PatientPK = last_encounter.PatientPK
 			and last_encounter.SiteCode = patient.SiteCode
         left join PBFW_valid_vl on PBFW_valid_vl.PatientPK=patient.PatientPK and PBFW_valid_vl.SiteCode=patient.SiteCode
 		Left join RepeatVL Vls on Patient.patientpk=Vls.patientpk and Patient.Sitecode=Vls.Sitecode 
@@ -410,7 +451,12 @@ RepeatVlUnSupp as (Select
 		combined_viral_load_dataset.[_18MonthVLSup] as [18MonthVLSup],
 		combined_viral_load_dataset.[_24MonthVLSup] as [24MonthVLSup],	
 		combined_viral_load_dataset.FirstVL,
+        combined_viral_load_dataset.SecondVL,
+        combined_viral_load_dataset.IsSuppressedInitialViralload,
 		combined_viral_load_dataset.LastVL,
+        combined_viral_load_dataset.IsSuppressedSecondFollowupViralloads,
+        combined_viral_load_dataset.ThirdVL,
+        combined_viral_load_dataset.IsSuppressedThirdFollowupViralloads,
 		combined_viral_load_dataset.TimetoFirstVL,
 		combined_viral_load_dataset.TimeToFirstVLGrp,
 		combined_viral_load_dataset.HighViremia,
@@ -418,28 +464,28 @@ RepeatVlUnSupp as (Select
 		combined_viral_load_dataset.RepeatVls,
 		combined_viral_load_dataset.RepeatSuppressed,
         combined_viral_load_dataset.RepeatUnSuppressed
-	into [NDWH].[dbo].[FactViralLoads]
+	into [NDWH].[Fact].[FactViralLoads]
 	from combined_viral_load_dataset
-	left join NDWH.dbo.DimPatient as patient on patient.PatientPKHash = combined_viral_load_dataset.PatientPKHash
+	left join NDWH.Dim.DimPatient as patient on patient.PatientPKHash = combined_viral_load_dataset.PatientPKHash
 		and patient.SiteCode = combined_viral_load_dataset.SiteCode
-	left join NDWH.dbo.DimFacility as facility on facility.MFLCode = combined_viral_load_dataset.SiteCode
+	left join NDWH.Dim.DimFacility as facility on facility.MFLCode = combined_viral_load_dataset.SiteCode
 	left join MFL_partner_agency_combination on MFL_partner_agency_combination.MFL_Code = combined_viral_load_dataset.SiteCode
-	left join NDWH.dbo.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
-	left join NDWH.dbo.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
-	left join NDWH.dbo.DimAgeGroup as age_group on age_group.Age = combined_viral_load_dataset.AgeLastVisit
-	left join NDWH.dbo.DimDate as validVL_date on validVL_date.Date = combined_viral_load_dataset.ValidVLDate
-	left join NDWH.dbo.DimDate as _6_monthVL_date on _6_monthVL_date.Date = combined_viral_load_dataset.[_6MonthVLDate]
-	left join NDWH.dbo.DimDate as _12_monthVL_date on _12_monthVL_date.Date = combined_viral_load_dataset.[_12MonthVLDate]
-	left join NDWH.dbo.DimDate as _18_monthVL_date on _18_monthVL_date.Date = combined_viral_load_dataset.[_18MonthVLDate]
-	left join NDWH.dbo.DimDate as _24_monthVL_date on _24_monthVL_date.Date = combined_viral_load_dataset.[_24MonthVLDate]
-	left join NDWH.dbo.DimDate as first_VL_date on first_VL_date.Date = combined_viral_load_dataset.FirstVLDate
-	left join NDWH.dbo.DimDate as last_VL_date on last_VL_date.Date = combined_viral_load_dataset.LastVLDate
-	left join NDWH.dbo.DimDate as lastest_VL_date1 on lastest_VL_date1.Date = combined_viral_load_dataset.LatestVLDate1
-	left join NDWH.dbo.DimDate as lastest_VL_date2 on lastest_VL_date2.Date = combined_viral_load_dataset.LatestVLDate2
-	left join NDWH.dbo.DimDate as lastest_VL_date3 on lastest_VL_date3.Date = combined_viral_load_dataset.LatestVLDate3
-	left join NDWH.dbo.DimDate as pbfw_validVL_date on pbfw_validVL_date.Date = combined_viral_load_dataset.PBFW_ValidVLDate
+	left join NDWH.Dim.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
+	left join NDWH.Dim.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
+	left join NDWH.Dim.DimAgeGroup as age_group on age_group.Age = combined_viral_load_dataset.AgeLastVisit
+	left join NDWH.Dim.DimDate as validVL_date on validVL_date.Date = combined_viral_load_dataset.ValidVLDate
+	left join NDWH.Dim.DimDate as _6_monthVL_date on _6_monthVL_date.Date = combined_viral_load_dataset.[_6MonthVLDate]
+	left join NDWH.Dim.DimDate as _12_monthVL_date on _12_monthVL_date.Date = combined_viral_load_dataset.[_12MonthVLDate]
+	left join NDWH.Dim.DimDate as _18_monthVL_date on _18_monthVL_date.Date = combined_viral_load_dataset.[_18MonthVLDate]
+	left join NDWH.Dim.DimDate as _24_monthVL_date on _24_monthVL_date.Date = combined_viral_load_dataset.[_24MonthVLDate]
+	left join NDWH.Dim.DimDate as first_VL_date on first_VL_date.Date = combined_viral_load_dataset.FirstVLDate
+	left join NDWH.Dim.DimDate as last_VL_date on last_VL_date.Date = combined_viral_load_dataset.LastVLDate
+	left join NDWH.Dim.DimDate as lastest_VL_date1 on lastest_VL_date1.Date = combined_viral_load_dataset.LatestVLDate1
+	left join NDWH.Dim.DimDate as lastest_VL_date2 on lastest_VL_date2.Date = combined_viral_load_dataset.LatestVLDate2
+	left join NDWH.Dim.DimDate as lastest_VL_date3 on lastest_VL_date3.Date = combined_viral_load_dataset.LatestVLDate3
+	left join NDWH.Dim.DimDate as pbfw_validVL_date on pbfw_validVL_date.Date = combined_viral_load_dataset.PBFW_ValidVLDate
 	WHERE patient.voided =0;
 
 
-	alter table [NDWH].[dbo].[FactViralLoads] add primary key(FactKey);
+	alter table [NDWH].[Fact].[FactViralLoads] add primary key(FactKey);
 END

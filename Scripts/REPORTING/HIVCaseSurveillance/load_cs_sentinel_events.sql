@@ -63,75 +63,19 @@ begin
     AgeAtARTStart
     from  NDWH.Fact.FACTARTBaselines
  ),
- Viralloads As (
-  SELECT 
-    ROW_NUMBER() OVER (PARTITION BY viralloads.patientkey ORDER BY  OrderedbyDate.[Date] ASC) AS [Rank],
-    viralloads.Patientkey,
-    SiteCode,
-    OrderedbyDate.[Date] As OrderedbyDate ,
-    ReportedbyDate.Date As ReportedbyDate ,
-    viralloads.TestName,
-    viralloads.TestResult,
-    fac.FacilityKey
-FROM 
-    NDWH.Fact.FactOrderedViralLoads as viralloads 
-    LEFT join NDWH.Dim.DimFacility fac on fac.FacilityKey = viralloads.FacilityKey
-    LEFT JOIN NDWH.Dim.DimAgency agency on agency.AgencyKey = viralloads.AgencyKey
-    LEFT JOIN [NDWH].[Dim].[DimPatient] pat on pat.PatientKey = viralloads.PatientKey
-    LEFT JOIN NDWH.Dim.DimPartner partner on partner.PartnerKey = viralloads.PartnerKey
-    left join [NDWH].[Dim].[DimDate] as  ReportedbyDate on ReportedbyDate.DateKey = viralloads.ReportedbyDateKey
-    LEFT JOIN [NDWH].[Dim].[DimDate] as Orderedbydate on Orderedbydate.DateKey = viralloads.OrderedbyDateKey
- ),
- InitialViralLoads As (
-    SELECT
-    Viralloads.patientkey,
-    Viralloads.Facilitykey,
-    Viralloads.Testresult,
-  CASE 
-    WHEN (Isnumeric(Testresult) = 1 AND Cast(Replace(Testresult, ',', '') AS Float) < 200.00)
-         OR Testresult IN ('undetectable', 'NOT DETECTED', '0 copies/ml', 'LDL', 'Less than Low Detectable Level') 
-    THEN 1 Else 0
-    End As IsSuppressedInitialViralload
 
-    from Viralloads
-    where Rank=1
- ),
- FirstFollowupViralloads As (
+ViralLoads as (
     SELECT
-    Patientkey,
-    Facilitykey,
-    Testresult,
-      CASE 
-    WHEN (Isnumeric(Testresult) = 1 AND Cast(Replace(Testresult, ',', '') AS Float) < 200.00)
-         OR Testresult IN ('undetectable', 'NOT DETECTED', '0 copies/ml', 'LDL', 'Less than Low Detectable Level') 
-    THEN 1 Else 0 End As IsSuppressedFirstFollowupViralloads
-    from Viralloads
-    where Rank=2
- ),
-  SecondFollowupViralloads As (
-    SELECT
-    Patientkey,
-    Facilitykey,
-    Testresult,
-      CASE 
-    WHEN (Isnumeric(Testresult) = 1 AND Cast(Replace(Testresult, ',', '') AS Float) < 200.00)
-         OR Testresult IN ('undetectable', 'NOT DETECTED', '0 copies/ml', 'LDL', 'Less than Low Detectable Level') 
-    THEN 1 Else 0 End As IsSuppressedSecondFollowupViralloads
-    from Viralloads
-    where Rank=3
- ),
-ThirdFollowupViralloads As (
-    SELECT
-    Patientkey,
-    Facilitykey,
-    Testresult,
-     CASE 
-    WHEN (Isnumeric(Testresult) = 1 AND Cast(Replace(Testresult, ',', '') AS Float) < 200.00)
-         OR Testresult IN ('undetectable', 'NOT DETECTED', '0 copies/ml', 'LDL', 'Less than Low Detectable Level') 
-    THEN 1 Else 0 End As IsSuppressedThirdFollowupViralloads
-    from Viralloads
-    where Rank=4
+    PatientKey,
+    FirstVL ,
+    IsSuppressedInitialViralload,
+    SecondVL as FirstFollowupViralloads,
+    IsSuppressedSecondFollowupViralloads as IsSuppressedFirstFollowUpViralloads,
+    ThirdVL as SecondFollowupviralloads,
+    IsSuppressedThirdFollowupViralloads as IsSuppressedSecondFollowupviralloads
+    from NDWH.Fact.FactViralLoads as vls 
 ),
+
 RegimenChanges as (
   Select 
   Patientkey,
@@ -233,16 +177,14 @@ case when whostageAtART is null then 1 else 0 End as NotStaged,
     BaselineWHO.WHOStageATART,
   BaselineWHO.AgeAtARTStart,
    age.DATIMAgeGroup as ARTStartAgeGroup,
-   case when InitialViralLoads.patientkey is not null then 1 Else 0 End as WithInitialViralLoad,
-   case when InitialViralLoads.patientkey is null then 1 Else 0 End as WithoutInitialViralLoad,
-   coalesce(InitialViralLoads.IsSuppressedInitialViralload,0) As IsSuppressedInitialViralload,
+   case when vls.FirstVL is not null then 1 Else 0 End as WithInitialViralLoad,
+   case when vls.FirstVL is null then 1 Else 0 End as WithoutInitialViralLoad,
+   coalesce(vls.IsSuppressedInitialViralload,0) As IsSuppressedInitialViralload,
   case when IsSuppressedInitialViralload=0 Then 1 Else 0 End as IsNotSuppressedInitialViralload,
-   case when FirstFollowupViralloads.patientkey is not null then 1 Else 0 End As WithFirstFollowupViralload,
-   coalesce (FirstFollowupViralloads.IsSuppressedFirstFollowupViralloads,0) as IsSuppressedFirstFollowupViralloads,
-   case when SecondFollowupViralloads.patientkey is not null then 1 Else 0 End As WithSecondFollowupViralloads,
-   coalesce (SecondFollowupViralloads.IsSuppressedSecondFollowupViralloads,0) As IssuppressedSecondFollowupViralloads,
-   case when ThirdFollowupViralloads.patientkey is not null then 1 Else 0 End As WithThirdFollowupViralloads,
-   coalesce(ThirdFollowupViralloads.IsSuppressedThirdFollowupViralloads,0) As IsSuppressedThirdFollowupViralloads,
+   case when vls.FirstFollowupViralloads is not null then 1 Else 0 End As WithFirstFollowupViralload,
+   coalesce (IsSuppressedFirstFollowupViralloads,0) as IsSuppressedFirstFollowupViralloads,
+   case when vls.SecondFollowupviralloads is not null then 1 Else 0 End As WithSecondFollowupViralloads,
+   coalesce (IsSuppressedSecondFollowupViralloads,0) As IssuppressedSecondFollowupViralloads,
    coalesce (RegimenChanged,0) as RegimenChanged,
    case when RegimenChanged=0 Then 1 else 0 End as RegimenNotChanged,
    OptimizedRegimen,
@@ -261,14 +203,10 @@ case when whostageAtART is null then 1 else 0 End as NotStaged,
  left join NDWH.Dim.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
  left join NDWH.Dim.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
  left join OtherCD4s on OtherCD4s.Patientkey=confirmed_reported_cases_and_art.Patientkey
- left join InitialViralLoads on InitialViralLoads.patientkey=confirmed_reported_cases_and_art.PatientKey
- left join FirstFollowupViralloads on FirstFollowupViralloads.patientkey=confirmed_reported_cases_and_art.PatientKey
- left join SecondFollowupViralloads on SecondFollowupViralloads.patientkey=confirmed_reported_cases_and_art.PatientKey
- left join ThirdFollowupViralloads on ThirdFollowupViralloads.patientkey=confirmed_reported_cases_and_art.PatientKey
  left join RegimenChanges on RegimenChanges.Patientkey=confirmed_reported_cases_and_art.PatientKey
  left join OptimizedRegimen on OptimizedRegimen.Patientkey=confirmed_reported_cases_and_art.PatientKey
  left join ConsecutiveHighVls on ConsecutiveHighVls.PatientKey=confirmed_reported_cases_and_art.PatientKey
  left join LatestSuppressedVL on LatestSuppressedVL.PatientKey=confirmed_reported_cases_and_art.PatientKey
  left join Retained on Retained.Patientkey=confirmed_reported_cases_and_art.PatientKey
+ left join Viralloads as vls on vls.PatientKey=confirmed_reported_cases_and_art.PatientKey
  end
-
