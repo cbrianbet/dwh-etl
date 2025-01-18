@@ -72,6 +72,10 @@ begin
     ThirdVL,
     IsSuppressedThirdFollowupViralloads,
     LastVL,
+           Case  WHEN (Isnumeric( LastVL) = 1 AND Cast(Replace( LastVL, ',', '') AS Float) < 200.00)
+         OR LastVL IN ('undetectable', 'NOT DETECTED', '0 copies/ml', 'LDL', 'Less than Low Detectable Level') 
+    THEN 1 Else 0
+    End As IsSuppressedLatestViralload,
     fac.FacilityKey
 FROM 
     NDWH.Fact.FactViralLoads as viralloads
