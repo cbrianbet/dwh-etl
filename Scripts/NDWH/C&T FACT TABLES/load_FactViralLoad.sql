@@ -168,9 +168,40 @@ BEGIN
 			PatientPK,
 			SiteCode,
 	 		replace(TestResult, ',', '') as FirstVL,
-			OrderedbyDate as FirstVLDate 
+			OrderedbyDate as FirstVLDate ,
+              Case  WHEN (Isnumeric( TestResult) = 1 AND Cast(Replace( TestResult, ',', '') AS Float) < 200.00)
+         OR TestResult IN ('undetectable', 'NOT DETECTED', '0 copies/ml', 'LDL', 'Less than Low Detectable Level') 
+    THEN 1 Else 0
+    End As IsSuppressedInitialViralload
 		from ODS.[Intermediate].Intermediate_BaseLineViralLoads	
+     ),
+     second_vl as (
+		select 
+			PatientPK,
+			SiteCode,
+	 		replace(TestResult, ',', '') as SecondVL,
+			OrderedbyDate as SecondVLDate ,
+             Case  WHEN (Isnumeric( TestResult) = 1 AND Cast(Replace( TestResult, ',', '') AS Float) < 200.00)
+         OR TestResult IN ('undetectable', 'NOT DETECTED', '0 copies/ml', 'LDL', 'Less than Low Detectable Level') 
+    THEN 1 Else 0
+    End As IsSuppressedSecondFollowupViralloads
+		from ODS.[Intermediate].Intermediate_OrderedViralLoads	
+        where rank=2
 	 ),
+Third_Vl as (
+		select 
+			PatientPK,
+			SiteCode,
+	 		replace(TestResult, ',', '') as ThirdVL,
+			OrderedbyDate as SecondVLDate ,
+             Case  WHEN (Isnumeric( TestResult) = 1 AND Cast(Replace( TestResult, ',', '') AS Float) < 200.00)
+         OR TestResult IN ('undetectable', 'NOT DETECTED', '0 copies/ml', 'LDL', 'Less than Low Detectable Level') 
+    THEN 1 Else 0
+    End As IsSuppressedThirdFollowupViralloads
+		from ODS.[Intermediate].Intermediate_OrderedViralLoads	
+        where rank=3
+),
+
 	last_vl as (
 		select 
 			PatientPK,
