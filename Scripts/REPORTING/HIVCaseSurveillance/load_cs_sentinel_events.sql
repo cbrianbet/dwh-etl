@@ -139,7 +139,7 @@ OptimizedRegimen as (
   from NDWH.Fact.FactViralLoads as secondlatestvls
    LEFT JOIN Ndwh.Dim.Dimdate AS SecondVLDate
                       ON SecondVLDate.Datekey = secondlatestvls.LatestVLDate2Key
-  where TRY_CAST(LatestVL2 as float) >=1000 
+  where TRY_CAST(LatestVL2 as float) >=200
     AND DATEDIFF(month, LatestVLDate2Key , GETDATE()) <= 26
 ),
 ConsecutiveHighVls as  (
@@ -152,7 +152,7 @@ ConsecutiveHighVls as  (
   inner join SecondLatestHighVls on SecondLatestHighVls.PatientKey=latestvls.PatientKey
    LEFT JOIN Ndwh.Dim.Dimdate AS LatestVLDate
                       ON LatestVLDate.Datekey = latestvls.LatestVLDate1Key
-    where TRY_CAST(LatestVL1 as float) >=1000 and  datediff(month, LatestVLDate1Key , eomonth(dateadd(mm,-1,getdate()))) <= 14
+    where TRY_CAST(LatestVL1 as float) >=200 and  datediff(month, LatestVLDate1Key , eomonth(dateadd(mm,-1,getdate()))) <= 14
 
 ),
 LatestSuppressedVL as (
@@ -164,7 +164,7 @@ Select
   from NDWH.Fact.FactViralLoads as latestvls
     LEFT JOIN Ndwh.Dim.Dimdate AS LatestVLDate
                       ON latestvlDate.Datekey = latestvls.LatestVLDate1Key
-  where TRY_CAST(LatestVL2 as float) <1000 
+  where TRY_CAST(LatestVL2 as float) <200
   OR Latestvl1 IN ( 'undetectable', 'NOT DETECTED',
                                      '0 copies/ml',
                                      'LDL',
@@ -244,4 +244,3 @@ CASE
  left join Retained on Retained.Patientkey=confirmed_reported_cases_and_art.PatientKey
 
  end
- --This is the model that contains sentinel events
