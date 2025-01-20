@@ -108,7 +108,74 @@ FROM
     Viralloads.IsSuppressedThirdFollowupViralloads as IsSuppressedSecondFollowupViralloads 
     from Viralloads
     
- 
+  ),
+  RegimenChanges as (
+  Select 
+  Patientkey,
+  Facilitykey,
+  StartRegimen,
+  CurrentRegimen,
+  case when StartRegimen = CurrentRegimen Then 0 Else 1 End as RegimenChanged
+  from NDWH.Fact.FACTART
+  where StartRegimen is not null
+),
+OptimizedRegimen as (
+  Select 
+    Patientkey,
+    Facilitykey,
+    StartRegimen,
+    CurrentRegimen,
+    case when  CurrentRegimen like '3TC+DTG+TDF' THEN 1
+    Else  0 END AS OptimizedRegimen
+  from NDWH.Fact.FACTART
+),
+
+ SecondLatestHighVls as (
+  SELECT
+  PatientKey,
+  FacilityKey,
+  cast (LatestVLDate2Key as date) as LatestVLDate2Key,
+  LatestVL2
+  from NDWH.Fact.FactViralLoads as secondlatestvls
+   LEFT JOIN Ndwh.Dim.Dimdate AS SecondVLDate
+                      ON SecondVLDate.Datekey = secondlatestvls.LatestVLDate2Key
+  where TRY_CAST(LatestVL2 as float) >=1000 
+    AND DATEDIFF(month, LatestVLDate2Key , GETDATE()) <= 26
+),
+ConsecutiveHighVls as  (
+  SELECT
+  latestvls.Patientkey,
+  latestvls.FacilityKey,
+  LatestVL1,
+  cast (LatestVLDate1Key as date ) as LatestVLDate
+  from NDWH.Fact.FactViralLoads as latestvls
+  inner join SecondLatestHighVls on SecondLatestHighVls.PatientKey=latestvls.PatientKey
+   LEFT JOIN Ndwh.Dim.Dimdate AS LatestVLDate
+                      ON LatestVLDate.Datekey = latestvls.LatestVLDate1Key
+    where TRY_CAST(LatestVL1 as float) >=1000 and  datediff(month, LatestVLDate1Key , eomonth(dateadd(mm,-1,getdate()))) <= 14
+
+),
+LatestSuppressedVL as (
+Select
+  latestvls.Patientkey,
+  latestvls.FacilityKey,
+  LatestVL1 as LatestVLSuppressed,
+  cast (LatestVLDate1Key as date ) as LatestVLDate
+  from NDWH.Fact.FactViralLoads as latestvls
+    LEFT JOIN Ndwh.Dim.Dimdate AS LatestVLDate
+                      ON latestvlDate.Datekey = latestvls.LatestVLDate1Key
+  where TRY_CAST(LatestVL2 as float) <1000 
+  OR Latestvl1 IN ( 'undetectable', 'NOT DETECTED',
+                                     '0 copies/ml',
+                                     'LDL',
+                                     'Less than Low Detectable Level')
+),
+Retained as (
+  Select
+  Patientkey,
+  FacilityKey,
+  case when artoutcomekey= 6 then 1 Else 0 End as PatientRetained
+  from NDWH.Fact.FACTART
 )
  select 
     confirmed_reported_cases_and_art.PatientKey,
@@ -135,17 +202,28 @@ CASE
         (AgeatDiagnosis <= 5 AND ISNUMERIC(OtherCD4Percent) = 1 AND TRY_CONVERT(float, OtherCD4Percent) IS NOT NULL AND TRY_CONVERT(float, OtherCD4Percent) < 25)
     THEN 1 
     ELSE 0 
-  END AS TreatmentFailure,
+  END AS AHD,
     WHOStageATART,
     AgeAtARTStart,
    age.DATIMAgeGroup as ARTStartAgeGroup,
    case when InitialViralLoads.patientkey is not null then 1 Else 0 End as WithInitialViralLoad,
+    case when InitialViralLoads.patientkey is  null then 1 Else 0 End as WithoutInitialViralLoad,
    coalesce(InitialViralLoads.IsSuppressedInitialViralload,0) As IsSuppressedInitialViralload,
    case when FirstFollowupViralloads.patientkey is not null then 1 Else 0 End As WithFirstFollowupViralload,
    coalesce (FirstFollowupViralloads.IsSuppressedFirstFollowupViralloads,0) as IsSuppressedFirstFollowupViralloads,
    case when SecondFollowupViralloads.patientkey is not null then 1 Else 0 End As WithSecondFollowupViralloads,
-   coalesce (SecondFollowupViralloads.IsSuppressedSecondFollowupViralloads,0) As IssuppressedSecondFollowupViralloads
-  
+   coalesce (SecondFollowupViralloads.IsSuppressedSecondFollowupViralloads,0) As IssuppressedSecondFollowupViralloads,
+    case when WHOStageATART is  null then 1 Else 0 End as NotStaged,
+   County,
+   SubCounty,
+   coalesce (RegimenChanged,0) as RegimenChanged,
+   case when RegimenChanged=0 Then 1 else 0 End as RegimenNotChanged,
+   OptimizedRegimen,
+   case when LatestVL1 is not null then 1 Else 0 End as TreatmentFailure,
+   case when LatestVLSuppressed is not null then 1 Else 0 End as LatestVLSuppressed,
+   case when LatestVLSuppressed is null then 1 Else 0 End as LatestVLNotSuppressed,
+   coalesce (PatientRetained,0) as PatientRetained,
+   case when PatientRetained=0 then 1 Else 0 End as PatientNotRetained
  into [HIVCaseSurveillance].[dbo].[CsSentinelEvents]
  from confirmed_reported_cases_and_art
  left join BaselineCD4s on BaselineCD4s.PatientKey=confirmed_reported_cases_and_art.PatientKey
@@ -159,5 +237,10 @@ CASE
  left join InitialViralLoads on InitialViralLoads.patientkey=confirmed_reported_cases_and_art.PatientKey
  left join FirstFollowupViralloads on FirstFollowupViralloads.patientkey=confirmed_reported_cases_and_art.PatientKey
  left join SecondFollowupViralloads on SecondFollowupViralloads.patientkey=confirmed_reported_cases_and_art.PatientKey
+  left join RegimenChanges on RegimenChanges.Patientkey=confirmed_reported_cases_and_art.PatientKey
+ left join OptimizedRegimen on OptimizedRegimen.Patientkey=confirmed_reported_cases_and_art.PatientKey
+ left join ConsecutiveHighVls on ConsecutiveHighVls.PatientKey=confirmed_reported_cases_and_art.PatientKey
+ left join LatestSuppressedVL on LatestSuppressedVL.PatientKey=confirmed_reported_cases_and_art.PatientKey
+ left join Retained on Retained.Patientkey=confirmed_reported_cases_and_art.PatientKey
 
  end
