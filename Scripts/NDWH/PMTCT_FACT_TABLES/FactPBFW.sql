@@ -1,12 +1,12 @@
-IF Object_id(N'[NDWH].[dbo].[FactPBFW]', N'U') IS NOT NULL
-  DROP TABLE [Ndwh].[Dbo].[Factpbfw];
+IF Object_id(N'[NDWH].[Fact].[FactPBFW]', N'U') IS NOT NULL
+  DROP TABLE [Ndwh].[Fact].[Factpbfw];
 
 BEGIN
     WITH Mfl_partner_agency_combination
          AS (SELECT DISTINCT Mfl_code,
                              Sdp,
                              Sdp_agency AS Agency
-             FROM   Ods.Dbo.All_emrsites
+             FROM   Ods.Care.All_emrsites
        ),
        Anc_from_mnch AS (
               select Row_number()
@@ -18,15 +18,15 @@ BEGIN
                      Sitecode,
                      Visitdate,
                      HIVStatusBeforeANC
-              from   Ods.Dbo.Mnch_ancvisits
+              from   Ods.Mnch.Mnch_ancvisits
               where (Hivstatusbeforeanc = 'KP'
                             OR Hivtestfinalresult = 'Positive')	
        ),
        Pbfw_patient AS (
               select
                      * 
-              from ODS.dbo.Intermediate_PregnantAndBreastFeeding
-              where AsOfDate = (select max(AsOfDate) from ODS.dbo.Intermediate_PregnantAndBreastFeeding)
+              from ODS.[Intermediate].Intermediate_PregnantAndBreastFeeding
+              where AsOfDate = (select max(AsOfDate) from ODS.[Intermediate].Intermediate_PregnantAndBreastFeeding)
        ),
        pbfw_visit_dates as (
               select 
@@ -91,7 +91,7 @@ BEGIN
                     Tests.Patientpkhash,
                     Tests.Sitecode,
                     Tests.Patientpk
-              FROM   Ods.Dbo.Hts_clienttests Tests
+              FROM   Ods.HTS.Hts_clienttests Tests
               WHERE  Entrypoint IN ( 'PMTCT ANC', 'MCH')
               and tests.TestType = 'Initial Test'
        ),
@@ -112,7 +112,7 @@ BEGIN
                     Tests.Patientpkhash,
                     Tests.Patientpk,
                     Tests.Sitecode
-             FROM   Ods.Dbo.Hts_clienttests Tests
+             FROM   Ods.HTS.Hts_clienttests Tests
              WHERE  Entrypoint IN ( 'Maternity', 'PMTCT MAT')
              and tests.TestType = 'Initial Test'
        ),
@@ -130,7 +130,7 @@ BEGIN
                     Tests.Patientpkhash,
                     Tests.Patientpk,
                     Tests.Sitecode
-             FROM   Ods.Dbo.Hts_clienttests Tests
+             FROM   Ods.HTS.Hts_clienttests Tests
              WHERE  Entrypoint IN ( 'PMTCT PNC', 'PNC', 'POSTNATAL CARE CLINIC')
              and tests.TestType = 'Initial Test'                          
           ),
@@ -149,7 +149,7 @@ BEGIN
                     Sitecode,
                     Patientpk,
                     Visitdate
-             FROM   Ods.Dbo.Ct_enhancedadherencecounselling Eac),
+             FROM   Ods.Care.Ct_enhancedadherencecounselling Eac),
          Receivedeac1
          AS (SELECT Eac1.Patientpkhash,
                     Eac1.Sitecode,
@@ -179,7 +179,7 @@ BEGIN
                       WHEN Regimenchangedswitched IS NOT NULL THEN 1
                       ELSE 0
                     END                                    AS PBFWRegLineSwitch
-             FROM   Ods.Dbo.Ct_patientpharmacy Pharm
+             FROM   Ods.Care.Ct_patientpharmacy Pharm
              WHERE  Regimenchangedswitched IS NOT NULL),
          Pbfwreglineswitch
          AS (SELECT *
@@ -192,7 +192,7 @@ BEGIN
               SiteCode,
               VisitDate,
               row_number() over (partition by PatientPK, SiteCode order by VisitDate asc) as rank
-       from ODS.dbo.CT_PatientVisits
+       from ODS.Care.CT_PatientVisits
               where (Pregnant='Yes' OR breastfeeding='Yes')
               and datediff(month, VisitDate, EOMONTH(DATEADD(mm,-1,GETDATE()))) <= 33 --filtering for 9 months pregnancy and at least 24 months of brestfeeding
        ),
@@ -238,7 +238,7 @@ BEGIN
                      Sitecode,
                      Visitdate,
                      HIVStatusBeforeANC
-              from   Ods.Dbo.Mnch_ancvisits
+              from   Ods.MNCH.Mnch_ancvisits
               where (Hivstatusbeforeanc = 'KP'
                             OR Hivtestfinalresult = 'Positive')
               and datediff(month, VisitDate, EOMONTH(DATEADD(mm,-1,GETDATE()))) <= 33 --filtering for 9 months pregnancy and at least 24 months of brestfeeding
@@ -336,10 +336,10 @@ BEGIN
               LEFT JOIN Pbfwreglineswitch
                      ON Patient.Patientpk = Pbfwreglineswitch.Patientpk
                             AND Patient.Sitecode = Pbfwreglineswitch.Sitecode
-              left join NDWH.dbo.Dimpatient as dim_patient 
+              left join NDWH.Dim.Dimpatient as dim_patient 
                      on dim_patient.PatientPKHash = CONVERT(NVARCHAR(64), HASHBYTES('SHA2_256', CAST(Patient.PatientPK as NVARCHAR(36))), 2) 
                             and dim_patient.SiteCode = Patient.SiteCode
-              left join ODS.dbo.CT_ARTPatients as art 
+              left join ODS.Care.CT_ARTPatients as art 
                                    on art.PatientPK = Patient.PatientPK
                             and art.SiteCode = Patient.SiteCode
               left join latest_anc        
@@ -394,31 +394,31 @@ BEGIN
            Pbfwreglineswitch,
            Pregnant,
            Breastfeeding
-    INTO   Ndwh.Dbo.Factpbfw
+    INTO   Ndwh.Fact.Factpbfw
     FROM   Summary
-           LEFT JOIN Ndwh.Dbo.Dimfacility AS Facility
+           LEFT JOIN Ndwh.Dim.Dimfacility AS Facility
                   ON Facility.Mflcode = Summary.Sitecode
            LEFT JOIN Mfl_partner_agency_combination
                   ON Mfl_partner_agency_combination.Mfl_code = Summary.Sitecode
-           LEFT JOIN Ndwh.Dbo.Dimpartner AS Partner
+           LEFT JOIN Ndwh.Dim.Dimpartner AS Partner
                   ON Partner.Partnername = Mfl_partner_agency_combination.Sdp
-           LEFT JOIN Ndwh.Dbo.Dimagency AS Agency
+           LEFT JOIN Ndwh.Dim.Dimagency AS Agency
                   ON Agency.Agencyname = Mfl_partner_agency_combination.Agency
-           LEFT JOIN Ndwh.Dbo.Dimpatient AS Patient
+           LEFT JOIN Ndwh.Dim.Dimpatient AS Patient
                   ON Patient.Patientpkhash = Summary.Patientpkhash
                      AND Patient.Sitecode = Summary.Sitecode
-           LEFT JOIN Ndwh.Dbo.Dimdate AS Ancdate1
+           LEFT JOIN Ndwh.Dim.Dimdate AS Ancdate1
                   ON Ancdate1.Date = Cast(Summary.Ancdate1 AS Date)
-           LEFT JOIN Ndwh.Dbo.Dimdate AS Ancdate2
+           LEFT JOIN Ndwh.Dim.Dimdate AS Ancdate2
                   ON Ancdate2.Date = Cast(Summary.Ancdate2 AS Date)
-           LEFT JOIN Ndwh.Dbo.Dimdate AS Ancdate3
+           LEFT JOIN Ndwh.Dim.Dimdate AS Ancdate3
                   ON Ancdate3.Date = Cast(Summary.Ancdate3 AS Date)
-           LEFT JOIN Ndwh.Dbo.Dimdate AS Ancdate4
+           LEFT JOIN Ndwh.Dim.Dimdate AS Ancdate4
                   ON Ancdate4.Date = Cast(Summary.Ancdate4 AS Date)
-           LEFT JOIN Ndwh.Dbo.Dimagegroup AS Age_group
+           LEFT JOIN Ndwh.Dim.Dimagegroup AS Age_group
                   ON Age_group.Age = Datediff(Yy, Summary.Dob, Getdate())
     WHERE  Patient.Voided = 0;
 
-    ALTER TABLE Ndwh.Dbo.Factpbfw
+    ALTER TABLE Ndwh.Fact.Factpbfw
       ADD PRIMARY KEY(Factkey);
 END 

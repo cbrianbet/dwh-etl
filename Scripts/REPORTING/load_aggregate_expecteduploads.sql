@@ -11,8 +11,8 @@ BEGIN
 			SDP AS partner,
 			COUNT(DISTINCT MFLCode) AS expected
 		FROM
-			NDWH.DBO.DimFacility f
-			INNER JOIN ODS.dbo.All_EMRSites a on a.MFL_Code = MFLCode
+			NDWH.Dim.DimFacility f
+			INNER JOIN ODS.Care.All_EMRSites a on a.MFL_Code = MFLCode
 		WHERE
 			(isCT = 1)
 		GROUP BY f.county, f.subCounty, SDP_Agency, SDP
@@ -25,8 +25,8 @@ BEGIN
 			SDP AS partner,
 			COUNT(DISTINCT MFLCode) AS expected
 		FROM
-			NDWH.DBO.DimFacility h
-			INNER JOIN ODS.dbo.All_EMRSites a on a.MFL_Code = MFLCode
+			NDWH.Dim.DimFacility h
+			INNER JOIN ODS.Care.All_EMRSites a on a.MFL_Code = MFLCode
 		WHERE
 			(isHts = 1)
 		GROUP BY h.county, h.subCounty, SDP_Agency, SDP
@@ -39,8 +39,8 @@ BEGIN
 			SDP AS partner,
 			COUNT(DISTINCT MFLCode) AS expected
 		FROM
-			NDWH.DBO.DimFacility p
-			INNER JOIN ODS.dbo.All_EMRSites a on a.MFL_Code = MFLCode
+			NDWH.Dim.DimFacility p
+			INNER JOIN ODS.Care.All_EMRSites a on a.MFL_Code = MFLCode
 		WHERE
 			(isPkv = 1)
 		GROUP BY p.county, p.subCounty, SDP_Agency, SDP

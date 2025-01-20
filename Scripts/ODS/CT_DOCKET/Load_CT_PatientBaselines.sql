@@ -1,7 +1,7 @@
 BEGIN
 
 		
-		MERGE INTO [ODS].[DBO].CT_PatientBaselines AS a
+		MERGE INTO [ODS].[Care].CT_PatientBaselines AS a
 		USING(SELECT  Distinct 
 						P.[PatientCccNumber] AS PatientID
 						,P.[PatientPID] AS PatientPK

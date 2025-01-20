@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[NDWH].[dbo].[FactHTSClientTests]', N'U') IS NOT NULL 
-	DROP TABLE [NDWH].[dbo].[FactHTSClientTests];
+IF OBJECT_ID(N'[NDWH].[Fact].[FactHTSClientTests]', N'U') IS NOT NULL 
+	DROP TABLE [NDWH].[Fact].[FactHTSClientTests];
 
 BEGIN
 
@@ -8,7 +8,7 @@ with MFL_partner_agency_combination as (
 		distinct MFL_Code,
 		SDP,
 	    SDP_Agency as Agency
-	from ODS.dbo.All_EMRSites 
+	from ODS.Care.All_EMRSites 
 ),
 client_linkage_data as (
     select 
@@ -17,7 +17,7 @@ client_linkage_data as (
         DateEnrolled,
         ReportedCCCNumber,
         row_number() over(partition by Sitecode,PatientPK order by DateEnrolled desc) as row_num 
-    from ODS.dbo.HTS_ClientLinkages 
+    from ODS.HTS.HTS_ClientLinkages 
 )
 select 
     Factkey = IDENTITY(INT, 1, 1),    
@@ -64,21 +64,21 @@ select
     else 'New' end as TestedBefore,
     hts_encounter.Setting,
     cast(getdate() as date) as LoadDate
-into NDWH.dbo.FactHTSClientTests
-from ODS.dbo.Intermediate_EncounterHTSTests as hts_encounter
-left join NDWH.dbo.DimPatient as patient on patient.PatientPKHash = hts_encounter.PatientPKHash
+into NDWH.Fact.FactHTSClientTests
+from ODS.[Intermediate].Intermediate_EncounterHTSTests as hts_encounter
+left join NDWH.Dim.DimPatient as patient on patient.PatientPKHash = hts_encounter.PatientPKHash
     and patient.SiteCode = hts_encounter.SiteCode
-left join NDWH.dbo.DimFacility as facility on facility.MFLCode = hts_encounter.SiteCode
+left join NDWH.Dim.DimFacility as facility on facility.MFLCode = hts_encounter.SiteCode
 left join MFL_partner_agency_combination on MFL_partner_agency_combination.MFL_Code = hts_encounter.SiteCode
-left join NDWH.dbo.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
-left join NDWH.dbo.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
-left join NDWH.dbo.DimAgeGroup as age_group on age_group.Age =  datediff(yy, patient.DOB, hts_encounter.TestDate)
-left join NDWH.dbo.DimDate as testing on testing.Date = cast(hts_encounter.TestDate as date)
+left join NDWH.Dim.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
+left join NDWH.Dim.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
+left join NDWH.Dim.DimAgeGroup as age_group on age_group.Age =  datediff(yy, patient.DOB, hts_encounter.TestDate)
+left join NDWH.Dim.DimDate as testing on testing.Date = cast(hts_encounter.TestDate as date)
 left join  client_linkage_data on client_linkage_data.PatientPk = hts_encounter.PatientPK
     and client_linkage_data.SiteCode = hts_encounter.SiteCode
     and client_linkage_data.row_num = 1
 	WHERE patient.voided =0;
 
-alter table NDWH.dbo.FactHTSClientTests add primary key(FactKey);
+alter table NDWH.Fact.FactHTSClientTests add primary key(FactKey);
 
 END

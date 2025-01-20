@@ -1,6 +1,6 @@
 
 BEGIN
-MERGE [ODS].[dbo].[PrEP_Patient] AS a
+MERGE [ODS].[PrEP].[PrEP_Patient] AS a
 	USING(SELECT  ID
 				  ,[RefId]
 				  ,[Created]
@@ -95,7 +95,7 @@ MERGE [ODS].[dbo].[PrEP_Patient] AS a
 
 				 ROW_NUMBER() OVER (PARTITION BY PatientPK,sitecode ORDER BY
 				PatientPK,sitecode) Row_Num
-				FROM [ODS].[dbo].[PrEP_Patient](NoLock)
+				FROM [ODS].[PrEP].[PrEP_Patient](NoLock)
 				)
 			delete   from cte 
 				Where Row_Num >1;										

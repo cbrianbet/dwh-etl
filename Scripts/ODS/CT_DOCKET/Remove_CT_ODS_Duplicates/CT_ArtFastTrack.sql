@@ -5,7 +5,7 @@
 
 						 ROW_NUMBER() OVER (PARTITION BY Sitecode,PatientPK ORDER BY
 						Sitecode,PatientPK) Row_Num
-						FROM [ODS].[dbo].[CT_ArtFastTrack](NoLock)
+						FROM [ODS].[Care].[CT_ArtFastTrack](NoLock)
 						)
 						delete from cte 
 						Where Row_Num >1 ;

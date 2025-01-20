@@ -9,7 +9,7 @@ BEGIN
 		VALUES(@VisitDate,GETDATE())
 
 	       ---- Refresh [ODS].[dbo].[CT_DrugAlcoholScreening]
-			MERGE [ODS].[dbo].[CT_DrugAlcoholScreening] AS a
+			MERGE [ODS].[Care].[CT_DrugAlcoholScreening] AS a
 				USING(SELECT distinct
 							P.[PatientCccNumber] AS PatientID
 							,P.[PatientPID] AS PatientPK

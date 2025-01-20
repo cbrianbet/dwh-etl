@@ -22,14 +22,14 @@ WITH prepCascade AS  (
         ScreenedPrep,
        prepEnrol.Date as PrepEnrollmentDate,
 	   ass.Date as VisitDate
-    FROM NDWH.dbo.FactPrepAssessments prep
-	LEFT JOIN NDWH.dbo.DimFacility f on f.FacilityKey = prep.FacilityKey
-	LEFT JOIN NDWH.dbo.DimAgency a on a.AgencyKey = prep.AgencyKey
-	LEFT JOIN NDWH.dbo.DimPatient pat on pat.PatientKey = prep.PatientKey
-	LEFT JOIN NDWH.dbo.DimAgeGroup age on age.AgeGroupKey=prep.AgeGroupKey
-	LEFT JOIN NDWH.dbo.DimPartner p on p.PartnerKey = prep.PartnerKey
-	LEFT JOIN NDWH.dbo.DimDate ass ON ass.DateKey = AssessmentVisitDateKey 	
-    LEFT JOIN NDWH.dbo.DimDate prepEnrol ON prepEnrol.DateKey = pat.PrepEnrollmentDateKey 	
+    FROM NDWH.Fact.FactPrepAssessments prep
+	LEFT JOIN NDWH.Dim.DimFacility f on f.FacilityKey = prep.FacilityKey
+	LEFT JOIN NDWH.Dim.DimAgency a on a.AgencyKey = prep.AgencyKey
+	LEFT JOIN NDWH.Dim.DimPatient pat on pat.PatientKey = prep.PatientKey
+	LEFT JOIN NDWH.Dim.DimAgeGroup age on age.AgeGroupKey=prep.AgeGroupKey
+	LEFT JOIN NDWH.Dim.DimPartner p on p.PartnerKey = prep.PartnerKey
+	LEFT JOIN NDWH.Dim.DimDate ass ON ass.DateKey = AssessmentVisitDateKey 	
+    LEFT JOIN NDWH.Dim.DimDate prepEnrol ON prepEnrol.DateKey = pat.PrepEnrollmentDateKey 	
 ),
 risk_category_ordering as (
     select 
@@ -37,7 +37,7 @@ risk_category_ordering as (
         PatientKey,
         HIVRiskCategory,
         VisitDateKey
-    from NDWH.dbo.FactHTSEligibilityextract hiv
+    from NDWH.Fact.FactHTSEligibilityextract hiv
     where HIVRiskCategory is not null
 ),
 latest_risk_category as (
@@ -51,7 +51,7 @@ TurnedPositive as (
     PatientKey,
     FinalTestResult
     from 
-    NDWH.dbo.FactHTSClientTests
+    NDWH.Fact.FactHTSClientTests
     where FinalTestResult='Positive' and TestType='Initial Test'
 )
 select 
@@ -78,7 +78,7 @@ select
 INTO REPORTING.dbo.LinelistPrepAssessments 
 from prepCascade prep
 left join latest_risk_category  on latest_risk_category.PatientKey = prep.PatientKey 
-left join NDWH.dbo.FactPrepDiscontinuation as disc on disc.PatientKey=prep.PatientKey
-left join NDWH.dbo.FactPrepVisits as visits on visits.PatientKey=prep.PatientKey
+left join NDWH.fact.FactPrepDiscontinuation as disc on disc.PatientKey=prep.PatientKey
+left join NDWH.Fact.FactPrepVisits as visits on visits.PatientKey=prep.PatientKey
 left join TurnedPositive on TurnedPositive.PatientKey=prep.PatientKey
 

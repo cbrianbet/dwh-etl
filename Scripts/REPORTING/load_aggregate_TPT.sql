@@ -20,14 +20,14 @@ WITH Source_TPT AS (
         EOMONTH(TBDiagnosisDate.Date) as AsOfDate,            
 		OnIPT,
 		hasTB     
-    FROM NDWH.dbo.FactTPT tpt
-    LEFT join NDWH.dbo.DimFacility f on f.FacilityKey = tpt.FacilityKey
-    LEFT JOIN NDWH.dbo.DimAgency a on a.AgencyKey = tpt.AgencyKey
-    LEFT JOIN NDWH.dbo.DimPatient pat on pat.PatientKey = tpt.PatientKey
-    LEFT join NDWH.dbo.DimAgeGroup age on age.AgeGroupKey=tpt.AgeGroupKey
-    LEFT JOIN NDWH.dbo.DimPartner p on p.PartnerKey = tpt.PartnerKey   
-    LEFT JOIN NDWH.dbo.DimDate StartTBTreatmentDate on StartTBTreatmentDate.DateKey = tpt.StartTBTreatmentDateKey
-	LEFT JOIN NDWH.dbo.DimDate TBDiagnosisDate on TBDiagnosisDate.DateKey = tpt.TBDiagnosisDateKey    
+    FROM NDWH.Fact.FactTPT tpt
+    LEFT join NDWH.Dim.DimFacility f on f.FacilityKey = tpt.FacilityKey
+    LEFT JOIN NDWH.Dim.DimAgency a on a.AgencyKey = tpt.AgencyKey
+    LEFT JOIN NDWH.Dim.DimPatient pat on pat.PatientKey = tpt.PatientKey
+    LEFT join NDWH.Dim.DimAgeGroup age on age.AgeGroupKey=tpt.AgeGroupKey
+    LEFT JOIN NDWH.Dim.DimPartner p on p.PartnerKey = tpt.PartnerKey   
+    LEFT JOIN NDWH.Dim.DimDate StartTBTreatmentDate on StartTBTreatmentDate.DateKey = tpt.StartTBTreatmentDateKey
+	LEFT JOIN NDWH.Dim.DimDate TBDiagnosisDate on TBDiagnosisDate.DateKey = tpt.TBDiagnosisDateKey    
 )
 SELECT 
     MFLCode,

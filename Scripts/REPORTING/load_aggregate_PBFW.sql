@@ -27,13 +27,13 @@ SELECT
     Sum (Case when RepeatUnsuppressed=1 and PBFWRegLineSwitch=1 Then 1 Else 0 End) As PBFWRegLineSwitch
  
 INTO REPORTING.dbo.AggregatePBFW
-FROM NDWH.dbo.FactPBFW AS PBFW
-LEFT JOIN NDWH.dbo.DimFacility AS Facility ON Facility.FacilityKey = PBFW.FacilityKey
-LEFT JOIN NDWH.dbo.DimPartner AS Partner ON Partner.PartnerKey = PBFW.PartnerKey
-LEFT JOIN NDWH.dbo.DimAgency AS Agency ON Agency.AgencyKey = PBFW.AgencyKey
-LEFT JOIN NDWH.dbo.DimAgeGroup AS Age_group ON Age_group.AgeGroupKey = PBFW.AgeGroupKey
-LEFT JOIN NDWH.dbo.DimPatient AS Patient ON Patient.PatientKey = PBFW.PatientKey
-LEFT JOIN NDWH.dbo.FactViralLoads as Vls on Vls.patientkey=PBFW.patientkey
+FROM NDWH.Fact.FactPBFW AS PBFW
+LEFT JOIN NDWH.Dim.DimFacility AS Facility ON Facility.FacilityKey = PBFW.FacilityKey
+LEFT JOIN NDWH.Dim.DimPartner AS Partner ON Partner.PartnerKey = PBFW.PartnerKey
+LEFT JOIN NDWH.Dim.DimAgency AS Agency ON Agency.AgencyKey = PBFW.AgencyKey
+LEFT JOIN NDWH.Dim.DimAgeGroup AS Age_group ON Age_group.AgeGroupKey = PBFW.AgeGroupKey
+LEFT JOIN NDWH.Dim.DimPatient AS Patient ON Patient.PatientKey = PBFW.PatientKey
+LEFT JOIN NDWH.Fact.FactViralLoads as Vls on Vls.patientkey=PBFW.patientkey
 GROUP BY 
     Facility.FacilityName,
     Facility.MFLCode,

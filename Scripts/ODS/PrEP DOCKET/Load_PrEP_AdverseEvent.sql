@@ -1,7 +1,7 @@
 
 BEGIN
---truncate table [ODS].[dbo].[PrEP_AdverseEvent]
-MERGE [ODS].[dbo].[PrEP_AdverseEvent] AS a
+--truncate table [ODS].[PrEP].[PrEP_AdverseEvent]
+MERGE [ODS].[PrEP].[PrEP_AdverseEvent] AS a
 	USING(SELECT distinct
 				  a.[Id]
 				  ,a.[RefId]
@@ -81,7 +81,7 @@ MERGE [ODS].[dbo].[PrEP_AdverseEvent] AS a
 
 						 ROW_NUMBER() OVER (PARTITION BY PatientPK,Sitecode ORDER BY
 						PatientPK,Sitecode) Row_Num
-						FROM  [ODS].[dbo].[PrEP_AdverseEvent](NoLock)
+						FROM  [ODS].[PrEP].[PrEP_AdverseEvent](NoLock)
 						)
 						Delete from cte 
 						Where Row_Num >1 ;

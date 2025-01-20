@@ -1,6 +1,6 @@
 BEGIN
 
-		MERGE [ODS].[dbo].[HTS_PartnerNotificationServices] AS a
+		MERGE [ODS].[HTS].[HTS_PartnerNotificationServices] AS a
 			USING(SELECT DISTINCT a.ID,a.[FacilityName]
 				  ,a.[SiteCode]
 				  ,a.[PatientPk]
@@ -72,7 +72,7 @@ BEGIN
 													RelationsipToIndexClient,a.LinkedToCare,a.PnsApproach,a.FacilityLinkedTo,a.CurrentlyLivingWithIndexClient,a.Age,a.DateElicited,a.Dob,a.LinkDateLinkedToCare
 									
 					ORDER BY a.SiteCode,a.PatientPk desc) Row_Num
-			from [ODS].[dbo].[HTS_PartnerNotificationServices] a
+			from [ODS].[HTS].[HTS_PartnerNotificationServices] a
 			-- where a.HtsNumber = 'mggwca' and a.SiteCode = 12483 and a.PatientPk = 953 
 			  ) 
 			  

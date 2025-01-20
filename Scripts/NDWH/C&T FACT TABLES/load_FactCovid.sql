@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[NDWH].[Dbo].[FactCovid]', N'U') IS NOT NULL 
-	DROP TABLE [NDWH].[Dbo].[FactCovid];
+IF OBJECT_ID(N'[NDWH].[Fact].[FactCovid]', N'U') IS NOT NULL 
+	DROP TABLE [NDWH].[Fact].[FactCovid];
 BEGIN
 With Covid As  (
 SELECT ROW_NUMBER()OVER(PARTITION BY Covid.PatientPKHash, Covid.SiteCode ORDER BY Covid19AssessmentDate Desc)AS RowNumber,
@@ -38,9 +38,9 @@ SELECT ROW_NUMBER()OVER(PARTITION BY Covid.PatientPKHash, Covid.SiteCode ORDER B
         CauseOfDeath,
         datediff(yy, patient.DOB, last_encounter.LastEncounterDate) as AgeLastVisit
         
-from ODS.dbo.CT_Covid as Covid
-left join ODS.dbo.CT_Patient as patient on patient.PatientPKHash = Covid.PatientPKHash and patient.SiteCode = Covid.SiteCode
-left join ODS.dbo.Intermediate_LastPatientEncounter as last_encounter on last_encounter.PatientPKHash = Covid.PatientPKHash and last_encounter.SiteCode = Covid.SiteCode
+from ODS.Care.CT_Covid as Covid
+left join ODS.Care.CT_Patient as patient on patient.PatientPKHash = Covid.PatientPKHash and patient.SiteCode = Covid.SiteCode
+left join ODS.[Intermediate].Intermediate_LastPatientEncounter as last_encounter on last_encounter.PatientPKHash = Covid.PatientPKHash and last_encounter.SiteCode = Covid.SiteCode
 group by 
         Covid.PatientIDHash,
         Covid.PatientPKHash,
@@ -84,7 +84,7 @@ group by
             distinct MFL_Code,
             SDP,
             SDP_Agency  as Agency
-	from ODS.dbo.All_EMRSites 
+	from ODS.Care.All_EMRSites 
  )
  Select 
         Factkey = IDENTITY(INT, 1, 1),
@@ -123,22 +123,22 @@ group by
         TracingFinalOutcome ,
         CauseOfDeath,
         cast(getdate() as date) as LoadDate
-INTO NDWH.dbo.FactCovid
+INTO NDWH.[Fact].FactCovid
  from Covid
- left join NDWH.dbo.DimPatient as patient on patient.PatientPKHash =  Covid.PatientPKHash  and patient.SiteCode = Covid.SiteCode
- left join NDWH.dbo.DimFacility as facility on facility.MFLCode = Covid.SiteCode
+ left join NDWH.Dim.DimPatient as patient on patient.PatientPKHash =  Covid.PatientPKHash  and patient.SiteCode = Covid.SiteCode
+ left join NDWH.Dim.DimFacility as facility on facility.MFLCode = Covid.SiteCode
  left join MFL_partner_agency_combination on MFL_partner_agency_combination.MFL_Code = Covid.SiteCode
- left join NDWH.dbo.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
- left join NDWH.dbo.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
- left join NDWH.dbo.DimAgeGroup as age_group on age_group.Age = Covid.AgeLastVisit
- left join NDWH.dbo.DimDate as Covid19AssessmentDate on Covid19AssessmentDate.Date = Covid.Covid19AssessmentDate
- left join NDWH.dbo.DimDate as DateGivenFirstDose  on DateGivenFirstDose.Date = Covid.DateGivenFirstDose
- left join NDWH.dbo.DimDate as BoosterDoseDate  on BoosterDoseDate.Date = Covid.BoosterDoseDate
- left join NDWH.dbo.DimDate as DateGivenSecondDose  on DateGivenSecondDose.Date = Covid.DateGivenSecondDose
- left join NDWH.dbo.DimDate as COVID19TestDate  on COVID19TestDate.Date = Covid.COVID19TestDate
- left join NDWH.dbo.DimDate as AdmissionStartDate  on AdmissionStartDate.Date = Covid.AdmissionStartDate
- left join NDWH.dbo.DimDate as AdmissionEndDate  on AdmissionEndDate.Date = Covid.AdmissionEndDate
+ left join NDWH.Dim.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
+ left join NDWH.Dim.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
+ left join NDWH.Dim.DimAgeGroup as age_group on age_group.Age = Covid.AgeLastVisit
+ left join NDWH.Dim.DimDate as Covid19AssessmentDate on Covid19AssessmentDate.Date = Covid.Covid19AssessmentDate
+ left join NDWH.Dim.DimDate as DateGivenFirstDose  on DateGivenFirstDose.Date = Covid.DateGivenFirstDose
+ left join NDWH.Dim.DimDate as BoosterDoseDate  on BoosterDoseDate.Date = Covid.BoosterDoseDate
+ left join NDWH.Dim.DimDate as DateGivenSecondDose  on DateGivenSecondDose.Date = Covid.DateGivenSecondDose
+ left join NDWH.Dim.DimDate as COVID19TestDate  on COVID19TestDate.Date = Covid.COVID19TestDate
+ left join NDWH.Dim.DimDate as AdmissionStartDate  on AdmissionStartDate.Date = Covid.AdmissionStartDate
+ left join NDWH.Dim.DimDate as AdmissionEndDate  on AdmissionEndDate.Date = Covid.AdmissionEndDate
  where RowNumber=1 and patient.voided =0;
  
-alter table NDWH.dbo.FactCOVID add primary key(FactKey);
+alter table NDWH.[Fact].FactCOVID add primary key(FactKey);
 END

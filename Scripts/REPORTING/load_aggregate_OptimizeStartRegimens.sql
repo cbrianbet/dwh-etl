@@ -66,14 +66,14 @@ FROM
 		ValidVLResultCategory2 as ValidVLResultCategory,
 
 		ISTxCurr 
-	FROM NDWH.dbo.FACTART art
-	INNER JOIN NDWH.dbo.DimAgeGroup age ON art.AgeGroupKey = age.AgeGroupKey
-	INNER JOIN NDWH.dbo.DimPartner part ON art.PartnerKey = part.PartnerKey
-	INNER JOIN NDWH.dbo.DimAgency a ON art.AgencyKey = a.AgencyKey
-	INNER JOIN NDWH.dbo.DimFacility fac ON art.FacilityKey = fac.FacilityKey
-	INNER JOIN NDWH.dbo.DimPatient pat ON art.PatientKey = pat.PatientKey
-	LEFT JOIN NDWH.dbo.FACTViralLoads vl ON art.PatientKey = vl.PatientKey 
-    LEFT JOIN NDWH.dbo.DimDate as date on date.DateKey = art.StartARTDateKey 
+	FROM NDWH.Fact.FACTART art
+	INNER JOIN NDWH.Dim.DimAgeGroup age ON art.AgeGroupKey = age.AgeGroupKey
+	INNER JOIN NDWH.Dim.DimPartner part ON art.PartnerKey = part.PartnerKey
+	INNER JOIN NDWH.Dim.DimAgency a ON art.AgencyKey = a.AgencyKey
+	INNER JOIN NDWH.Dim.DimFacility fac ON art.FacilityKey = fac.FacilityKey
+	INNER JOIN NDWH.Dim.DimPatient pat ON art.PatientKey = pat.PatientKey
+	LEFT JOIN NDWH.Fact.FACTViralLoads vl ON art.PatientKey = vl.PatientKey 
+    LEFT JOIN NDWH.Dim.DimDate as date on date.DateKey = art.StartARTDateKey 
 	WHERE ISTxCurr = 1 
 	) H 
 

@@ -1,7 +1,7 @@
 
 BEGIN
 
-			MERGE [ODS].[dbo].[Mhealth_Ushauri_Patient] AS a
+			MERGE [ODS].[Mhealth].[Mhealth_Ushauri_Patient] AS a
 				USING(SELECT Distinct
 						PatientPK,MPIPKV,null PatientPKHash,PartnerName,SiteCode,SiteType,PatientID,null PatientIDHash,FacilityID,Emr,Project,FacilityName,
 						Gender,DOB_Date AS DOB,RegistrationDate_Date As RegistrationDate,RegistrationAtCCC_Date As RegistrationAtCCC,RegistrationAtPMTCT_Date As RegistrationAtPMTCT,RegistrationAtTBClinic,PatientSource,Region,District,
@@ -80,7 +80,7 @@ BEGIN
 
 						 ROW_NUMBER() OVER (PARTITION BY UshauriPatientPK,Sitecode ORDER BY
 						UshauriPatientPK) Row_Num
-						FROM [ODS].[dbo].[Mhealth_Ushauri_Patient](NoLock)
+						FROM [ODS].[Mhealth].[Mhealth_Ushauri_Patient](NoLock)
 						)
 						delete from cte
 						Where Row_Num >1 ;

@@ -1,6 +1,6 @@
 BEGIN
- --truncate table [ODS].[dbo].[HTS_EligibilityExtract]
-		MERGE [ODS].[dbo].[HTS_EligibilityExtract] AS a
+ --truncate table [ODS].[HTS].[HTS_EligibilityExtract]
+		MERGE [ODS].[HTS].[HTS_EligibilityExtract] AS a
 			USING(SELECT DISTINCT  a.ID,a.[FacilityName],a.[SiteCode],a.[PatientPk],a.[HtsNumber],a.[Emr],a.[Project],a.[Processed],a.[QueueId],a.[Status]
 							,a.[StatusDate],a.[EncounterId],a.[VisitID],a.[VisitDate],a.[PopulationType],[KeyPopulation],[PriorityPopulation],[Department]
 							,[PatientType],[IsHealthWorker],[RelationshipWithContact],[TestedHIVBefore],[WhoPerformedTest],[ResultOfHIV],[DateTestedSelf]

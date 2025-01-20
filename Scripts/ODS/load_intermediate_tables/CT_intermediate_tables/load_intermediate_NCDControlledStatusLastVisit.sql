@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[ODS].[dbo].[Intermediate_NCDControlledStatusLastVisit]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[dbo].[Intermediate_NCDControlledStatusLastVisit];
+IF OBJECT_ID(N'[ODS].[Intermediate].[Intermediate_NCDControlledStatusLastVisit]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[Intermediate].[Intermediate_NCDControlledStatusLastVisit];
 
 with SplitDiseases as (
     select 
@@ -10,7 +10,7 @@ with SplitDiseases as (
         /* partition to make sure the order of the piped values remain the same */
         row_number() over (partition by PatientPKHash, SiteCode, VisitDate order by (select null)) as DiseaseOrder
     from
-        ODS.dbo.CT_AllergiesChronicIllness as chronic
+        ODS.Care.CT_AllergiesChronicIllness as chronic
     cross apply
         STRING_SPLIT(chronic.ChronicIllness, '|') as illness
     where
@@ -26,7 +26,7 @@ SplitControlled AS (
         /* partition to make sure the order of the piped values remain the same */
         row_number() over (partition by PatientPKHash, SiteCode, VisitDate order by (select null)) AS ControlledOrder
     from 
-        ODS.dbo.CT_AllergiesChronicIllness as chronic
+        ODS.Care.CT_AllergiesChronicIllness as chronic
     cross apply
         STRING_SPLIT(chronic.Controlled, '|') as controlled
     WHERE
@@ -51,6 +51,6 @@ where disease in ('Diabetes', 'Hypertension')
 select 
     final_data.*,
     cast(getdate() as date) as LoadDate
-into ODS.dbo.Intermediate_NCDControlledStatusLastVisit
+into ODS.[Intermediate].Intermediate_NCDControlledStatusLastVisit
 from final_data
 where VisitRank = 1

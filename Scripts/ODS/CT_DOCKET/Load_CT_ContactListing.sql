@@ -8,7 +8,7 @@ BEGIN
 		INSERT INTO  [ODS_Logs].[dbo].[CT_ContactListing_Log] (MaxDateCreated,LoadStartDateTime)
 		VALUES(@MaxDateCreated_Hist,GETDATE())
 	       ---- Refresh [ODS].[dbo].[CT_ContactListing]
-			MERGE [ODS].[dbo].[CT_ContactListing] AS a
+			MERGE [ODS].[Care].[CT_ContactListing] AS a
 				USING(SELECT distinct
 							P.[PatientCccNumber] AS PatientID
 							,P.[PatientPID] AS PatientPK

@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[NDWH].[dbo].[FactContactElicitation]', N'U') IS NOT NULL 
-	DROP TABLE  [NDWH].[dbo].[FactContactElicitation];
+IF OBJECT_ID(N'[NDWH].[Fact].[FactContactElicitation]', N'U') IS NOT NULL 
+	DROP TABLE  [NDWH].[Fact].[FactContactElicitation];
 
 BEGIN
 
@@ -8,7 +8,7 @@ with MFL_partner_agency_combination as (
         distinct MFL_Code,
         SDP,
         [SDP_Agency]  as Agency
-    from ODS.dbo.All_EMRSites 
+    from ODS.Care.All_EMRSites 
 ),
 subset_data as (
     select 
@@ -23,7 +23,7 @@ subset_data as (
         RelationshipWithPatient,
 		KnowledgeOfHivStatus,
         DateCreated
-    from ODS.dbo.CT_ContactListing
+    from ODS.Care.CT_ContactListing
     where voided = 0 
 ),
 tested_contacts as (
@@ -34,7 +34,7 @@ tested_contacts as (
         TestDate,
         row_number() over (partition by subset_data.ContactPatientPK, subset_data.SiteCode order by TestDate desc) as rank
     from subset_data
-    inner join ODS.dbo.HTS_ClientTests as tests on tests.PatientPk = subset_data.ContactPatientPK
+    inner join ODS.Hts.HTS_ClientTests as tests on tests.PatientPk = subset_data.ContactPatientPK
         and tests.SiteCode =subset_data.SiteCode
 ),
 latest_test_for_tested_contacts as (
@@ -62,21 +62,21 @@ select
     created.DateKey as DateCreatedKey,
     case when latest_test_for_tested_contacts.ContactPatientPK is not null then 1 else 0 end as Tested,
 	latest_test_for_tested_contacts.FinalTestResult as ContactHIVStatusAfterTesting
-into [NDWH].[dbo].[FactContactElicitation]
+into [NDWH].[Fact].[FactContactElicitation]
 from subset_data
 left join latest_test_for_tested_contacts on latest_test_for_tested_contacts.ContactPatientPK = subset_data.ContactPatientPK
     and latest_test_for_tested_contacts.SiteCode = subset_data.SiteCode
-left join NDWH.dbo.DimPatient as index_pat on index_pat.PatientPKHash = subset_data.PatientPKHash
+left join NDWH.Dim.DimPatient as index_pat on index_pat.PatientPKHash = subset_data.PatientPKHash
     and index_pat.SiteCode = subset_data.SiteCode
-left join NDWH.dbo.DimPatient as contact_pat on contact_pat.PatientPKHash = subset_data.ContactPatientPKHash
+left join NDWH.Dim.DimPatient as contact_pat on contact_pat.PatientPKHash = subset_data.ContactPatientPKHash
     and contact_pat.SiteCode = subset_data.SiteCode
-left join NDWH.dbo.DimFacility as facility on facility.MFLCode = subset_data.SiteCode
-left join NDWH.dbo.DimAgeGroup as age_group on age_group.Age = datediff(year, index_pat.DOB,eomonth(dateadd(mm,-1,getdate())))
+left join NDWH.Dim.DimFacility as facility on facility.MFLCode = subset_data.SiteCode
+left join NDWH.Dim.DimAgeGroup as age_group on age_group.Age = datediff(year, index_pat.DOB,eomonth(dateadd(mm,-1,getdate())))
 left join MFL_partner_agency_combination on MFL_partner_agency_combination.MFL_Code = subset_data.SiteCode
-left join NDWH.dbo.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
-left join NDWH.dbo.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
-left join NDWH.dbo.DimDate as created on created.[Date] = subset_data.DateCreated
+left join NDWH.Dim.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
+left join NDWH.Dim.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
+left join NDWH.Dim.DimDate as created on created.[Date] = subset_data.DateCreated
 
-alter table [NDWH].[dbo].[FactContactElicitation] add primary key(FactKey);
+alter table [NDWH].[Fact].[FactContactElicitation] add primary key(FactKey);
 
 END

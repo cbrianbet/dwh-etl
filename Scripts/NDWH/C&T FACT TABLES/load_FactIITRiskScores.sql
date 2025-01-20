@@ -1,15 +1,18 @@
-
-IF OBJECT_ID(N'[NDWH].[dbo].[FactIITRiskScores]', N'U') IS NOT NULL 
-	DROP TABLE [NDWH].[dbo].[FactIITRiskScores];
+IF OBJECT_ID(N'[NDWH].[fact].[FactIITRiskScores]', N'U') IS NOT NULL 
+	DROP TABLE [NDWH].[fact].[FactIITRiskScores];
+    
 BEGIN
 
+
+-- Setting the start date when valid IIT Risk scores where generated
+DECLARE @ValidStartDate DATE = '2024-02-01';
 
 with MFL_partner_agency_combination as (
 	select 
 		distinct MFL_Code,
 		SDP,
         SDP_Agency as Agency
-	from ODS.dbo.All_EMRSites 
+	from ODS.Care.All_EMRSites 
 ),
 iit_risk_scores_ordering as (
     select
@@ -24,9 +27,10 @@ iit_risk_scores_ordering as (
             when Try_cast(scores.RiskScore as decimal(9, 8)) >= 0.1458253  and scores.RiskScore <= 1.0 then 'High'
         end as RiskCategory,
         row_number() over (partition by scores.PatientPK, scores.SiteCode order by scores.RiskEvaluationDate desc) as rank
-    from ODS.dbo.CT_IITRiskScores as scores 
-    left join ODS.dbo.CT_Patient as patient on patient.PatientPK = scores.PatientPK
+    from ODS.Care.CT_IITRiskScores as scores 
+    left join ODS.Care.CT_Patient as patient on patient.PatientPK = scores.PatientPK
         and patient.SiteCode = scores.PatientPK
+    where RiskEvaluationDate >= @ValidStartDate
 ),
 appointments_from_last_visit as (
     select 
@@ -34,14 +38,7 @@ appointments_from_last_visit as (
         lastencounter.SiteCode,
         lastencounter.LastEncounterDate as lastencounterDate,
         lastencounter.NextAppointmentDate as NextAppointment
-    from ODS.dbo.Intermediate_LastPatientEncounter as lastencounter
-),
-active_clients as (
-    select 
-        PatientPk,
-        SiteCode
-    from ODS.dbo.Intermediate_ARTOutcomes
-    where ARTOutcome = 'V'
+    from ODS.Intermediate.Intermediate_LastPatientEncounter as lastencounter
 )
 select 
     Factkey = IDENTITY(INT, 1, 1),
@@ -53,24 +50,25 @@ select
     evaluation.DateKey as RiskEvaluationDateKey,
     appointment.DateKey as LastVisitAppointmentGivenDateKey,
     RiskScore as LatestRiskScore,
-    RiskCategory as LatestRiskCategory
-	into NDWH.dbo.FactIITRiskScores
+    RiskCategory as LatestRiskCategory,
+    art.ARTOutcomeKey
+	into NDWH.fact.FactIITRiskScores
 from iit_risk_scores_ordering as risk_scores
-inner join active_clients on active_clients.PatientPK = risk_scores.PatientPK
-    and active_clients.SiteCode = risk_scores.SiteCode
-left join NDWH.dbo.DimPatient as patient on patient.PatientPKHash = risk_scores.PatientPKHash
+left join NDWH.Dim.DimPatient as patient on patient.PatientPKHash = risk_scores.PatientPKHash
     and patient.SiteCode = risk_scores.SiteCode
-left join NDWH.dbo.DimFacility as facility on facility.MFLCode = risk_scores.SiteCode
+left join NDWH.Fact.FACTART as art on art.PatientKey=Patient.Patientkey
+left join NDWH.Dim.DimARTOutcome as outcome on outcome.ARTOutcomeKey=art.ARTOutcomeKey
+left join NDWH.Dim.DimFacility as facility on facility.MFLCode = risk_scores.SiteCode
 left join MFL_partner_agency_combination on MFL_partner_agency_combination.MFL_Code = risk_scores.SiteCode
-left join NDWH.dbo.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
-left join NDWH.dbo.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency 
-left join NDWH.dbo.DimDate as evaluation on evaluation.Date = risk_scores.RiskEvaluationDate
-left join NDWh.dbo.DimAgeGroup as agegroup on agegroup.Age = datediff(yy, patient.DOB, risk_scores.RiskEvaluationDate)
+left join NDWH.Dim.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP
+left join NDWH.Dim.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency 
+left join NDWH.Dim.DimDate as evaluation on evaluation.Date = risk_scores.RiskEvaluationDate
+left join NDWh.Dim.DimAgeGroup as agegroup on agegroup.Age = datediff(yy, patient.DOB, risk_scores.RiskEvaluationDate)
 left join appointments_from_last_visit on appointments_from_last_visit.PatientPK = risk_scores.PatientPK
     and appointments_from_last_visit.SiteCode = risk_scores.SiteCode
-left join NDWH.dbo.DimDate as appointment on appointment.Date = appointments_from_last_visit.NextAppointment
+left join NDWH.Dim.DimDate as appointment on appointment.Date = appointments_from_last_visit.NextAppointment
 where rank = 1 and patient.voided = 0
-
-alter table NDWH.dbo.FactIITRiskScores add primary key(FactKey)
+    and RiskCategory IN ( 'Low', 'Medium', 'High')
+alter table NDWH.fact.FactIITRiskScores add primary key(FactKey)
 
 END

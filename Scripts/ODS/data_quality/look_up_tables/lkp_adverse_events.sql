@@ -1,14 +1,14 @@
-IF OBJECT_ID(N'[ODS].[DBO].[lkp_adverse_events]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[DBO].[lkp_adverse_events];
+IF OBJECT_ID(N'[ODS].[lkp].[lkp_adverse_events]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[lkp].[lkp_adverse_events];
 BEGIN
             -- create table statement
-	CREATE TABLE [ODS].[DBO].[lkp_adverse_events](
+	CREATE TABLE [ODS].[lkp].[lkp_adverse_events](
 		source_name VARCHAR(100) NOT NULL PRIMARY KEY WITH (IGNORE_DUP_KEY = ON),
 		target_name VARCHAR(100) NOT NULL,
 		date_created DATE NOT NULL
 	)
 	-- insert table
-	INSERT INTO [ODS].[DBO].[lkp_adverse_events](
+	INSERT INTO [ODS].[lkp].[lkp_adverse_events](
 				source_name,
 				target_name,
 				date_created

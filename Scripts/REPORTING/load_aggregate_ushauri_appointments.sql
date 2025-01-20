@@ -9,7 +9,7 @@ Begin
                     Partnerkey,
                     Agencykey,
                     Agegroupkey
-             From   ndwh.dbo.FactUshauriAppointments Sms
+             From   ndwh.Fact.FactUshauriAppointments Sms
              Where  Appointmentstatus in ('honoured','not honoured')
              Group  By eomonth(cast(Appointmentdatekey as date)),
                        Facilitykey,
@@ -24,7 +24,7 @@ Begin
                     Partnerkey,
                     Agencykey,
                     Agegroupkey
-             From   ndwh.dbo.FactUshauriAppointments Sms
+             From   ndwh.Fact.FactUshauriAppointments Sms
              Where  Consentforsms = 'YES' and Appointmentstatus in ('honoured','not honoured')
              Group  By eomonth(cast(Appointmentdatekey as date)),
                        Facilitykey,
@@ -41,7 +41,7 @@ Begin
             Agencykey,
             Agegroupkey AS Agegroupkey
 FROM
-    ndwh.dbo.FactUshauriAppointments Sms
+    ndwh.Fact.FactUshauriAppointments Sms
 WHERE
         (Fourweeksmssent = 'Success' OR
         Threeweeksmssent = 'Success' OR
@@ -64,7 +64,7 @@ GROUP BY
                     Partnerkey,
                     Agencykey,
                     Agegroupkey
-             From   ndwh.dbo.FactUshauriAppointments Sms
+             From   ndwh.Fact.FactUshauriAppointments Sms
              Where  Appointmentstatus ='honoured'
              Group  By eomonth(cast(Appointmentdatekey as date)),
                        Facilitykey,
@@ -79,7 +79,7 @@ GROUP BY
                     Partnerkey,
                     Agencykey,
                     Agegroupkey
-             From   ndwh.dbo.FactUshauriAppointments Sms
+             From   ndwh.Fact.FactUshauriAppointments Sms
              Where  Appointmentstatus ='not honoured'
              Group  By eomonth(cast(Appointmentdatekey as date)),
                        Facilitykey,
@@ -94,7 +94,7 @@ GROUP BY
                     Partnerkey,
                     Agencykey,
                     Agegroupkey
-             From   ndwh.dbo.FactUshauriAppointments Sms
+             From   ndwh.Fact.FactUshauriAppointments Sms
              Where  Tracingoutcome is not null and Tracingoutcome <>'' and Appointmentstatus ='not honoured'
              Group  By eomonth(cast(Appointmentdatekey as date)),
                        Facilitykey,
@@ -109,7 +109,7 @@ GROUP BY
                     Partnerkey,
                     Agencykey,
                     Agegroupkey
-             From   ndwh.dbo.FactUshauriAppointments Sms
+             From   ndwh.Fact.FactUshauriAppointments Sms
              Where Tracingoutcome is not null and Tracingoutcome <> 'Client not found' and Appointmentstatus ='not honoured'
              Group  By eomonth(cast(Appointmentdatekey as date)),
                        Facilitykey,
@@ -126,7 +126,7 @@ GROUP BY
                     Partnerkey,
                     Agencykey,
                     Agegroupkey
-             From   ndwh.dbo.FactUshauriAppointments Sms
+             From   ndwh.Fact.FactUshauriAppointments Sms
              Where Tracingoutcome='Client returned to care 'and Appointmentstatus ='not honoured'
              Group  By eomonth(cast(Appointmentdatekey as date)),
                        Facilitykey,
@@ -242,10 +242,10 @@ select
     sum(NumberReturnedToCare) as NumberReturnedToCare
 into REPORTING.dbo.AggregateUshauriAppointments
 from joined_indicator
-left join NDWH.dbo.DimFacility as facility on facility.FacilityKey = joined_indicator.Facilitykey
-left join NDWH.dbo.DimPartner as partner on partner.PartnerKey = joined_indicator.Partnerkey
-left join NDWH.dbo.DimAgency as agency on agency.AgencyKey = joined_indicator.Agencykey
-left join NDWH.dbo.DimAgeGroup as agegroup on agegroup.AgeGroupKey = joined_indicator.Agegroupkey
+left join NDWH.Dim.DimFacility as facility on facility.FacilityKey = joined_indicator.Facilitykey
+left join NDWH.Dim.DimPartner as partner on partner.PartnerKey = joined_indicator.Partnerkey
+left join NDWH.Dim.DimAgency as agency on agency.AgencyKey = joined_indicator.Agencykey
+left join NDWH.Dim.DimAgeGroup as agegroup on agegroup.AgeGroupKey = joined_indicator.Agegroupkey
 group by 
     joined_indicator.AsofDate,
     facility.FacilityName,

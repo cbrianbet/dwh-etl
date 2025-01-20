@@ -18,14 +18,14 @@ SELECT DISTINCT
 	Count(ARTOutcomeDescription) TotalOutcomes,
     CAST(GETDATE() AS DATE) AS LoadDate 
 INTO REPORTING.dbo.AggregateTreatmentOutcomes
-FROM NDWH.dbo.FACTART art
-INNER join NDWH.dbo.DimAgeGroup age on age.AgeGroupKey= art.AgeGroupKey
-INNER join NDWH.dbo.DimFacility f on f.FacilityKey = art.FacilityKey
-INNER JOIN NDWH.dbo.DimAgency a on a.AgencyKey = art.AgencyKey
-INNER JOIN NDWH.dbo.DimPatient pat on pat.PatientKey = art.PatientKey
-INNER JOIN NDWH.dbo.DimPartner p on p.PartnerKey = art.PartnerKey
-INNER JOIN NDWH.dbo.DimARTOutcome ot on ot.ARTOutcomeKey = art.ARTOutcomeKey
-INNER JOIN NDWH.dbo.DimDate as date on date.DateKey = art.StartARTDateKey
+FROM NDWH.Fact.FACTART art
+INNER join NDWH.Dim.DimAgeGroup age on age.AgeGroupKey= art.AgeGroupKey
+INNER join NDWH.Dim.DimFacility f on f.FacilityKey = art.FacilityKey
+INNER JOIN NDWH.Dim.DimAgency a on a.AgencyKey = art.AgencyKey
+INNER JOIN NDWH.Dim.DimPatient pat on pat.PatientKey = art.PatientKey
+INNER JOIN NDWH.Dim.DimPartner p on p.PartnerKey = art.PartnerKey
+INNER JOIN NDWH.Dim.DimARTOutcome ot on ot.ARTOutcomeKey = art.ARTOutcomeKey
+INNER JOIN NDWH.Dim.DimDate as date on date.DateKey = art.StartARTDateKey
 GROUP BY 
     MFLCode, 
     f.FacilityName,

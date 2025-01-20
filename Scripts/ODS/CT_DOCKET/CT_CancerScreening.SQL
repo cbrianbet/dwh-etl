@@ -1,5 +1,5 @@
 BEGIN 
-		MERGE [ODS].[dbo].[CT_CancerScreening] AS a 
+		MERGE [ODS].[Care].[CT_CancerScreening] AS a 
 		USING(
 			SELECT  DISTINCT F.Code AS SiteCode
 				,P.patientPID AS PatientPK
