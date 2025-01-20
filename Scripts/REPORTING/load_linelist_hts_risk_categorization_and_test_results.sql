@@ -6,7 +6,7 @@ BEGIN
 
 with source_data as (
 	select 
-		row_number() over (partition by tests.FacilityKey, tests.PatientKey, tests.DateTestedKey, tests.TestType order by tests.DateTestedKey desc) as num,
+		row_number() over (partition by tests.FacilityKey, tests.PatientKey,tests.TestType order by tests.DateTestedKey desc) as num,
 		patient.PatientPKHash,
 		patient.PatientKey,
 		patient.DOB,
@@ -21,7 +21,7 @@ with source_data as (
 		facility.longitude,
 		testDate.Date as TestDate,
 		elig.VisitDateKey,
-		elig.HIVRiskCategory,
+		elig.HIVRiskCategory as LatestHIVRiskCategory,
 		elig.HtsRiskScore,
 		tests.FinalTestResult as HTSResult,
 		elig.ReasonRefferredForTesting,
@@ -66,7 +66,7 @@ select
 		longitude,
 		TestDate,
 		VisitDateKey,
-		HIVRiskCategory,
+		LatestHIVRiskCategory,
 		HtsRiskScore,
 		HTSResult,
 		ReasonRefferredForTesting,
