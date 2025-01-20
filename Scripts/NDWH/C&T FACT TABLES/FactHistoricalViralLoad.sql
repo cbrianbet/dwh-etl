@@ -2,11 +2,11 @@ TRUNCATE TABLE ndwh.dbo.FactViralLoad_Hist;
 
 DECLARE @start_date DATE;
 
-SELECT @start_date = dateadd(month, -12, eomonth(dateadd(month, -2, getdate())));
+SELECT @start_date = dateadd(month, -24, eomonth(dateadd(month, -1, getdate())));
 
 DECLARE @end_date DATE;
 
-SELECT @end_date = eomonth(dateadd(month, -2, getdate()));
+SELECT @end_date = eomonth(dateadd(month, -1, getdate()));
 
 --- create a temp table to store end of month for each month
 with dates as (     
