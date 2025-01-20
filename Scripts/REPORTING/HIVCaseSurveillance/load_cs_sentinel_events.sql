@@ -244,3 +244,4 @@ CASE
  left join Retained on Retained.Patientkey=confirmed_reported_cases_and_art.PatientKey
 
  end
+ --This is the model that contains sentinel events
