@@ -168,9 +168,40 @@ BEGIN
 			PatientPK,
 			SiteCode,
 	 		replace(TestResult, ',', '') as FirstVL,
-			OrderedbyDate as FirstVLDate 
+			OrderedbyDate as FirstVLDate ,
+              Case  WHEN (Isnumeric( TestResult) = 1 AND Cast(Replace( TestResult, ',', '') AS Float) < 200.00)
+         OR TestResult IN ('undetectable', 'NOT DETECTED', '0 copies/ml', 'LDL', 'Less than Low Detectable Level') 
+    THEN 1 Else 0
+    End As IsSuppressedInitialViralload
 		from ODS.[Intermediate].Intermediate_BaseLineViralLoads	
+     ),
+     second_vl as (
+		select 
+			PatientPK,
+			SiteCode,
+	 		replace(TestResult, ',', '') as SecondVL,
+			OrderedbyDate as SecondVLDate ,
+             Case  WHEN (Isnumeric( TestResult) = 1 AND Cast(Replace( TestResult, ',', '') AS Float) < 200.00)
+         OR TestResult IN ('undetectable', 'NOT DETECTED', '0 copies/ml', 'LDL', 'Less than Low Detectable Level') 
+    THEN 1 Else 0
+    End As IsSuppressedSecondFollowupViralloads
+		from ODS.[Intermediate].Intermediate_OrderedViralLoads	
+        where rank=2
 	 ),
+Third_Vl as (
+		select 
+			PatientPK,
+			SiteCode,
+	 		replace(TestResult, ',', '') as ThirdVL,
+			OrderedbyDate as SecondVLDate ,
+             Case  WHEN (Isnumeric( TestResult) = 1 AND Cast(Replace( TestResult, ',', '') AS Float) < 200.00)
+         OR TestResult IN ('undetectable', 'NOT DETECTED', '0 copies/ml', 'LDL', 'Less than Low Detectable Level') 
+    THEN 1 Else 0
+    End As IsSuppressedThirdFollowupViralloads
+		from ODS.[Intermediate].Intermediate_OrderedViralLoads	
+        where rank=3
+),
+
 	last_vl as (
 		select 
 			PatientPK,
@@ -312,6 +343,12 @@ RepeatVlUnSupp as (Select
 			patient_viral_load_intervals.[_24MonthVLSup],
 			first_vl.FirstVL,
 			first_vl.FirstVLDate,
+            IsSuppressedInitialViralload,
+            second_vl.SecondVL,
+            second_vl.SecondVLDate,
+            IsSuppressedSecondFollowupViralloads,
+            Third_Vl.ThirdVL,
+            IsSuppressedThirdFollowupViralloads,
 			last_vl.LastVL,
 			last_vl.LastVLDate,
 			time_to_first_vl.TimetoFirstVL,
@@ -344,6 +381,10 @@ RepeatVlUnSupp as (Select
 			and patient_viral_load_intervals.SiteCode = patient.SiteCode
 		left join first_vl on first_vl.PatientPK = patient.PatientPK
 			and first_vl.SiteCode = patient.SiteCode
+        left join second_vl on second_vl.PatientPK = patient.PatientPK
+			and second_vl.SiteCode = patient.SiteCode
+        left join Third_Vl on Third_Vl.PatientPK = patient.PatientPK
+			and Third_Vl.SiteCode = patient.SiteCode
 		left join last_vl on last_vl.PatientPK = patient.PatientPK
 			and last_vl.SiteCode = patient.SiteCode
 		left join time_to_first_vl_group on time_to_first_vl_group.PatientPK = patient.PatientPK
@@ -410,7 +451,12 @@ RepeatVlUnSupp as (Select
 		combined_viral_load_dataset.[_18MonthVLSup] as [18MonthVLSup],
 		combined_viral_load_dataset.[_24MonthVLSup] as [24MonthVLSup],	
 		combined_viral_load_dataset.FirstVL,
+        combined_viral_load_dataset.SecondVL,
+        combined_viral_load_dataset.IsSuppressedInitialViralload,
 		combined_viral_load_dataset.LastVL,
+        combined_viral_load_dataset.IsSuppressedSecondFollowupViralloads,
+        combined_viral_load_dataset.ThirdVL,
+        combined_viral_load_dataset.IsSuppressedThirdFollowupViralloads,
 		combined_viral_load_dataset.TimetoFirstVL,
 		combined_viral_load_dataset.TimeToFirstVLGrp,
 		combined_viral_load_dataset.HighViremia,

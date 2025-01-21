@@ -99,7 +99,8 @@ WHERE
     BP = 'i78/56' OR
     BP = 'I67/89' OR
     BP = '9o/80' OR
-    BP = '999/999'
+    BP = '999/999' OR
+    BP =  '0/0'
 
 Go
 
