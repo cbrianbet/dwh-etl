@@ -208,6 +208,16 @@ Combined_MBP AS (
         PersonBPatientPk,
         PersonBPatientPkHash
      FROM MBP
+),
+MothersonART as (
+    SELECT
+      Combined_MBP.PatientPK ,
+       Combined_MBP.SiteCode,
+        PersonBPatientPk,
+        PersonBPatientPkHash,
+        case when StartARTDate is not null then 1 Else 0 End as MotherOnART 
+    from Combined_MBP
+    left join  ODS.Care.CT_ARTPatients as art on art.PatientPKHash=Combined_MBP.PersonBPatientPkHash and art.SiteCode=Combined_MBP.SiteCode
 )
 select
     FactKey = IDENTITY(INT, 1, 1),
@@ -219,7 +229,7 @@ select
     DNAPCR2.DateKey as DNAPCR2DateKey,
     antiboday_date.DateKey as FinalyAntibodyDateKey,
     age_group.AgeGroupKey,
-    PersonBPatientpkhash as MothersPatientPkHash,
+    Combined_MBP.PersonBPatientPkHash as MothersPatientPkHash,
     case 
         when tested_at_6wks_first_contact.age_in_weeks_at_DNAPCR1Date is not null then 1 
         else 0
@@ -279,7 +289,8 @@ select
         when unknown_status_24_months.PatientPk is not null then 1 
         else 0
     end as  UnknownOutocomeAt24months,
-    CASE WHEN Combined_MBP.PatientPK IS NOT NULL THEN 1 ELSE 0 END AS Paired
+    CASE WHEN Combined_MBP.PatientPK IS NOT NULL THEN 1 ELSE 0 END AS Paired,
+    MotherOnART
 into NDWH.Fact.FactHEI
 from ODS.MNCH.MNCH_HEIs as heis
 left join tested_at_6wks_first_contact on tested_at_6wks_first_contact.PatientPk = heis.PatientPk
@@ -316,6 +327,7 @@ left join NDWH.Dim.DimDate as DNAPCR1 on DNAPCR1.Date = cast(heis.DNAPCR1Date as
 left join NDWH.Dim.DimDate as DNAPCR2 on DNAPCR2.Date = cast(heis.DNAPCR2Date as date)
 left join NDWH.Dim.DimDate as antiboday_date on antiboday_date.Date = cast(final_antibody_data.FinalyAntibodyDate as date)
 left join Combined_MBP on Combined_MBP.PatientPK=heis.Patientpk and Combined_MBP.Sitecode=heis.Sitecode
+left join MothersonART on MothersonART.PatientPK=heis.PatientPk and MothersonART.sitecode=heis.SiteCode
 left join NDWH.Dim.DimAgeGroup as age_group on age_group.Age =  datediff(yy, patient.DOB, coalesce(latest_cwc_visit.VisitDate, getdate()))
 
 WHERE patient.voided =0;
