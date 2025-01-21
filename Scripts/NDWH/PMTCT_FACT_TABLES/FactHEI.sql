@@ -17,6 +17,8 @@ pmtct_client_demographics as (
         DOB,
         Gender
     from ODS.MNCH.MNCH_Patient as patient
+    --Filtering out the HEIs to return the ones in the last 6 years-------------
+   WHERE DOB > DATEADD(YEAR, -6, EOMONTH(GETDATE()))
 ),
 tested_at_6wks_first_contact as (
     select 
@@ -174,6 +176,34 @@ union
 FROM ODS.MNCH.MNCH_MatVisits as mat
 left join ODS.MNCH.mnch_motherbabypairs as pair on pair.PatientPk=mat.patientpk and pair.sitecode=mat.sitecode
 WHERE BabyGivenProphylaxis = 'Yes'
+),
+Relationships AS (
+    SELECT
+        PatientPk,
+        SiteCode,
+        PersonBPatientPk
+    FROM ODS.Care.CT_Relationships
+    WHERE RelationshipToPatient IN ('Parent', 'Child')
+),
+MBP AS (
+    SELECT
+        BabyPatientPk AS PatientPK,
+        SiteCode,
+        MotherPatientPk AS PersonBPatientPk
+    FROM ODS.MNCH.MNCH_MotherBabyPairs
+),
+Combined_MBP AS (
+    SELECT 
+        PatientPk,
+        SiteCode,
+        PersonBPatientPk
+     FROM Relationships
+    UNION
+    SELECT 
+        PatientPk,
+        SiteCode,
+        PersonBPatientPk
+     FROM MBP
 )
 select
     FactKey = IDENTITY(INT, 1, 1),
@@ -243,7 +273,8 @@ select
     case 
         when unknown_status_24_months.PatientPk is not null then 1 
         else 0
-    end as  UnknownOutocomeAt24months
+    end as  UnknownOutocomeAt24months,
+    CASE WHEN Combined_MBP.PatientPK IS NOT NULL THEN 1 ELSE 0 END AS Paired
 into NDWH.Fact.FactHEI
 from ODS.MNCH.MNCH_HEIs as heis
 left join tested_at_6wks_first_contact on tested_at_6wks_first_contact.PatientPk = heis.PatientPk
@@ -279,7 +310,9 @@ left join NDWH.Dim.DimPatient as patient on patient.PatientPKHash = heis.Patient
 left join NDWH.Dim.DimDate as DNAPCR1 on DNAPCR1.Date = cast(heis.DNAPCR1Date as date)
 left join NDWH.Dim.DimDate as DNAPCR2 on DNAPCR2.Date = cast(heis.DNAPCR2Date as date)
 left join NDWH.Dim.DimDate as antiboday_date on antiboday_date.Date = cast(final_antibody_data.FinalyAntibodyDate as date)
+left join Combined_MBP on Combined_MBP.PatientPK=heis.Patientpk and Combined_MBP.Sitecode=heis.Sitecode
 left join NDWH.Dim.DimAgeGroup as age_group on age_group.Age =  datediff(yy, patient.DOB, coalesce(latest_cwc_visit.VisitDate, getdate()))
+
 WHERE patient.voided =0;
 
 alter table NDWH.Fact.FactHEI add primary key(FactKey);
