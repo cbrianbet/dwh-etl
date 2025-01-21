@@ -89,6 +89,7 @@ FROM
     SELECT
     Viralloads.patientkey,
     Viralloads.Facilitykey,
+    Viralloads.FirstVL,
   Viralloads.IsSuppressedInitialViralload
     from Viralloads
  
@@ -97,6 +98,7 @@ FROM
     SELECT
     Patientkey,
     Facilitykey,
+    SecondVL,
     Viralloads.IsSuppressedSecondFollowupViralloads as IsSuppressedFirstFollowupViralloads
     from Viralloads
     
@@ -105,6 +107,7 @@ FROM
     SELECT
     Patientkey,
     Facilitykey,
+    ThirdVL,
     Viralloads.IsSuppressedThirdFollowupViralloads as IsSuppressedSecondFollowupViralloads 
     from Viralloads
     
@@ -206,12 +209,12 @@ CASE
     WHOStageATART,
     AgeAtARTStart,
    age.DATIMAgeGroup as ARTStartAgeGroup,
-   case when InitialViralLoads.patientkey is not null then 1 Else 0 End as WithInitialViralLoad,
-    case when InitialViralLoads.patientkey is  null then 1 Else 0 End as WithoutInitialViralLoad,
+   case when InitialViralLoads.firstVL is not null then 1 Else 0 End as WithInitialViralLoad,
+   case when InitialViralLoads.FirstVL is  null then 1 Else 0 End as WithoutInitialViralLoad,
    coalesce(InitialViralLoads.IsSuppressedInitialViralload,0) As IsSuppressedInitialViralload,
-   case when FirstFollowupViralloads.patientkey is not null then 1 Else 0 End As WithFirstFollowupViralload,
+   case when FirstFollowupViralloads.SecondVL is not null then 1 Else 0 End As WithFirstFollowupViralload,
    coalesce (FirstFollowupViralloads.IsSuppressedFirstFollowupViralloads,0) as IsSuppressedFirstFollowupViralloads,
-   case when SecondFollowupViralloads.patientkey is not null then 1 Else 0 End As WithSecondFollowupViralloads,
+   case when SecondFollowupViralloads.ThirdVL is not null then 1 Else 0 End As WithSecondFollowupViralloads,
    coalesce (SecondFollowupViralloads.IsSuppressedSecondFollowupViralloads,0) As IssuppressedSecondFollowupViralloads,
     case when WHOStageATART is  null then 1 Else 0 End as NotStaged,
    County,
