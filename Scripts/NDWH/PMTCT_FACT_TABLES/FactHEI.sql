@@ -181,7 +181,8 @@ Relationships AS (
     SELECT
         PatientPk,
         SiteCode,
-        PersonBPatientPk
+        PersonBPatientPk,
+        PersonBPatientPkHash
     FROM ODS.Care.CT_Relationships
     WHERE RelationshipToPatient IN ('Parent', 'Child')
 ),
@@ -189,20 +190,23 @@ MBP AS (
     SELECT
         BabyPatientPk AS PatientPK,
         SiteCode,
-        MotherPatientPk AS PersonBPatientPk
+        MotherPatientPk AS PersonBPatientPk,
+        MotherPatientPKHash as PersonBPatientPkHash
     FROM ODS.MNCH.MNCH_MotherBabyPairs
 ),
 Combined_MBP AS (
     SELECT 
         PatientPk,
         SiteCode,
-        PersonBPatientPk
+        PersonBPatientPk,
+        PersonBPatientPkHash
      FROM Relationships
     UNION
     SELECT 
         PatientPk,
         SiteCode,
-        PersonBPatientPk
+        PersonBPatientPk,
+        PersonBPatientPkHash
      FROM MBP
 )
 select
@@ -215,6 +219,7 @@ select
     DNAPCR2.DateKey as DNAPCR2DateKey,
     antiboday_date.DateKey as FinalyAntibodyDateKey,
     age_group.AgeGroupKey,
+    PersonBPatientpkhash,
     case 
         when tested_at_6wks_first_contact.age_in_weeks_at_DNAPCR1Date is not null then 1 
         else 0
