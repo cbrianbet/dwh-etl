@@ -219,7 +219,7 @@ select
     DNAPCR2.DateKey as DNAPCR2DateKey,
     antiboday_date.DateKey as FinalyAntibodyDateKey,
     age_group.AgeGroupKey,
-    PersonBPatientpkhash,
+    PersonBPatientpkhash as MothersPatientPkHash,
     case 
         when tested_at_6wks_first_contact.age_in_weeks_at_DNAPCR1Date is not null then 1 
         else 0
