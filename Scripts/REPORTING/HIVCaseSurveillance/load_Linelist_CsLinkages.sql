@@ -108,4 +108,3 @@ FROM   confirmed_reported_cases_and_art
                  confirmed_reported_cases_and_art.patientkey
        LEFT JOIN ndwh.dbo.dimagegroup age
               ON age.agegroupkey = confirmed_reported_cases_and_art.agegroupkey
---select top 50 * from [HIVCaseSurveillance].[dbo].[CsLinkage]
