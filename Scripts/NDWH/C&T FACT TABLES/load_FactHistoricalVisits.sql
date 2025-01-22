@@ -62,7 +62,6 @@ left join NDWH.Dim.DimDate as StartARTDate on StartARTDate.Date=art.StartARTDate
 left join NDWH.Dim.DimDate as NextAppointmentDate on NextAppointmentDate.Date=visits.NextAppointmentDate
 WHERE Visits.voided =0 and Visits.NUM=1 and visits.VisitDate >= EOMONTH(DATEADD(MONTH, -11, GETDATE())) 
 
-
 alter table NDWH.fact.FactHistoricalVisits add primary key(FactKey);
 END
 
