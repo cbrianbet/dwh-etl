@@ -22,7 +22,7 @@ BEGIN
 			,IsValidVL As VLValidity
 			,VLSup As VLSuppression
 			INTO [HIVCaseSurveillance].[dbo].[CsLinelistHistoricalViralLoad]
-		FROM ndwh.Fact.FactViralLoad_Hist FactViralLoad_Hist
+		FROM ndwh.dbo.FactViralLoad_Historical FactViralLoad_Hist
 		LEFT OUTER JOIN [NDWH].[Dim].[DimFacility] Facility
 		ON FactViralLoad_Hist.FacilityKey	= Facility.FacilityKey
 		LEFT OUTER JOIN [NDWH].[Dim].[DimPatient] Patient

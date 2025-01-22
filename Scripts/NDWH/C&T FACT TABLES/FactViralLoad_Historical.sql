@@ -1,4 +1,4 @@
-TRUNCATE TABLE ndwh.dbo.FactViralLoad_Hist;
+TRUNCATE TABLE ndwh.dbo.FactViralLoad_Historical;
 
 DECLARE @start_date DATE;
 
@@ -301,7 +301,7 @@ Combine_PBFWListing_VLSupCheck_Final As(
 												,IsPBFW
 										from CombinedValidityCheck									
 )
-INSERT INTO ndwh.dbo.FactViralLoad_Hist(PatientKey,
+INSERT INTO ndwh.dbo.FactViralLoad_Historical(PatientKey,
 										FacilityKey,
 										AgeGroupKey,
 										CohortYearMonth,
