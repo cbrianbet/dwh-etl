@@ -1,6 +1,6 @@
 
 --truncate table first
-truncate table Hivcasesurveillance.Dbo.Cslinelistadvancehivdisease;
+truncate table Hivcasesurveillance.Dbo.CslinelistNCDScreening;
 
 --declare start and end dates i.e. within the last 12 months form reporting period
 declare @start_date date;
@@ -48,7 +48,8 @@ With Visitdata As (
         Visits.Patientkey,
         Visits.PatientPKHash,
         Visits.SiteCode,
-        Whostage,        
+        Visits.Whostage,        
+        Visits.ScreenedForChronicIllness,
         Gender,
         Try_convert(Date, Visitdatekey) As VisitDate,
         Eomonth(Try_convert(Date, Visitdatekey)) As AsofDate,
@@ -58,58 +59,12 @@ With Visitdata As (
         Left Join NDWH.Dim.Dimpatient As Pat On Pat.Patientkey = Visits.Patientkey
         Left Join NDWH.Dim.Dimfacility As Facility On Facility.Facilitykey = Visits.Facilitykey
         Left Join NDWH.Dim.Dimpartner As Partner On Partner.Partnerkey = Visits.Partnerkey
-        Left Join NDWH.Dim.Dimagency As Agency On Agency.Agencykey = Visits.Agencykey
+        Left Join NDWH.Dim.Dimagency As Agency On Agency.Agencykey = Visits.Agencykey       
     Where  
         Visits.Patientkey Is Not Null and  Visitdatekey <= @as_of_date
-), Rankedvisits As (
-    Select 
-        Visitdata.Patientkey,
-        Visitdata.PatientPKHash,
-        Visitdata.SiteCode,
-        Facilityname,
-        Partnername,
-        Agencyname,
-        County,
-        Subcounty,
-        Asofdate,
-        VisitDate,
-        Gender,
-        Visitdata.Whostage, 
-        Age,
-        Row_number() Over (
-            Partition By Patientkey
-            Order By VisitDate Desc
-        ) As VisitRank
-    From   
-        Visitdata
-), Latestvisits As (
-    Select 
-        Patientkey,
-        PatientPKHash,
-        SiteCode,
-        Facilityname,
-        Partnername,
-        Agencyname,
-        County,
-        Subcounty,
-        Asofdate,
-        VisitDate,
-        Whostage,
-        Gender,
-        Age
-    From   
-        Rankedvisits
-    Where  
-        Visitrank = 1
-), Cd4s As (
-    Select 
-        Patientkey,
-        Lastcd4,
-        Lastcd4date
-    From   
-        Ndwh.fact.Factcd4
 )
-insert into [HIVCaseSurveillance].[dbo].[Cslinelistadvancehivdisease]
+
+insert into [HIVCaseSurveillance].[dbo].[CslinelistNCDScreening]
  
 Select 
     Visits.Patientkey,
@@ -123,35 +78,18 @@ Select
     County,
     Subcounty,
     Whostage,
+    ScreenedForChronicIllness,
     Visits.Gender,
     Eomonth(Dateconfirmed.Date) As CohortYearMonth,
     Visits.Age,
-    Age.Datimagegroup  as Agegroup,
-    Case
-        When ( Visits.Age >= 5 And Visits.Whostage In ( 3, 4 ) )
-            Or Visits.Age < 5
-            Or ( Visits.Age >= 5 And Convert(Float, Cd4s.Lastcd4) < 200 ) 
-        Then 1
-        Else 0
-    End As AHD,
-    Case
-        When Visits.Whostage In ( 3, 4 ) 
-        Then 1
-        Else 0
-    End As WhoStage3and4,
-    Case
-        When Visits.Age >= 5 And Convert(Float, Cd4s.Lastcd4) < 200 
-        Then 1
-        Else 0
-    End As CD4Lessthan200,
-    LastCD4Date
+    Age.Datimagegroup  as Agegroup
 
 From   
-    Latestvisits As Visits
-    Left Join Cd4s On Cd4s.Patientkey = Visits.Patientkey
+    Visitdata As Visits
     Left Join NDWH.Dim.Dimpatient As Pat On Pat.Patientkey = Visits.Patientkey
     Left Join NDWH.Dim.Dimdate As Dateconfirmed On Dateconfirmed.Datekey = Pat.Dateconfirmedhivpositivekey
     Left Join NDWH.Dim.Dimagegroup Age On Age.Age = Visits.Age
+    where Visits.Age >= 15
    
    fetch next from cursor_AsOfDates into @as_of_date
 
