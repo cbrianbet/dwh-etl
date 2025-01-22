@@ -8,7 +8,7 @@ with MFL_partner_agency_combination as (
 	select 
 		distinct MFL_Code,
 		SDP,
-	    SDP_Agency as Agency 
+	    SDP_Agency as Agency
 	from ODS.Care.All_EMRSites 
 ),
 UniqueVisits as (
@@ -21,11 +21,21 @@ Select   row_number() OVER (PARTITION BY SiteCode,Patientpkhash, VisitDate ORDER
 	voided
 	from ODS.Care.CT_PatientVisits as visits
 	
+),
+ChronicIllnessScreening as (
+	select 
+		distinct SiteCode,
+		PatientPKHash,
+	    VisitID,
+		VisitDate 
+	from ODS.Care.CT_AllergiesChronicIllness 
 )
 
 select 
 	Factkey = IDENTITY(INT, 1, 1),
 	patient.PatientKey,
+	patient.PatientPKHash,
+	patient.SiteCode,
 	facility.FacilityKey,
 	partner.PartnerKey,
 	agency.AgencyKey,
@@ -34,7 +44,7 @@ select
     NextAppointmentDate.DateKey As NextAppointmentDateKey,
 	WHOStage,
 	CASE
-		WHEN chronicIllness.PatientPKHash IS NOT NULL THEN 1
+		WHEN ChronicIllnessScreening.PatientPKHash IS NOT NULL THEN 1
 		ELSE 0
 	END As ScreenedForChronicIllness,
 	cast(getdate() as date) as LoadDate
@@ -42,7 +52,7 @@ into NDWH.fact.FactHistoricalVisits
 from UniqueVisits as  visits
 inner join ODS.Care.CT_ARTPatients as art on art.PatientPKHash=visits.PatientPKHash and art.SiteCode=visits.SiteCode
 inner join NDWH.Dim.DimPatient as patient on visits.PatientPKHash = patient.PatientPKHash and visits.SiteCode = patient.SiteCode
-left join ODS.Care.CT_AllergiesChronicIllness as chronicIllness on visits.PatientPKHash=chronicIllness.PatientPKHash and visits.SiteCode=chronicIllness.SiteCode
+left join ChronicIllnessScreening on visits.PatientPKHash=ChronicIllnessScreening.PatientPKHash and visits.SiteCode=ChronicIllnessScreening.SiteCode and visits.VisitDate=ChronicIllnessScreening.VisitDate
 left join NDWH.Dim.DimFacility as facility on facility.MFLCode = visits.SiteCode
 left join MFL_partner_agency_combination on MFL_partner_agency_combination.MFL_Code = visits.SiteCode
 left join NDWH.Dim.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP

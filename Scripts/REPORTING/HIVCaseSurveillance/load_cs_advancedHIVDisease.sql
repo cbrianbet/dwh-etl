@@ -46,6 +46,8 @@ With Visitdata As (
         County,
         Subcounty,
         Visits.Patientkey,
+        Visits.PatientPKHash,
+        Visits.SiteCode,
         Whostage,        
         Visits.ScreenedForChronicIllness,
         Gender,
@@ -63,6 +65,8 @@ With Visitdata As (
 ), Rankedvisits As (
     Select 
         Visitdata.Patientkey,
+        Visitdata.PatientPKHash,
+        Visitdata.SiteCode,
         Facilityname,
         Partnername,
         Agencyname,
@@ -83,6 +87,8 @@ With Visitdata As (
 ), Latestvisits As (
     Select 
         Patientkey,
+        PatientPKHash,
+        SiteCode,
         Facilityname,
         Partnername,
         Agencyname,
@@ -110,6 +116,8 @@ insert into [HIVCaseSurveillance].[dbo].[Cslinelistadvancehivdisease]
  
 Select 
     Visits.Patientkey,
+    Visits.PatientPKHash,
+    Visits.SiteCode,
     VisitDate,
      @as_of_date as AsOfDate,
     Facilityname,
