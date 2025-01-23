@@ -19,6 +19,7 @@ BEGIN
     select 
         eomonth(confirm_date.date) as CohortYearMonth,
         facility.FacilityName,
+        facility.MFLCode,
         facility.County,
         facility.SubCounty,
         partner.PartnerName,
