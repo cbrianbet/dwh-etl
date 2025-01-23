@@ -5,9 +5,9 @@ With Confirmed_reported_cases_and_art
      As (Select Ctpatients.Patientkey,
                 Patient.Gender,
                 Ctpatients.Agelastvisit,
-                Ctpatients.Facilitykey,
-                Ctpatients.Partnerkey,
-                Ctpatients.Agencykey,
+                fac.MFLCode,
+                Partner.PartnerName,
+                Agency.AgencyName,
                 Ctpatients.Agegroupkey,
                 Case
                   When Confirmed_date.Date Is Not Null Then 1
@@ -59,11 +59,13 @@ With Confirmed_reported_cases_and_art
                   Else 0
                 End                                              As Disclosure,
                 Adherence,
-                Baselinevloutcomes
+                Baselinevloutcomes,
+                County,
+                SubCounty
+                
          From   
          NDWH.Fact.FactART As Ctpatients
                
-                     --  On Ctpatients.Patientkey = Art.Patientkey
                 Left Join Ndwh.Dim.Dimpatient As Patient
                        On Patient.Patientkey = Ctpatients.Patientkey
                 Left Join Ndwh.Dim.Dimdate As Confirmed_date
@@ -72,7 +74,16 @@ With Confirmed_reported_cases_and_art
                 Left Join Ndwh.Dim.Dimdate As Art_date
                        On Art_date.Datekey = Ctpatients.Startartdatekey
                 Left Join Ndwh.Dim.Dimagegroup Age
-                       On Age.Agegroupkey = Ctpatients.Agegroupkey),
+                       On Age.Agegroupkey = Ctpatients.Agegroupkey
+                Left Join Ndwh.Dim.DimPartner as Partner
+                       On Partner.PartnerKey = Ctpatients.PartnerKey
+                Left Join Ndwh.Dim.DimAgency as Agency
+                       On Agency.AgencyKey = Ctpatients.AgencyKey
+                 Left Join Ndwh.Dim.DimFacility as fac
+                       On fac.FacilityKey = Ctpatients.FacilityKey
+                       
+                       
+                       ),
      Baselinecd4s
      As (Select Patientkey,
                 Baselinecd4,
@@ -86,9 +97,11 @@ With Confirmed_reported_cases_and_art
 Select Confirmed_reported_cases_and_art.Patientkey,
        Gender,
        Agelastvisit,
-       Facilitykey,
-       Partnerkey,
-       Agencykey,
+       MFLCode,
+       PartnerName,
+       AgencyName,
+       County,
+       SubCounty,
        Newcasereported,
        Linkedtoart,
        Notlinkedonart,
@@ -104,7 +117,7 @@ Select Confirmed_reported_cases_and_art.Patientkey,
        End               As WithBaselineCD4,
        Whostageatart,
        Ageatartstart,
-       Age.Datimagegroup As ARTStartAgeGroup,
+       Age.Datimagegroup As AgeGroup,
        Adherence,
       Baselinevloutcomes
 Into   [Hivcasesurveillance].[Dbo].[Cslinkage]
@@ -117,80 +130,3 @@ Confirmed_reported_cases_and_art.Patientkey
 Confirmed_reported_cases_and_art.Patientkey
        Left Join Ndwh.Dim.Dimagegroup Age
               On Age.Agegroupkey = Confirmed_reported_cases_and_art.Agegroupkey 
-=======
-Datediff(year, patient.dob, confirmed_date.date) AS AgeatDiagnosis,
-CASE
-  WHEN Datediff(day, confirmed_date.date, art_date.date) = 0 THEN
-  'Same Day'
-  WHEN Datediff(day, confirmed_date.date, art_date.date) BETWEEN 1
-       AND 7
-   THEN
-  '1 to 7 Days'
-  WHEN Datediff(day, confirmed_date.date, art_date.date) BETWEEN 8
-       AND
-       14 THEN
-  '8 to 14 Days'
-  WHEN Datediff(day, confirmed_date.date, art_date.date) > 14
-       AND timetoartdiagnosis IS NOT NULL THEN '> 14 Days'
-  ELSE 'Missing'
-END                                              AS
-   TimeToARTDiagnosis_Grp,
-CASE
-  WHEN disclosure IS NOT NULL THEN 1
-  ELSE 0
-END                                              AS Disclosure
-FROM   ndwh.dbo.factctpatients AS ctpatients
-LEFT JOIN ndwh.dbo.factart AS art
-       ON ctpatients.patientkey = art.patientkey
-LEFT JOIN ndwh.dbo.dimpatient AS patient
-       ON patient.patientkey = ctpatients.patientkey
-LEFT JOIN ndwh.dbo.dimdate AS confirmed_date
-       ON confirmed_date.datekey =
-          patient.dateconfirmedhivpositivekey
-LEFT JOIN ndwh.dbo.dimdate AS art_date
-       ON art_date.datekey = art.startartdatekey
-LEFT JOIN ndwh.dbo.dimagegroup age
-       ON age.agegroupkey = art.agegroupkey),
-     baselinecd4s
-     AS (SELECT patientkey,
-                baselinecd4,
-                baselinecd4date
-         FROM   ndwh.dbo.factcd4),
-     baselinewho
-     AS (SELECT patientkey,
-                whostageatart,
-                ageatartstart
-         FROM   ndwh.dbo.factartbaselines)
-SELECT confirmed_reported_cases_and_art.patientkey,
-       gender,
-       agelastvisit,
-       facilitykey,
-       partnerkey,
-       agencykey,
-       newcasereported,
-       linkedtoart,
-       notlinkedonart,
-       dateconfirmedpositive,
-       cohortyearmonth,
-       startartdate,
-       ageatdiagnosis,
-       timetoartdiagnosis_grp,
-       disclosure,
-       CASE
-         WHEN baselinecd4 IS NOT NULL THEN 1
-         ELSE 0
-       END               AS WithBaselineCD4,
-       whostageatart,
-       ageatartstart,
-       age.datimagegroup AS ARTStartAgeGroup
-INTO   [HIVCaseSurveillance].[dbo].[cslinkage]
-FROM   confirmed_reported_cases_and_art
-       LEFT JOIN baselinecd4s
-              ON baselinecd4s.patientkey =
-                 confirmed_reported_cases_and_art.patientkey
-       LEFT JOIN baselinewho
-              ON baselinewho.patientkey =
-                 confirmed_reported_cases_and_art.patientkey
-       LEFT JOIN ndwh.dbo.dimagegroup age
-              ON age.agegroupkey = confirmed_reported_cases_and_art.agegroupkey
-
