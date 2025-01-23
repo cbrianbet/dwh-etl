@@ -10,9 +10,9 @@ with cases as (
     art.AgencyKey,
     pat.Gender,
     confirm_date.[Date] as DateConfirmedHIVPos
-  from NDWH.dbo.FactART as art 
-  left join NDWH.dbo.DimPatient as pat on pat.PatientKey = art.PatientKey
-  left join NDWH.dbo.DimDate as confirm_date on confirm_date.DateKey = pat.DateConfirmedHIVPositiveKey
+  from NDWH.Fact.FactART as art 
+  left join NDWH.Dim.DimPatient as pat on pat.PatientKey = art.PatientKey
+  left join NDWH.Dim.DimDate as confirm_date on confirm_date.DateKey = pat.DateConfirmedHIVPositiveKey
 ),
 eligibility_indicators as (
   select
@@ -27,8 +27,8 @@ eligibility_indicators as (
       when CurrentlyHasSTI = 'YES' then 1 
       else 0 
     end as CurrentlyHasSTI
-from NDWH.dbo.FactHTSEligibilityextract as eligibility_data
-left join NDWH.dbo.DimDate as eligibilitydate on eligibilitydate.DateKey = eligibility_data.VisitDateKey
+from NDWH.fact.FactHTSEligibilityextract as eligibility_data
+left join NDWH.Dim.DimDate as eligibilitydate on eligibilitydate.DateKey = eligibility_data.VisitDateKey
 ),
 latest_eligibility_indicators_per_patient as (
   select 
@@ -56,23 +56,27 @@ select
   facility.FacilityName,
   facility.County,
   facility.SubCounty,
+  joined_data.Gender,
   partner.PartnerName,
   agency.AgencyName,
+  agegroup.DATIMAgegroup as Agegroup,
   count(joined_data.PatientKey) as NoOfCases,
   sum(SexwithAlcohoDrugs) HasSexwithAlcohoDrugs,
   sum(CurrentlyHasSTI) as CurrentlyHasSTI
 into HIVCaseSurveillance.dbo.CsAggregateAlcoholSexSTIRiskFactors
 from joined_data
-left join NDWH.dbo.DimPartner as partner on partner.PartnerKey = joined_data.PartnerKey
-left join NDWH.dbo.DimAgency as agency on agency.AgencyKey = joined_data.AgencyKey
-left join NDWH.dbo.DimAgeGroup as agegroup on agegroup.AgeGroupKey = joined_data.AgeGroupKey
-left join NDWH.dbo.DimPatient as patient on patient.PatientKey = joined_data.PatientKey
-left join NDWH.dbo.DimFacility as facility on facility.FacilityKey = joined_data.FacilityKey
-left join NDWH.dbo.DimDate as confirm_date on confirm_date.DateKey = patient.DateConfirmedHIVPositiveKey
+left join NDWH.Dim.DimPartner as partner on partner.PartnerKey = joined_data.PartnerKey
+left join NDWH.Dim.DimAgency as agency on agency.AgencyKey = joined_data.AgencyKey
+left join NDWH.Dim.DimAgeGroup as agegroup on agegroup.AgeGroupKey = joined_data.AgeGroupKey
+left join NDWH.Dim.DimPatient as patient on patient.PatientKey = joined_data.PatientKey
+left join NDWH.Dim.DimFacility as facility on facility.FacilityKey = joined_data.FacilityKey
+left join NDWH.Dim.DimDate as confirm_date on confirm_date.DateKey = patient.DateConfirmedHIVPositiveKey
 group by 
     eomonth(confirm_date.Date),
     facility.FacilityName,
     facility.County,
     facility.SubCounty,
+    joined_data.Gender,
     partner.PartnerName,
-    agency.AgencyName; 
+    agency.AgencyName,
+    agegroup.DATIMAgegroup ; 

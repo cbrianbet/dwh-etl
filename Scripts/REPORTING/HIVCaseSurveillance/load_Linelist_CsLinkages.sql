@@ -54,28 +54,28 @@ CASE
   WHEN disclosure IS NOT NULL THEN 1
   ELSE 0
 END                                              AS Disclosure
-FROM   ndwh.dbo.factctpatients AS ctpatients
-LEFT JOIN ndwh.dbo.factart AS art
+FROM   ndwh.Fact.factctpatients AS ctpatients
+LEFT JOIN ndwh.Fact.factart AS art
        ON ctpatients.patientkey = art.patientkey
-LEFT JOIN ndwh.dbo.dimpatient AS patient
+LEFT JOIN ndwh.Dim.dimpatient AS patient
        ON patient.patientkey = ctpatients.patientkey
-LEFT JOIN ndwh.dbo.dimdate AS confirmed_date
+LEFT JOIN ndwh.Dim.dimdate AS confirmed_date
        ON confirmed_date.datekey =
           patient.dateconfirmedhivpositivekey
-LEFT JOIN ndwh.dbo.dimdate AS art_date
+LEFT JOIN ndwh.Dim.dimdate AS art_date
        ON art_date.datekey = art.startartdatekey
-LEFT JOIN ndwh.dbo.dimagegroup age
+LEFT JOIN ndwh.Dim.dimagegroup age
        ON age.agegroupkey = art.agegroupkey),
      baselinecd4s
      AS (SELECT patientkey,
                 baselinecd4,
                 baselinecd4date
-         FROM   ndwh.dbo.factcd4),
+         FROM   ndwh.Fact.factcd4),
      baselinewho
      AS (SELECT patientkey,
                 whostageatart,
                 ageatartstart
-         FROM   ndwh.dbo.factartbaselines)
+         FROM   ndwh.Fact.factartbaselines)
 SELECT confirmed_reported_cases_and_art.patientkey,
        gender,
        agelastvisit,
@@ -97,7 +97,7 @@ SELECT confirmed_reported_cases_and_art.patientkey,
        END               AS WithBaselineCD4,
        whostageatart,
        ageatartstart,
-       age.datimagegroup AS ARTStartAgeGroup
+       age.datimagegroup AS AgeGroup
 INTO   [HIVCaseSurveillance].[dbo].[cslinkage]
 FROM   confirmed_reported_cases_and_art
        LEFT JOIN baselinecd4s
@@ -106,5 +106,5 @@ FROM   confirmed_reported_cases_and_art
        LEFT JOIN baselinewho
               ON baselinewho.patientkey =
                  confirmed_reported_cases_and_art.patientkey
-       LEFT JOIN ndwh.dbo.dimagegroup age
+       LEFT JOIN ndwh.Dim.dimagegroup age
               ON age.agegroupkey = confirmed_reported_cases_and_art.agegroupkey

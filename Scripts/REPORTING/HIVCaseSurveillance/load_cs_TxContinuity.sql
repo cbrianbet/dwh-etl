@@ -10,7 +10,7 @@ BEGIN
 			,Patient.PatientPKHash
 			,Patient.Gender
 			,Patient.DOB
-			,[AgeGroup].DATIMAgeGroup
+			,[AgeGroup].DATIMAgeGroup as Agegroup,
 			,[Partner].PartnerName
 			,case 
 				when ARTOutcome.ARTOutcomeDescription in ('LOSS TO FOLLOW UP','UNDOCUMENTED LOSS') Then 'IIT'
