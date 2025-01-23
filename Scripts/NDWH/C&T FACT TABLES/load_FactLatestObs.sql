@@ -11,6 +11,12 @@ with MFL_partner_agency_combination as (
 		SDP,
 	    SDP_Agency as Agency 
 	from ODS.Care.All_EMRSites 
+),
+distinct_alcohol_drug_use_patients as (
+	select 
+		distinct PatientPKHash,
+    	SiteCode
+	from ODS.[Intermediate].[IntermediateAlcoholDrugUseLastOneYear]
 )
 select 
 	Factkey = IDENTITY(INT, 1, 1),
@@ -33,9 +39,12 @@ select
     OnIPT,
     StartIPT,
     EverOnIPT,
+	case when alcohol_drug_use.PatientPKHash is not null then 1 else 0 end as HasAlcoholOrDrugUseLastOneYear,
 	cast(getdate() as date) as LoadDate
 into NDWH.[Fact].FactLatestObs
-from ODS.[intermediate].intermediate_LatestObs obs
+from ODS.[intermediate].intermediate_LatestObs as  obs
+left join distinct_alcohol_drug_use_patients as alcohol_drug_use on alcohol_drug_use.PatientPKHash = obs.PatientPKHash
+	and alcohol_drug_use.SiteCode = obs.SiteCode
 left join NDWH.Dim.DimPatient as patient on obs.PatientPKHash = patient.PatientPKHash 
     and obs.SiteCode = patient.SiteCode
 left join NDWH.Dim.DimFacility as facility on facility.MFLCode = obs.SiteCode
