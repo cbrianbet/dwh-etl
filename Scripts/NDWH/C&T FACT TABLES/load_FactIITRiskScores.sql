@@ -1,9 +1,11 @@
-
 IF OBJECT_ID(N'[NDWH].[fact].[FactIITRiskScores]', N'U') IS NOT NULL 
 	DROP TABLE [NDWH].[fact].[FactIITRiskScores];
     
 BEGIN
 
+
+-- Setting the start date when valid IIT Risk scores where generated
+DECLARE @ValidStartDate DATE = '2024-02-01';
 
 with MFL_partner_agency_combination as (
 	select 
@@ -28,6 +30,7 @@ iit_risk_scores_ordering as (
     from ODS.Care.CT_IITRiskScores as scores 
     left join ODS.Care.CT_Patient as patient on patient.PatientPK = scores.PatientPK
         and patient.SiteCode = scores.PatientPK
+    where RiskEvaluationDate >= @ValidStartDate
 ),
 appointments_from_last_visit as (
     select 
@@ -65,7 +68,7 @@ left join appointments_from_last_visit on appointments_from_last_visit.PatientPK
     and appointments_from_last_visit.SiteCode = risk_scores.SiteCode
 left join NDWH.Dim.DimDate as appointment on appointment.Date = appointments_from_last_visit.NextAppointment
 where rank = 1 and patient.voided = 0
-and   cast(evaluation.DateKey as date)>'2024-01-31'
+    and RiskCategory IN ( 'Low', 'Medium', 'High')
 alter table NDWH.fact.FactIITRiskScores add primary key(FactKey)
 
 END
