@@ -14,16 +14,17 @@ with initial_data as (
         partenr.PartnerName,
         agency.AgencyName,
         DATIMAgeGroup as Agegroup,
+        patient.Gender,
         cast(patient.EveronART as int) as EveronART,
         elicitation.Tested
-    from  [NDWH].[dbo].[FactContactElicitation] as elicitation 
-    left join NDWH.dbo.DimPatient as patient on patient.PatientKey = elicitation.IndexPatientKey --joining on IndexPatientKey to get details of the index client
-    left join NDWH.dbo.DimFacility as facility on facility.FacilityKey = elicitation.FacilityKey
-    left join NDWH.dbo.DimPartner as partenr on partenr.PartnerKey = elicitation.PartnerKey
-    left join NDWH.dbo.DimAgency as agency on agency.AgencyKey = elicitation.AgencyKey
-    left join NDWH.dbo.DimAgeGroup as agegroup on agegroup.AgeGroupKey = elicitation.AgegroupKey
-    left join NDWH.dbo.DimDate as confirm_date on confirm_date.DateKey = patient.DateConfirmedHIVPositiveKey
-    left join NDWH.dbo.DimDate as date_created on date_created.DateKey = elicitation.DateCreatedKey
+    from  [NDWH].[Fact].[FactContactElicitation] as elicitation 
+    left join NDWH.Dim.DimPatient as patient on patient.PatientKey = elicitation.IndexPatientKey --joining on IndexPatientKey to get details of the index client
+    left join NDWH.Dim.DimFacility as facility on facility.FacilityKey = elicitation.FacilityKey
+    left join NDWH.Dim.DimPartner as partenr on partenr.PartnerKey = elicitation.PartnerKey
+    left join NDWH.Dim.DimAgency as agency on agency.AgencyKey = elicitation.AgencyKey
+    left join NDWH.Dim.DimAgeGroup as agegroup on agegroup.AgeGroupKey = elicitation.AgegroupKey
+    left join NDWH.Dim.DimDate as confirm_date on confirm_date.DateKey = patient.DateConfirmedHIVPositiveKey
+    left join NDWH.Dim.DimDate as date_created on date_created.DateKey = elicitation.DateCreatedKey
     where date_created.DateKey is not null
 )
 select
@@ -35,6 +36,7 @@ select
     SubCounty,
     AgencyName,
     PartnerName,
+    Gender,
     count(FactKey) as NoElicited,
     sum(Tested) as NoTested,
     count(distinct case when EverOnART = 1 then IndexPatientKey end) as NoOfIndexLinkedToTX,
@@ -49,4 +51,5 @@ group by
    County,
    SubCounty,
    AgencyName,
-   PartnerName
+   PartnerName,
+   Gender
