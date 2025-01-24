@@ -13,7 +13,7 @@ with initial_data as (
         facility.SubCounty,
         partenr.PartnerName,
         agency.AgencyName,
-        DATIMAgeGroup as Agegroup,
+        DATIMAgeGroup as AgeGroup,
         patient.Gender,
         cast(patient.EveronART as int) as EveronART,
         elicitation.Tested
