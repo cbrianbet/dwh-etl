@@ -112,13 +112,17 @@ feeding_data as (
         and pmtct_client_demographics.SiteCode = heis.SiteCode
 ),
 positive_heis as (
-    select 
-        heis.PatientPK,
-        heis.SiteCode,
-        HEIExitCritearia,
-        HEIHIVStatus
-    from ODS.MNCH.MNCH_HEIs as heis
-    where HEIHIVStatus = 'Positive' 
+    SELECT
+    heis.PatientPk,
+    heis.SiteCode,
+    heis.ConfirmatoryPCR,
+    heis.ConfirmatoryPCRDate,
+    heis.FinalyAntibody,
+    heis.FinalyAntibodyDate,
+    heis.HEIExitCritearia,
+    heis.HEIHIVStatus
+   from ODS.MNCH.MNCH_HEIs as heis
+  where ConfirmatoryPCR='Positive' or [FinalyAntibody]='Positive'or HEIHIVStatus = 'Positive'
 ),
 unknown_status_24_months as (
     select
@@ -276,7 +280,7 @@ select
         else 0 
     end as InfectedOnART,
     case 
-        when positive_heis.HEIHIVStatus is not null then 1 
+        when positive_heis.PatientPk is not null then 1 
         else 0
     end as InfectedAt24mnths,
     positive_heis.HEIExitCritearia as HEIExitCriteria,
