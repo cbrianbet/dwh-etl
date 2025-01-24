@@ -17,7 +17,7 @@ begin
         agency.AgencyKey,
         age_group.AgeGroupKey,
         visit_date.DateKey as VisitDateKey,
-        PillCountAdherence
+        PillCountAdherence,
         EACRecievedVL,
         EACVL,
         EACAdherencePlan

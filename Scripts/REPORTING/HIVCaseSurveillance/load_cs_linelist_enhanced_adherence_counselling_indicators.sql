@@ -39,10 +39,10 @@ BEGIN
         case
             when ISNUMERIC(RepeatVLResult) = 1 then
                 case 
-                    when cast(replace(RepeatVLResult,',','') AS float) >= 1000.00 then 'UNSUPPRESSED' 
-                    when cast(replace(RepeatVLResult,',','') as float) between 200.00 and 999.00  then 'High Risk LLV '
-                    when cast(replace(RepeatVLResult,',','') as float) between 50.00 and 199.00 then 'Low Risk LLV'
-                    when cast(replace(RepeatVLResult,',','') as float) < 50 then 'LDL'
+                    when try_cast(replace(RepeatVLResult,',','') AS float) >= 1000.00 then 'UNSUPPRESSED' 
+                    when try_cast(replace(RepeatVLResult,',','') as float) between 200.00 and 999.00  then 'High Risk LLV '
+                    when try_cast(replace(RepeatVLResult,',','') as float) between 50.00 and 199.00 then 'Low Risk LLV'
+                    when try_cast(replace(RepeatVLResult,',','') as float) < 50 then 'LDL'
                 end
         else
             case
