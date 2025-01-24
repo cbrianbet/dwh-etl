@@ -9,18 +9,23 @@ IF OBJECT_ID(N'[HIVCaseSurveillance].[dbo].[CsLinelistReportedCasesRisks]', N'U'
                 art.FacilityKey,
                 PartnerKey,
                 AgencyKey,
+                agegroup.DATIMAgegroup,
                 eomonth(confirmed_date.Date) as CohortYearMonth,
                 case 
 					when art_date.Date < confirmed_date.Date then confirmed_date.Date
 					else art_date.Date
 				end as StartARTDate,
+
                 DATEDIFF(year,patient.DOB,confirmed_date.Date) as AgeatDiagnosis,
                 age.DATIMAgeGroup as AgeGroup
+
+
             from NDWH.Fact.FACTART as art 
             left join NDWH.Dim.DimPatient as patient on patient.PatientKey = art.PatientKey
             left join NDWH.Dim.DimDate as confirmed_date on confirmed_date.DateKey = patient.DateConfirmedHIVPositiveKey
             left join NDWH.Dim.DimDate as art_date on art_date.DateKey = art.StartARTDateKey
             left join NDWH.Dim.DimAgeGroup as age on age.AgeGroupKey=art.AgeGroupKey
+
     
     ),
     RiskFactors as (
@@ -72,6 +77,7 @@ IF OBJECT_ID(N'[HIVCaseSurveillance].[dbo].[CsLinelistReportedCasesRisks]', N'U'
         confirmed_reported_cases_and_art.PatientKey,
         Gender,
         AgeLastVisit,
+        DATIMAgeGroup as Agegroup,
         FacilityName,
         PartnerName,
         AgencyName,

@@ -12,7 +12,7 @@ BEGIN
 			,Patient.DOB
 			,[AgeGroup].DATIMAgeGroup as AgeGroup
 			,[Partner].PartnerName
-            ,Agency.AgencyName
+        ,Agency.AgencyName
 			,case 
 				when ARTOutcome.ARTOutcomeDescription in ('LOSS TO FOLLOW UP','UNDOCUMENTED LOSS') Then 'IIT'
 				when ARTOutcome.ARTOutcomeDescription in ('DEAD') Then 'MORTALITY'
