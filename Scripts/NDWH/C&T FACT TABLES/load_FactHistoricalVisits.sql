@@ -16,6 +16,7 @@ Select   row_number() OVER (PARTITION BY SiteCode,Patientpkhash, VisitDate ORDER
 	Patientpkhash,
 	Sitecode,
 	VisitDate,
+	BP,
 	WHOStage,
 	NextAppointmentDate,
 	voided
@@ -47,6 +48,10 @@ select
 		WHEN ChronicIllnessScreening.PatientPKHash IS NOT NULL THEN 1
 		ELSE 0
 	END As ScreenedForChronicIllness,
+	CASE
+		WHEN visits.BP IS NOT NULL THEN 1
+		ELSE 0
+	END As ScreenedForHypertension,
 	cast(getdate() as date) as LoadDate
 into NDWH.fact.FactHistoricalVisits
 from UniqueVisits as  visits
