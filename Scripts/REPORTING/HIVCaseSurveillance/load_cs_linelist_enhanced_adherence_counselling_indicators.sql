@@ -83,7 +83,8 @@ BEGIN
     left join earliest_repeat_vl_within_three_months on unsurpressed_as_of_one_year_ago.PatientKey = earliest_repeat_vl_within_three_months.PatientKey
     left join patients_at_least_one_eac_session_after_last_unsurpressed_vl on patients_at_least_one_eac_session_after_last_unsurpressed_vl.PatientKey = unsurpressed_as_of_one_year_ago.PatientKey
     )
-    select 
+    select
+        eomonth(dim_date.Date) as CohortYearMonth,
         patient.PatientPKhash,
         patient.Gender,
         age_group.DATIMAgegroup as AgeGroup,
@@ -101,4 +102,5 @@ BEGIN
     left join NDWH.Dim.DimPatient as patient on patient.Patientkey = metrics.Patientkey
     left join NDWH.Dim.DimFacility as facility on facility.FacilityKey = metrics.FacilityKey
     left join NDWH.Dim.DimAgeGroup as age_group on age_group.Age = metrics.AgeAsOfDate
+    left join NDWH.Dim.DimDate as dim_date on dim_date.DateKey = patient.DateConfirmedHIVPositiveKey
 END
