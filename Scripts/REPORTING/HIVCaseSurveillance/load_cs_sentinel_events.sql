@@ -184,6 +184,7 @@ Retained as (
     confirmed_reported_cases_and_art.PatientKey,
     Gender,
     AgeLastVisit,
+    age.DATIMAgeGroup as Agegroup,
     SiteCode,
     SDP as PartnerName,
     AgencyName,
