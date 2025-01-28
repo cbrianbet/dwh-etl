@@ -11,6 +11,7 @@ IF OBJECT_ID(N'[HIVCaseSurveillance].[dbo].[CsLinelistReportedCasesRisks]', N'U'
                 AgencyKey,
                 agegroup.DATIMAgegroup,
                 eomonth(confirmed_date.Date) as CohortYearMonth,
+                prep_enrol_date.Date as PrepEnrollmentDate,
                 case 
 					when art_date.Date < confirmed_date.Date then confirmed_date.Date
 					else art_date.Date
@@ -20,8 +21,8 @@ IF OBJECT_ID(N'[HIVCaseSurveillance].[dbo].[CsLinelistReportedCasesRisks]', N'U'
             left join NDWH.Dim.DimPatient as patient on patient.PatientKey = art.PatientKey
             left join NDWH.Dim.DimDate as confirmed_date on confirmed_date.DateKey = patient.DateConfirmedHIVPositiveKey
             left join NDWH.Dim.DimDate as art_date on art_date.DateKey = art.StartARTDateKey
-            left join NDWH.Dim.DimAgeGroup as agegroup on agegroup.AgeGroupKey=art.AgeGroupKey
-    
+            left join NDWH.Dim.DimDate as prep_enrol_date on prep_enrol_date.DateKey = patient.PrepEnrollmentDateKey
+            left join NDWH.Dim.DimAgeGroup as agegroup on agegroup.AgeGroupKey=art.AgeGroupKey  
     ),
     RiskFactors as (
         Select 
@@ -40,18 +41,6 @@ IF OBJECT_ID(N'[HIVCaseSurveillance].[dbo].[CsLinelistReportedCasesRisks]', N'U'
         NumerofSexualPartners,
         HTSHighRiskCategory
         from RiskFactors
-        where NUM=1
-    ),
-    PrepVisits as (
-        SELECT
-        PatientKey,
-          row_number() OVER (PARTITION BY Patientkey ORDER BY VisitDatekey DESC) AS NUM
-        from NDWH.Fact.FactPrepVisits
-    ),
-    LatestPrepVisits as (
-        Select 
-        PatientKey
-        from PrepVisits
         where NUM=1
     ),
     PBFWNotOnART as (
@@ -81,7 +70,7 @@ IF OBJECT_ID(N'[HIVCaseSurveillance].[dbo].[CsLinelistReportedCasesRisks]', N'U'
         HasMultiplePartners,
         NumerofSexualPartners,
         HTSHighRiskCategory,
-        case when LatestPrepVisits.PatientKey is not null then 1 else 0 End as Secoronverted,
+        case when confirmed_date.Date is not null and PrepEnrollmentDatekey is not null then 1 else 0 End as Seroconverted,
         case when AgeatDiagnosis <15 Then 1 Else 0 End as IsChild,
         case when PBFWNotOnART.patientkey is not null then 1 Else 0 end as PbfwNotOnART,
         case when InfantsNotOnProphylaxis.patientkey is not null then 1 else 0 End as InfantsNotOnProphylaxis
@@ -94,10 +83,3 @@ IF OBJECT_ID(N'[HIVCaseSurveillance].[dbo].[CsLinelistReportedCasesRisks]', N'U'
     left join LatestPrepVisits on LatestPrepVisits.PatientKey=confirmed_reported_cases_and_art.PatientKey
     left join PBFWNotOnART on PBFWNotOnART.Patientkey=confirmed_reported_cases_and_art.Patientkey
     left join InfantsNotOnProphylaxis on InfantsNotOnProphylaxis.patientkey=confirmed_reported_cases_and_art.PatientKey
-   
-    
-  
-    
-
-
-
