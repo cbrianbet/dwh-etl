@@ -1,4 +1,4 @@
-TRUNCATE TABLE ndwh.dbo.FactViralLoad_Historical;
+TRUNCATE TABLE ndwh.Fact.FactViralLoad_Historical;
 
 DECLARE @start_date DATE;
 
@@ -37,7 +37,15 @@ FETCH NEXT FROM cursor_AsOfDates INTO @as_of_date
 WHILE @@FETCH_STATUS = 0
 
 BEGIN
-WITH PatientStartedOnART As (
+
+with MFL_partner_agency_combination as (
+	select 
+		distinct MFL_Code,
+		SDP ,
+	    SDP_Agency  as Agency
+	from ODS.Care.All_EMRSites 
+),
+ PatientStartedOnART As (
 					SELECT	DISTINCT	
 					patient.PatientPKHash,
 					art.PatientPK,
@@ -51,8 +59,8 @@ WITH PatientStartedOnART As (
 					0 as VLSup,
 					@as_of_date As AsOfDate,
 					getdate() As LoadDate
-			FROM  ndwh.dbo.DimPatient patient  
-			INNER join ODS.dbo.CT_ARTPatients art 
+			FROM  ndwh.Dim.DimPatient patient  
+			INNER join ODS.Care.CT_ARTPatients art 
 			on art.PatientPKHash = patient.PatientPKHash and
 				art.SiteCode = patient.SiteCode	 and patient.voided = 0
 				),
@@ -69,7 +77,7 @@ ViralLoadOrdered As (
 						,PatientPKHash
 						,Reason
 						,@as_of_date As AsOfDate
-				from ods.dbo.Intermediate_OrderedViralLoads OrderedViralLoads
+				from ods.[Intermediate].Intermediate_OrderedViralLoads OrderedViralLoads
 					where  OrderedbyDate <=@as_of_date
 
 ),
@@ -217,7 +225,7 @@ CombineVLSupCheckAndPBFW As(
 										,b.IsPBFW
 										,0 VLSup
 					from VLValidityCheckBasedOnEligibilityAndAge a
-					left join [ODS].[dbo].[Intermediate_PregnantAndBreastFeeding] b
+					left join [ODS].[Intermediate].[Intermediate_PregnantAndBreastFeeding] b
 						on a.SiteCode = b.SiteCode and a.PatientPK = b.PatientPK 
 
 ),
@@ -301,51 +309,52 @@ Combine_PBFWListing_VLSupCheck_Final As(
 												,IsPBFW
 										from CombinedValidityCheck									
 )
-INSERT INTO ndwh.dbo.FactViralLoad_Historical(PatientKey,
+INSERT INTO ndwh.Fact.FactViralLoad_Historical(PatientKey,
 										FacilityKey,
 										AgeGroupKey,
-										CohortYearMonth,
-										CohortYear,
-										StartARTDate,
-										AgeAsOfDate,											
-										OrderedbyDate,											
-										ReportedbyDate,
+										PartnerKey,
+										StartARTDateKey,
+										AgencyKey,
+										AsOfDateKey,
+										OrderedbyDateKey,
+										ReportedbyDateKey,										
 										EligibleVL,
 										IsValidVL,
 										VLSup,
-										AsOfDate,
 										TestName,
 										TestResult,
-										Emr,
-										Project,
 										IsPBFW
 									)
 
 SELECT  Patient.PatientKey,
 		Facility.FacilityKey,
-		AgeGroup.AgeGroupKey,	
-		CohortYearMonth,
-		CohortYear,
-		StartARTDate,
-		AgeAsOfDate,
-		OrderedbyDate,
-		ReportedbyDate,
+		AgeGroup.AgeGroupKey,
+		[partner].PartnerKey,
+		StartARTDate.DateKey As StartARTDateKey,
+		agency.AgencyKey,
+		AsOfDate.DateKey as AsOfDateKey,
+		OrderedbyDate.DateKey as OrderedbyDateKey,
+		ReportedbyDate.DateKey as ReportedbyDateKey,		
 		EligibleVL,
 		IsValidVL,
 		VLSup,
-		AsOfDate,
 		TestName,
 		TestResult,
-		VLSupCheck.Emr,
-		VLSupCheck.Project ,
 		ISnull(VLSupCheck.IsPBFW,0)
 FROM Combine_PBFWListing_VLSupCheck_Final VLSupCheck
-left join NDWH.dbo.DimPatient Patient
+left join NDWH.Dim.DimPatient Patient
    on VLSupCheck.SiteCode = Patient.SiteCode and VLSupCheck.PatientPkHash = Patient.PatientPKHash
-Left join NDWH.dbo.DimFacility   Facility
+Left join NDWH.Dim.DimFacility   Facility
 	on VLSupCheck.SiteCode = Facility.MFLCode
-left join [NDWH].[dbo].[DimAgeGroup] AgeGroup
+left join [NDWH].[Dim].[DimAgeGroup] AgeGroup
      on VLSupCheck.AgeAsOfDate = AgeGroup.Age
+left join MFL_partner_agency_combination on MFL_partner_agency_combination.MFL_Code = VLSupCheck.SiteCode
+left join NDWH.Dim.DimPartner as [partner] on [partner].PartnerName = MFL_partner_agency_combination.SDP
+left join NDWH.Dim.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
+left join NDWH.Dim.DimDate as StartARTDate on StartARTDate.Date = VLSupCheck.StartARTDate
+left join NDWH.Dim.DimDate as AsOfDate on AsOfDate.Date = VLSupCheck.AsOfDate
+left join NDWH.Dim.DimDate as OrderedbyDate on OrderedbyDate.Date = VLSupCheck.OrderedbyDate
+left join NDWH.Dim.DimDate as ReportedbyDate on ReportedbyDate.Date = VLSupCheck.ReportedbyDate
 
 
 fetch next from cursor_AsOfDates into @as_of_date

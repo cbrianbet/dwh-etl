@@ -10,10 +10,8 @@ BEGIN
 			,Patient.PatientPKHash
 			,Patient.Gender
 			,Patient.DOB
-			,StartARTDate
-			,AsOfDate
-			,AgeAsOfDate
-			,[AgeGroup].DATIMAgeGroup
+			,StartARTDate.Date as StartARTDate
+			,[Date].Date as  AsOfDate
 			,YEAR(TRY_CAST(DateConfirmedHIVPositiveKey AS DATE)) As CohortYear
 			,TRY_CAST(DateConfirmedHIVPositiveKey AS DATE) As CohortYearMonth
 			,cast(DateConfirmedHIVPositiveKey as date) As OutcomeYearMonth
@@ -22,15 +20,16 @@ BEGIN
 			,IsValidVL As VLValidity
 			,VLSup As VLSuppression
 			INTO [HIVCaseSurveillance].[dbo].[CsLinelistHistoricalViralLoad]
-		FROM ndwh.dbo.FactViralLoad_Historical FactViralLoad_Hist
+		FROM ndwh.Fact.FactViralLoad_Historical FactViralLoad_Hist
 		LEFT OUTER JOIN [NDWH].[Dim].[DimFacility] Facility
 		ON FactViralLoad_Hist.FacilityKey	= Facility.FacilityKey
 		LEFT OUTER JOIN [NDWH].[Dim].[DimPatient] Patient
 		on FactViralLoad_Hist.PatientKey = Patient.PatientKey
 			LEFT OUTER JOIN [NDWH].[Dim].[DimDate] [Date]
-		ON FactViralLoad_Hist.AsOfDate = [Date].[Date]
-	LEFT OUTER JOIN [NDWH].[Dim].[DimAgeGroup] [AgeGroup]
-		ON FactViralLoad_Hist.AgeGroupKey = [AgeGroup].AgeGroupKey
+		ON FactViralLoad_Hist.AsOfDateKey = [Date].[DateKey]
+
+		LEFT OUTER JOIN [NDWH].[Dim].[DimDate] [StartARTDate]
+		ON FactViralLoad_Hist.[StartARTDateKey] = [StartARTDate].DateKey
 				where  YEAR(DateConfirmedHIVPositiveKey) <= YEAR(GETDATE())
 		
 			ORDER BY DateConfirmedHIVPositiveKey DESC;
