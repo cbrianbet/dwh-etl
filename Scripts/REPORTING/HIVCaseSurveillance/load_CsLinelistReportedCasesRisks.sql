@@ -15,12 +15,17 @@ IF OBJECT_ID(N'[HIVCaseSurveillance].[dbo].[CsLinelistReportedCasesRisks]', N'U'
 					when art_date.Date < confirmed_date.Date then confirmed_date.Date
 					else art_date.Date
 				end as StartARTDate,
-                DATEDIFF(year,patient.DOB,confirmed_date.Date) as AgeatDiagnosis
+
+                DATEDIFF(year,patient.DOB,confirmed_date.Date) as AgeatDiagnosis,
+                age.DATIMAgeGroup as AgeGroup
+
+
             from NDWH.Fact.FACTART as art 
             left join NDWH.Dim.DimPatient as patient on patient.PatientKey = art.PatientKey
             left join NDWH.Dim.DimDate as confirmed_date on confirmed_date.DateKey = patient.DateConfirmedHIVPositiveKey
             left join NDWH.Dim.DimDate as art_date on art_date.DateKey = art.StartARTDateKey
-            left join NDWH.Dim.DimAgeGroup as agegroup on agegroup.AgeGroupKey=art.AgeGroupKey
+            left join NDWH.Dim.DimAgeGroup as age on age.AgeGroupKey=art.AgeGroupKey
+
     
     ),
     RiskFactors as (
@@ -59,7 +64,7 @@ IF OBJECT_ID(N'[HIVCaseSurveillance].[dbo].[CsLinelistReportedCasesRisks]', N'U'
         Patientkey,
         startregimen,
         startartdatekey
-        from NDWH.dbo.FactART
+        from NDWH.Fact.FactART
         where ispbfwatconfirmationpositive=1 and (startartdatekey is null and startregimen is null) 
     ) , 
     InfantsNotOnProphylaxis as (
@@ -81,6 +86,9 @@ IF OBJECT_ID(N'[HIVCaseSurveillance].[dbo].[CsLinelistReportedCasesRisks]', N'U'
         HasMultiplePartners,
         NumerofSexualPartners,
         HTSHighRiskCategory,
+        County,
+        SubCounty,
+        AgeGroup,
         case when LatestPrepVisits.PatientKey is not null then 1 else 0 End as Secoronverted,
         case when AgeatDiagnosis <15 Then 1 Else 0 End as IsChild,
         case when PBFWNotOnART.patientkey is not null then 1 Else 0 end as PbfwNotOnART,

@@ -14,7 +14,8 @@ with initial_data as (
         facility.SubCounty,
         partenr.PartnerName,
         agency.AgencyName,
-        DATIMAgeGroup as Agegroup,
+        DATIMAgeGroup as AgeGroup,
+        patient.Gender,
         cast(patient.EveronART as int) as EveronART,
         elicitation.Tested
     from  [NDWH].[Fact].[FactContactElicitation] as elicitation 
@@ -37,6 +38,7 @@ select
     SubCounty,
     AgencyName,
     PartnerName,
+    Gender,
     count(FactKey) as NoElicited,
     sum(Tested) as NoTested,
     count(distinct case when EverOnART = 1 then IndexPatientKey end) as NoOfIndexLinkedToTX,
@@ -52,4 +54,5 @@ group by
    County,
    SubCounty,
    AgencyName,
-   PartnerName
+   PartnerName,
+   Gender
