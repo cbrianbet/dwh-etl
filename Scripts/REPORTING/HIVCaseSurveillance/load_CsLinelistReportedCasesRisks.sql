@@ -16,13 +16,23 @@ IF OBJECT_ID(N'[HIVCaseSurveillance].[dbo].[CsLinelistReportedCasesRisks]', N'U'
 					when art_date.Date < confirmed_date.Date then confirmed_date.Date
 					else art_date.Date
 				end as StartARTDate,
-                DATEDIFF(year,patient.DOB,confirmed_date.Date) as AgeatDiagnosis
+
+                DATEDIFF(year,patient.DOB,confirmed_date.Date) as AgeatDiagnosis,
+                age.DATIMAgeGroup as AgeGroup
+
+
             from NDWH.Fact.FACTART as art 
             left join NDWH.Dim.DimPatient as patient on patient.PatientKey = art.PatientKey
             left join NDWH.Dim.DimDate as confirmed_date on confirmed_date.DateKey = patient.DateConfirmedHIVPositiveKey
             left join NDWH.Dim.DimDate as art_date on art_date.DateKey = art.StartARTDateKey
+<<<<<<< HEAD
             left join NDWH.Dim.DimDate as prep_enrol_date on prep_enrol_date.DateKey = patient.PrepEnrollmentDateKey
             left join NDWH.Dim.DimAgeGroup as agegroup on agegroup.AgeGroupKey=art.AgeGroupKey  
+=======
+            left join NDWH.Dim.DimAgeGroup as age on age.AgeGroupKey=art.AgeGroupKey
+
+    
+>>>>>>> de73e05b8c1e8064e51906ed22efea464151a267
     ),
     RiskFactors as (
         Select 
@@ -48,7 +58,7 @@ IF OBJECT_ID(N'[HIVCaseSurveillance].[dbo].[CsLinelistReportedCasesRisks]', N'U'
         Patientkey,
         startregimen,
         startartdatekey
-        from NDWH.dbo.FactART
+        from NDWH.Fact.FactART
         where ispbfwatconfirmationpositive=1 and (startartdatekey is null and startregimen is null) 
     ) , 
     InfantsNotOnProphylaxis as (
@@ -74,7 +84,7 @@ IF OBJECT_ID(N'[HIVCaseSurveillance].[dbo].[CsLinelistReportedCasesRisks]', N'U'
         case when AgeatDiagnosis <15 Then 1 Else 0 End as IsChild,
         case when PBFWNotOnART.patientkey is not null then 1 Else 0 end as PbfwNotOnART,
         case when InfantsNotOnProphylaxis.patientkey is not null then 1 else 0 End as InfantsNotOnProphylaxis
- into [HIVCaseSurveillance].[dbo].[CsLinelistReportedCasesRisks]
+    into [HIVCaseSurveillance].[dbo].[CsLinelistReportedCasesRisks]
     from confirmed_reported_cases_and_art
     left join LatestRiskFactors as risks   on confirmed_reported_cases_and_art.PatientKey = risks.PatientKey
     left join NDWH.Dim.DimFacility as facility on facility.FacilityKey=confirmed_reported_cases_and_art.FacilityKey
