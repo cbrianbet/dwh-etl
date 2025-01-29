@@ -1,4 +1,4 @@
-if object_id(N'[HIVCaseSurveillanceEPORTING].[dbo].[CSAggregateTestedNegativePrepStart]', N'U') is not null 			
+if object_id(N'[HIVCaseSurveillance].[dbo].[CSAggregateTestedNegativePrepStart]', N'U') is not null 			
 	drop table [HIVCaseSurveillance].[dbo].[CSAggregateTestedNegativePrepStart]
 go
 
@@ -11,7 +11,7 @@ begin
             elig.HIVRiskCategory,
             elig.HtsRiskScore,
             case 
-                when patient.PrepEnrollmentDateKey is not null and datediff(month, testDate.Date, prepStart.Date) <= 3 then 1 else 0 end as IsStartedOnPrep,
+                when patient.PrepEnrollmentDateKey is not null and datediff(day, testDate.Date, prepStart.Date) <= 90 then 1 else 0 end as IsStartedOnPrep,
             patient.PatientKey,
             agegroup.DATIMAgeGroup,
             patient.Gender,
@@ -60,5 +60,5 @@ begin
         PartnerName,
         AgencyName,
         HIVRiskCategory
-        
+
 end
