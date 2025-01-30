@@ -21,9 +21,9 @@ BEGIN
             partner.PartnerName,
             agency.AgencyName,   
             eomonth(confirm_date.Date) as CohortYearMonth
-        from NDWH.[Fact].[FactViralLoad_Historical] as historical
+        from NDWH.Fact.FactViralLoad_Historical as historical
         left join NDWH.Dim.DimDate as as_of on as_of.DateKey = historical.AsOfDateKey
-        left join NDWH.Dim.DimDate as order_date on order_date.DateKey = historical.[OrderedbyDateKey]
+        left join NDWH.Dim.DimDate as order_date on order_date.DateKey = historical.OrderedbyDateKey
         left join NDWH.Dim.DimAgeGroup as age_group on age_group.AgeGroupKey = historical.AgeGroupKey
         left join NDWH.Dim.DimPartner as partner on partner.PartnerKey = historical.PartnerKey
         left join NDWH.Dim.DimAgency as agency on agency.AgencyKey = historical.AgencyKey
@@ -34,7 +34,7 @@ BEGIN
             and IsValidVL = 1 
             and VLSup = 0 
     ),
-    vl_tests_within_three_months_from_as_of_date as (
+    vl_tests_within_three_months_from_last_valid_vl_one_year_ago as (
         select 
             vl.PatientKey,
             unsurpressed_as_of_one_year_ago.AsOfDate,
@@ -65,7 +65,7 @@ BEGIN
                 else null 
             end 
         end as RepeatVLCategory
-        from vl_tests_within_three_months_from_as_of_date
+        from vl_tests_within_three_months_from_last_valid_vl_one_year_ago
         where rank = 1
     ),
     eac_session_after_last_unsurpressed_vl as (
