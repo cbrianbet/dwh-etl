@@ -3,6 +3,11 @@ if object_id(N'[HIVCaseSurveillance].[dbo].[CSAggregateTestedNegativePrepStart]'
 go
 
 begin
+    --  Accepted days between testing neg to starting prep
+    declare @DaystoStartPrEP INT = 90 ;
+
+    -- Minimum eligible age for PrEP start
+    declare @MinimumDaysToPrEPStart INT = 15 ;
 
     with source_data as (
         select 
@@ -11,7 +16,7 @@ begin
             elig.HIVRiskCategory,
             elig.HtsRiskScore,
             case 
-                when patient.PrepEnrollmentDateKey is not null and datediff(day, testDate.Date, prepStart.Date) <= 90 then 1 else 0 end as IsStartedOnPrep,
+                when patient.PrepEnrollmentDateKey is not null and datediff(day, testDate.Date, prepStart.Date) <= @DaystoStartPrEP then 1 else 0 end as IsStartedOnPrep,
             patient.PatientKey,
             agegroup.DATIMAgeGroup,
             patient.Gender,
@@ -36,7 +41,7 @@ begin
         where 
         tests.TestType = 'Initial Test' 
         and HIVRiskCategory is not null
-        and agegroup.Age >= 15 --only picking for 15+ year olds who are eligible for PrEP
+        and agegroup.Age >= @MinimumDaysToPrEPStart --only picking for 15+ year olds who are eligible for PrEP
     )
     select
         DATIMAgeGroup as AgeGroup,
