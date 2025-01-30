@@ -5,17 +5,32 @@ BEGIN
 
     with unsurpressed_as_of_one_year_ago as (
         select 
-            PatientKey,
-            FacilityKey,
+            historical. PatientKey,
             IsValidVL,
             VLSup,
             TestResult,
             TestName,
-            cast(OrderedByDate as date) as LastOrderedByDate,
-            AsOfDate,
-            AgeAsOfDate
-        from NDWH.[Fact].[FactViralLoad_Historical]
-        where datediff(month, AsOfDate, eomonth(dateadd(mm,-1,getdate()))) = 12 
+            order_date.date as LastOrderedByDate,
+            as_of.Date as AsOfDate,
+            age_group.DATIMAgeGroup as AgeGroup,
+            patient.Gender,
+            facility.FacilityName,
+            facility.County,
+            facility.SubCounty,
+            facility.MFLCode,
+            partner.PartnerName,
+            agency.AgencyName,   
+            eomonth(confirm_date.Date) as CohortYearMonth
+        from NDWH.[Fact].[FactViralLoad_Historical] as historical
+        left join NDWH.Dim.DimDate as as_of on as_of.DateKey = historical.AsOfDateKey
+        left join NDWH.Dim.DimDate as order_date on order_date.DateKey = historical.[OrderedbyDateKey]
+        left join NDWH.Dim.DimAgeGroup as age_group on age_group.AgeGroupKey = historical.AgeGroupKey
+        left join NDWH.Dim.DimPartner as partner on partner.PartnerKey = historical.PartnerKey
+        left join NDWH.Dim.DimAgency as agency on agency.AgencyKey = historical.AgencyKey
+        left join NDWH.Dim.DimFacility as facility on facility.FacilityKey = historical.FacilityKey
+        left join NDWH.Dim.DimPatient as patient on patient.PatientKey = historical.PatientKey
+        left join NDWH.Dim.DimDate as confirm_date on confirm_date.DateKey = patient.DateConfirmedHIVPositiveKey
+        where datediff(month, as_of.Date, eomonth(dateadd(mm,-1,getdate()))) = 12 
             and IsValidVL = 1 
             and VLSup = 0 
     ),
@@ -71,9 +86,16 @@ BEGIN
     ),
     metrics as (
     select 
+        unsurpressed_as_of_one_year_ago.CohortYearMonth,
         unsurpressed_as_of_one_year_ago.PatientKey,
-        unsurpressed_as_of_one_year_ago.FacilityKey,
-        unsurpressed_as_of_one_year_ago.AgeAsOfDate,
+        unsurpressed_as_of_one_year_ago.AgeGroup,
+        unsurpressed_as_of_one_year_ago.Gender,
+        unsurpressed_as_of_one_year_ago.FacilityName,
+        unsurpressed_as_of_one_year_ago.County,
+        unsurpressed_as_of_one_year_ago.SubCounty,
+        unsurpressed_as_of_one_year_ago.MFLCode,
+        unsurpressed_as_of_one_year_ago.PartnerName,
+        unsurpressed_as_of_one_year_ago.AgencyName, 
         case when unsurpressed_as_of_one_year_ago.PatientKey is not null then 1 else 0 end as IsUnsurpressedAsOfOneYearAgo,
         case when earliest_repeat_vl_within_three_months.PatientKey is null then 1 else 0 end as WithoutRepeatVLWithinThreeMonths,
         earliest_repeat_vl_within_three_months.RepeatVLCategory as RepeatVLCategory,
@@ -84,23 +106,8 @@ BEGIN
     left join patients_at_least_one_eac_session_after_last_unsurpressed_vl on patients_at_least_one_eac_session_after_last_unsurpressed_vl.PatientKey = unsurpressed_as_of_one_year_ago.PatientKey
     )
     select
-        eomonth(dim_date.Date) as CohortYearMonth,
-        patient.PatientPKhash,
-        patient.Gender,
-        age_group.DATIMAgegroup as AgeGroup,
-        facility.FacilityName,
-        facility.County,
-        facility.SubCounty,
-        facility.MFLCode,
-        IsunsurpressedAsOfOneYearAgo,
-        WithoutRepeatVLWithinThreeMonths,
-        RepeatVLCategory,
-        WithoutEACSessionAfterLastUnsurpressedVL,
-        IsSuspectedTreatmentFailure
+        *
     into HIVCaseSurveillance.dbo.CsLinelistEnhancedAdherenceCounsellingIndicators
     from metrics
-    left join NDWH.Dim.DimPatient as patient on patient.Patientkey = metrics.Patientkey
-    left join NDWH.Dim.DimFacility as facility on facility.FacilityKey = metrics.FacilityKey
-    left join NDWH.Dim.DimAgeGroup as age_group on age_group.Age = metrics.AgeAsOfDate
-    left join NDWH.Dim.DimDate as dim_date on dim_date.DateKey = patient.DateConfirmedHIVPositiveKey
+
 END
