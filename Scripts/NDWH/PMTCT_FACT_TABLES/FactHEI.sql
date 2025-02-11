@@ -201,30 +201,34 @@ Combined_MBP AS (
         PersonBPatientPk,
         PersonBPatientPkHash,
         Patient.PatientKey
-     FROM Relationships
-     left join NDWH.Dim.DimPatient as patient on patient.PatientPKHash = Relationships.PersonBPatientPkHash 
-      and patient.SiteCode = Relationships.SiteCode
+    FROM Relationships
+    LEFT JOIN NDWH.Dim.DimPatient AS patient 
+        ON patient.PatientPKHash = Relationships.PersonBPatientPkHash 
+        AND patient.SiteCode = Relationships.SiteCode
     UNION
     SELECT 
         PatientPk,
-        mbp.SiteCode,
+        MBP.SiteCode,
         PersonBPatientPk,
-        PersonBPatientPkHash,
+        PersonBPatientPkHash AS MothersPatientpkhash,
         Patient.PatientKey
-     FROM MBP
-      left join NDWH.Dim.DimPatient as patient on patient.PatientPKHash = MBP.PersonBPatientPkHash 
-      and patient.SiteCode = MBP.SiteCode
+    FROM MBP
+    LEFT JOIN NDWH.Dim.DimPatient AS patient 
+        ON patient.PatientPKHash = MBP.PersonBPatientPkHash 
+        AND patient.SiteCode = MBP.SiteCode
 ),
-MothersonART as (
+MothersonART AS (
     SELECT
-      Combined_MBP.PatientPK ,
-       Combined_MBP.SiteCode,
+        Combined_MBP.PatientPK,
+        Combined_MBP.SiteCode,
         PersonBPatientPk,
-        PersonBPatientPkHash,
-        Combined_MBP.PatientKey as MothersPatientKey,
-        case when StartARTDate is not null then 1 Else 0 End as MotherOnART 
-    from Combined_MBP
-    left join  ODS.Care.CT_ARTPatients as art on art.PatientPKHash=Combined_MBP.PersonBPatientPkHash and art.SiteCode=Combined_MBP.SiteCode
+        PersonBPatientPkHash AS MothersPatientpkhash,
+        Combined_MBP.PatientKey AS MothersPatientKey,
+        CASE WHEN StartARTDate IS NOT NULL THEN 1 ELSE 0 END AS MotherOnART 
+    FROM Combined_MBP
+    LEFT JOIN ODS.Care.CT_ARTPatients AS art 
+        ON art.PatientPKHash = Combined_MBP.PersonBPatientPkHash 
+        AND art.SiteCode = Combined_MBP.SiteCode
 )
 select
     FactKey = IDENTITY(INT, 1, 1),
