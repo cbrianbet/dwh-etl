@@ -197,17 +197,23 @@ MBP AS (
 Combined_MBP AS (
     SELECT 
         PatientPk,
-        SiteCode,
+        Relationships.SiteCode,
         PersonBPatientPk,
-        PersonBPatientPkHash
+        PersonBPatientPkHash,
+        Patient.PatientKey
      FROM Relationships
+     left join NDWH.Dim.DimPatient as patient on patient.PatientPKHash = Relationships.PersonBPatientPkHash 
+      and patient.SiteCode = Relationships.SiteCode
     UNION
     SELECT 
         PatientPk,
-        SiteCode,
+        mbp.SiteCode,
         PersonBPatientPk,
-        PersonBPatientPkHash
+        PersonBPatientPkHash,
+        Patient.PatientKey
      FROM MBP
+      left join NDWH.Dim.DimPatient as patient on patient.PatientPKHash = MBP.PersonBPatientPkHash 
+      and patient.SiteCode = MBP.SiteCode
 ),
 MothersonART as (
     SELECT
@@ -215,6 +221,7 @@ MothersonART as (
        Combined_MBP.SiteCode,
         PersonBPatientPk,
         PersonBPatientPkHash,
+        Combined_MBP.PatientKey as MothersPatientKey,
         case when StartARTDate is not null then 1 Else 0 End as MotherOnART 
     from Combined_MBP
     left join  ODS.Care.CT_ARTPatients as art on art.PatientPKHash=Combined_MBP.PersonBPatientPkHash and art.SiteCode=Combined_MBP.SiteCode
@@ -229,7 +236,7 @@ select
     DNAPCR2.DateKey as DNAPCR2DateKey,
     antiboday_date.DateKey as FinalyAntibodyDateKey,
     age_group.AgeGroupKey,
-    Combined_MBP.PersonBPatientPkHash as MothersPatientPkHash,
+    MothersPatientKey,
     case 
         when tested_at_6wks_first_contact.age_in_weeks_at_DNAPCR1Date is not null then 1 
         else 0
