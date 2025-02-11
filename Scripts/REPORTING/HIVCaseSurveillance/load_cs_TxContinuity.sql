@@ -10,8 +10,9 @@ BEGIN
 			,Patient.PatientPKHash
 			,Patient.Gender
 			,Patient.DOB
-			,[AgeGroup].DATIMAgeGroup
+			,[AgeGroup].DATIMAgeGroup as AgeGroup
 			,[Partner].PartnerName
+        ,Agency.AgencyName
 			,case 
 				when ARTOutcome.ARTOutcomeDescription in ('LOSS TO FOLLOW UP','UNDOCUMENTED LOSS') Then 'IIT'
 				when ARTOutcome.ARTOutcomeDescription in ('DEAD') Then 'MORTALITY'
@@ -23,20 +24,20 @@ BEGIN
 			,cast(asofdatekey as datetime2) As OutcomeYearMonth
 			,COUNT(1) AS NoOfClients
 			INTO [HIVCaseSurveillance].[dbo].[CsTxContinuity]
-		FROM [NDWH].[dbo].[FactARTHistory] FactARTHistory
-		LEFT OUTER JOIN [NDWH].[dbo].[DimFacility] Facility
+		FROM [NDWH].[Fact].[FactARTHistory] FactARTHistory
+		LEFT OUTER JOIN [NDWH].[Dim].[DimFacility] Facility
 		ON FactARTHistory.FacilityKey	= Facility.FacilityKey
-		LEFT OUTER JOIN [NDWH].[dbo].[DimPatient] Patient
+		LEFT OUTER JOIN [NDWH].[Dim].[DimPatient] Patient
 		on FactARTHistory.PatientKey = Patient.PatientKey
-	LEFT OUTER JOIN [NDWH].[dbo].[DimPartner] [Partner]
+	LEFT OUTER JOIN [NDWH].[Dim].[DimPartner] [Partner]
 		on FactARTHistory.PartnerKey = [Partner].PartnerKey
-	LEFT OUTER JOIN [NDWH].[dbo].[DimAgency] Agency
+	LEFT OUTER JOIN [NDWH].[Dim].[DimAgency] Agency
 		on FactARTHistory.AgencyKey = Agency.AgencyKey
-	LEFT OUTER JOIN [NDWH].[dbo].[DimARTOutcome] ARTOutcome
+	LEFT OUTER JOIN [NDWH].[Dim].[DimARTOutcome] ARTOutcome
 		on FactARTHistory.ARTOutcomeKey = ARTOutcome.ARTOutcomeKey
-	LEFT OUTER JOIN [NDWH].[dbo].[DimDate] [Date]
+	LEFT OUTER JOIN [NDWH].[Dim].[DimDate] [Date]
 		ON FactARTHistory.AsOfDateKey = [Date].[Date]
-	LEFT OUTER JOIN [NDWH].[dbo].[DimAgeGroup] [AgeGroup]
+	LEFT OUTER JOIN [NDWH].[Dim].[DimAgeGroup] [AgeGroup]
 		ON FactARTHistory.AgeGroup = [AgeGroup].DATIMAgeGroup
 		WHERE Facility.MFLCode IS NOT NULL AND FactARTHistory.ARTOutcomeKey in (2,3,6,8) -- MORTALITY{2="DEAD"},Txcurr{6="ACTIVE},IIT{8=UNDOCUMENTED LOSS" 3="LOSS TO FOLLOW UP"}
             AND YEAR(AsOfDateKey) <= YEAR(GETDATE())
@@ -48,6 +49,7 @@ BEGIN
 				,Patient.Gender
 				,Patient.DOB
 				,[Partner].PartnerName
+                ,Agency.AgencyName
 				,ARTOutcome.ARTOutcomeDescription
 				,asofdatekey
 				,DateConfirmedHIVPositiveKey
