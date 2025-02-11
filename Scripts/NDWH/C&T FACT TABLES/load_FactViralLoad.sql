@@ -307,10 +307,11 @@ RepeatVlUnSupp as (Select
     where  try_Cast(Replace(TestResult,',','') AS FLOAT) >= 200.00 
  ),
  pbfw_clients as (
-		select 
-	 		pbfw.SiteCode,
-			pbfw.PatientPK
-		from ODS.[Intermediate].Intermediate_Pbfw as pbfw
+	select  
+		distinct PatientPK,
+		SiteCode
+	from ODS.[Intermediate].Intermediate_PregnantAndBreastFeeding 
+	where AsOfDate = (select max(AsOfDate) from ODS.[Intermediate].Intermediate_PregnantAndBreastFeeding)
  ),
 	combined_viral_load_dataset as (
 		select
