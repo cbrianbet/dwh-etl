@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[REPORTING].[dbo].[CSAggregateHTSRiskScoresLastThreeMonths]', N'U') IS NOT NULL 			
-	DROP TABLE [REPORTING].[dbo].[CSAggregateHTSRiskScoresLastThreeMonths]
+IF OBJECT_ID(N'[HIVCaseSurveillance].[dbo].[CSAggregateHTSRiskScoresLastThreeMonths]', N'U') IS NOT NULL 			
+	DROP TABLE [HIVCaseSurveillance].[dbo].[CSAggregateHTSRiskScoresLastThreeMonths]
 GO
 
 BEGIN
