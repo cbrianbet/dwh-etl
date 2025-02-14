@@ -198,8 +198,7 @@ Combined_MBP AS (
     SELECT 
         PatientPk,
         Relationships.SiteCode,
-        PersonBPatientPk,
-        PersonBPatientPkHash,
+        PersonBPatientPkHash AS MothersPatientpkhash,
         Patient.PatientKey
     FROM Relationships
     LEFT JOIN NDWH.Dim.DimPatient AS patient 
@@ -209,7 +208,6 @@ Combined_MBP AS (
     SELECT 
         PatientPk,
         MBP.SiteCode,
-        PersonBPatientPk,
         PersonBPatientPkHash AS MothersPatientpkhash,
         Patient.PatientKey
     FROM MBP
@@ -221,13 +219,12 @@ MothersonART AS (
     SELECT
         Combined_MBP.PatientPK,
         Combined_MBP.SiteCode,
-        PersonBPatientPk,
-        PersonBPatientPkHash AS MothersPatientpkhash,
+       MothersPatientpkhash,
         Combined_MBP.PatientKey AS MothersPatientKey,
         CASE WHEN StartARTDate IS NOT NULL THEN 1 ELSE 0 END AS MotherOnART 
     FROM Combined_MBP
     LEFT JOIN ODS.Care.CT_ARTPatients AS art 
-        ON art.PatientPKHash = Combined_MBP.PersonBPatientPkHash 
+        ON art.PatientPKHash = Combined_MBP.MothersPatientpkhash 
         AND art.SiteCode = Combined_MBP.SiteCode
 )
 select
