@@ -197,27 +197,35 @@ MBP AS (
 Combined_MBP AS (
     SELECT 
         PatientPk,
-        SiteCode,
-        PersonBPatientPk,
-        PersonBPatientPkHash
-     FROM Relationships
+        Relationships.SiteCode,
+        PersonBPatientPkHash AS MothersPatientpkhash,
+        Patient.PatientKey
+    FROM Relationships
+    LEFT JOIN NDWH.Dim.DimPatient AS patient 
+        ON patient.PatientPKHash = Relationships.PersonBPatientPkHash 
+        AND patient.SiteCode = Relationships.SiteCode
     UNION
     SELECT 
         PatientPk,
-        SiteCode,
-        PersonBPatientPk,
-        PersonBPatientPkHash
-     FROM MBP
+        MBP.SiteCode,
+        PersonBPatientPkHash AS MothersPatientpkhash,
+        Patient.PatientKey
+    FROM MBP
+    LEFT JOIN NDWH.Dim.DimPatient AS patient 
+        ON patient.PatientPKHash = MBP.PersonBPatientPkHash 
+        AND patient.SiteCode = MBP.SiteCode
 ),
-MothersonART as (
+MothersonART AS (
     SELECT
-      Combined_MBP.PatientPK ,
-       Combined_MBP.SiteCode,
-        PersonBPatientPk,
-        PersonBPatientPkHash,
-        case when StartARTDate is not null then 1 Else 0 End as MotherOnART 
-    from Combined_MBP
-    left join  ODS.Care.CT_ARTPatients as art on art.PatientPKHash=Combined_MBP.PersonBPatientPkHash and art.SiteCode=Combined_MBP.SiteCode
+        Combined_MBP.PatientPK,
+        Combined_MBP.SiteCode,
+       MothersPatientpkhash,
+        Combined_MBP.PatientKey AS MothersPatientKey,
+        CASE WHEN StartARTDate IS NOT NULL THEN 1 ELSE 0 END AS MotherOnART 
+    FROM Combined_MBP
+    LEFT JOIN ODS.Care.CT_ARTPatients AS art 
+        ON art.PatientPKHash = Combined_MBP.MothersPatientpkhash 
+        AND art.SiteCode = Combined_MBP.SiteCode
 )
 select
     FactKey = IDENTITY(INT, 1, 1),
@@ -229,7 +237,7 @@ select
     DNAPCR2.DateKey as DNAPCR2DateKey,
     antiboday_date.DateKey as FinalyAntibodyDateKey,
     age_group.AgeGroupKey,
-    Combined_MBP.PersonBPatientPkHash as MothersPatientPkHash,
+    MothersPatientKey,
     case 
         when tested_at_6wks_first_contact.age_in_weeks_at_DNAPCR1Date is not null then 1 
         else 0
