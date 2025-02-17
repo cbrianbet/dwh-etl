@@ -1,4 +1,3 @@
-
 IF OBJECT_ID(N'[HIVCaseSurveillance].[dbo].[CsLinelistReportedCasesRisks]', N'U') IS NOT NULL 
 	DROP TABLE [HIVCaseSurveillance].[dbo].[CsLinelistReportedCasesRisks];
     with confirmed_reported_cases_and_art as (
@@ -65,7 +64,7 @@ IF OBJECT_ID(N'[HIVCaseSurveillance].[dbo].[CsLinelistReportedCasesRisks]', N'U'
         confirmed_reported_cases_and_art.PatientKey,
         Gender,
         AgeLastVisit,
-        DATIMAgeGroup as Agegroup,
+        DATIMAgeGroup as AgeGroup,
         FacilityName,
         PartnerName,
         AgencyName,
