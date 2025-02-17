@@ -1,10 +1,8 @@
-
-
 IF OBJECT_ID(N'[ODS].[lkp].[lkp_regimen]', N'U') IS NOT NULL 
 	DROP TABLE [ODS].[lkp].[lkp_regimen];
 BEGIN
 		-- create table statement
-		CREATE TABLE [ODS].[lkp].[lkp_regimen]
+		CREATE TABLE [ODS].[lkp].[lkp_regimen](
 			source_name VARCHAR(700) NOT NULL PRIMARY KEY WITH (IGNORE_DUP_KEY = ON),
 			target_name VARCHAR(700) NOT NULL,
 			date_created DATE NOT NULL
@@ -3342,7 +3340,6 @@ BEGIN
 		INSERT INTO ODS.lkp.lkp_regimen VALUES('Anyother1stlinePaediatricregimens','Other',GETDATE())
 		INSERT INTO ODS.lkp.lkp_regimen VALUES('Anyother2ndlineAdultregimens','Other',GETDATE())
 		INSERT INTO ODS.lkp.lkp_regimen VALUES('3TC + TDF + DTG', '3TC+DTG+TDF', GETDATE())
-=======
 		INSERT INTO ODS.[lkp].lkp_regimen VALUES('LAMIVUDINE-EFAVIRENZ-LOPINAVIR-RITONAVIR','3TC+EFV+LPV/r',GETDATE())
 		INSERT INTO ODS.[lkp].lkp_regimen VALUES('LAMIVUDINE-EFAVIRENZ-NEVIRAPINE','3TC+EFV+NVP',GETDATE())
 		INSERT INTO ODS.[lkp].lkp_regimen VALUES('LAMIVUDINE-EFAVIRENZ-NEVIRAPINE-ABACAVIR','3TC+ABC+EFV+NVP',GETDATE())

@@ -104,7 +104,6 @@ latest_fp_method as (
 		and FamilyPlanningMethod <> ''
 	WHERE  VISITS.VOIDED=0
 ),
-
 latest_breastfeeding as (
 	select
 		distinct visits.PatientPK,  
@@ -161,7 +160,28 @@ latest_Who as (
 		and Screening.VisitDate = last_visit.LastVisitDate
 		and Screening.VisitID = last_visit.visitID
 	where 	Screening.NUM=1
- )
+ ),
+ eac as (
+    SELECT 
+        Row_number()
+                OVER (
+                Partition BY Sitecode, Patientpk
+                ORDER BY Visitdate DESC) as num,
+        Patientpkhash,
+        Sitecode,
+        Patientpk,
+        Visitdate
+    FROM Ods.Care.Ct_enhancedadherencecounselling 
+),
+latest_EAC_session as (
+    select 
+        Eac1.Patientpkhash,
+        Eac1.Sitecode,
+        Eac1.Patientpk,
+        VisitDate
+    from eac AS Eac1
+    where num = 1
+)
 	select 
 		patient.PatientPKHash,
         patient.PatientPK,
@@ -182,6 +202,7 @@ latest_Who as (
         latest_TBScreening.OnIPT,
         latest_TBScreening.StartIPT,
         latest_TBScreening.EverOnIPT,
+		latest_EAC_session.VisitDate as LastEACSessionDate,
         cast(getdate() as date) as LoadDate
         into ODS.[intermediate].intermediate_LatestObs
 	from ODS.Care.CT_Patient as patient
@@ -204,7 +225,8 @@ latest_Who as (
     left join latest_breastfeeding on latest_breastfeeding.PatientPK=patient.PatientPK
         and latest_breastfeeding.Sitecode=patient.SiteCode
     left join latest_Who on latest_Who.PatientPK=patient.PatientPK and latest_Who.Sitecode=patient.Sitecode
-    left join latest_TBScreening on latest_TBScreening.PatientPK=patient.PatientPK and latest_TBScreening.SiteCode=patient.SiteCode
-    Where patient.voided = 0
-END
+    left join latest_TBScreening on latest_TBScreening.PatientPK = patient.PatientPK and latest_TBScreening.SiteCode = patient.SiteCode
+    left join latest_EAC_session on latest_EAC_session.PatientPK = patient.PatientPK and latest_EAC_session.SiteCode = patient.SiteCode
+	Where patient.voided = 0
 
+END

@@ -20,17 +20,17 @@ WITH Recentdata AS (
         Partnername as Partner,
         Agencyname AS Agency
     FROM 
-        Ndwh.Dbo.Factvisits AS Visits
+        Ndwh.Fact.Factvisits AS Visits
     LEFT JOIN 
-        Ndwh.Dbo.Factvllasttwoyears AS Vl ON Visits.Patientkey = Vl.Patientkey AND CAST(OrderedbyDateKey AS DATE) >= EOMONTH(DATEADD(MONTH, -12, GETDATE()))
+        Ndwh.Fact.Factvllasttwoyears AS Vl ON Visits.Patientkey = Vl.Patientkey AND CAST(OrderedbyDateKey AS DATE) >= EOMONTH(DATEADD(MONTH, -12, GETDATE()))
     INNER JOIN 
-        Ndwh.Dbo.Dimpatient AS Pat ON Pat.Patientkey = Visits.Patientkey
+        Ndwh.Dim.Dimpatient AS Pat ON Pat.Patientkey = Visits.Patientkey
     LEFT JOIN 
-        Ndwh.Dbo.Dimdate AS Orderedbydate ON Orderedbydate.Datekey = Vl.Orderedbydatekey
+        Ndwh.Dim.Dimdate AS Orderedbydate ON Orderedbydate.Datekey = Vl.Orderedbydatekey
     LEFT JOIN 
-        Ndwh.Dbo.Dimfacility AS Fac ON Fac.Facilitykey = Visits.Facilitykey
-LEFT JOIN  Ndwh.Dbo.Dimpartner AS Partner ON Partner.PartnerKey = visits.PartnerKey
-LEFT JOIN Ndwh.Dbo.Dimagency AS Agency ON Agency.AgencyKey = Visits.AgencyKey
+        Ndwh.Dim.Dimfacility AS Fac ON Fac.Facilitykey = Visits.Facilitykey
+LEFT JOIN  Ndwh.Dim.Dimpartner AS Partner ON Partner.PartnerKey = visits.PartnerKey
+LEFT JOIN Ndwh.Dim.Dimagency AS Agency ON Agency.AgencyKey = Visits.AgencyKey
    
    
 ),
@@ -52,13 +52,13 @@ Invalidity_for_vl AS (
     FROM 
         Recentdata AS Recent
     LEFT JOIN 
-        Ndwh.Dbo.Factart AS Art ON Art.Patientkey = Recent.Patientkey
+        Ndwh.Fact.Factart AS Art ON Art.Patientkey = Recent.Patientkey
     LEFT JOIN 
-        Ndwh.Dbo.Dimdate AS Startartdate ON Startartdate.Datekey = Art.Startartdatekey
+        Ndwh.Dim.Dimdate AS Startartdate ON Startartdate.Datekey = Art.Startartdatekey
     INNER JOIN 
-        Ndwh.Dbo.Dimpatient AS Pat ON Pat.PatientKey = Recent.PatientKey AND Pat.Sitecode = Recent.Mflcode
+        Ndwh.Dim.Dimpatient AS Pat ON Pat.PatientKey = Recent.PatientKey AND Pat.Sitecode = Recent.Mflcode
     LEFT JOIN 
-        Ndwh.Dbo.Dimdate AS Orderedbydate ON Orderedbydate.Datekey = recent.Orderedbydate
+        Ndwh.Dim.Dimdate AS Orderedbydate ON Orderedbydate.Datekey = recent.Orderedbydate
 
     GROUP BY 
         Pat.Patientkey,
@@ -84,11 +84,11 @@ DueAndDoneVL AS (
     FROM 
         Recentdata AS visits
     LEFT JOIN 
-        Ndwh.Dbo.Factart AS Art ON Art.Patientkey = visits.Patientkey
+        Ndwh.Fact.Factart AS Art ON Art.Patientkey = visits.Patientkey
     LEFT JOIN 
-        Ndwh.Dbo.Factvllasttwoyears AS vls ON visits.Patientkey = vls.Patientkey
+        Ndwh.Fact.Factvllasttwoyears AS vls ON visits.Patientkey = vls.Patientkey
     LEFT JOIN 
-        NDWH.Dbo.Dimdate AS OrderedDate ON OrderedDate.Datekey = vls.Orderedbydatekey
+        NDWH.Dim.Dimdate AS OrderedDate ON OrderedDate.Datekey = vls.Orderedbydatekey
     WHERE 
         OrderedDate.Date IS NOT NULL AND 
         visits.Visitdate BETWEEN DATEADD(MONTH, -12, visits.Visitdate) AND visits.Visitdate
@@ -116,11 +116,11 @@ SELECT
     HadVLDone.IsUnsuppressed
 INTO HIVCaseSurveillance.Dbo.CsLinelistMissedOpportunitiesVlGap
 FROM Recentdata AS HadVLDone
-Left  JOIN  Ndwh.Dbo.Dimpatient AS Pat ON Pat.Patientkey = HadVLDone.Patientkey
-LEFT JOIN  Ndwh.Dbo.Dimagegroup AS Agegroup ON Agegroup.Agegroupkey = DATEDIFF(YEAR, Pat.Dob, HadVLDone.AsOfDate)
-LEFT JOIN Ndwh.Dbo.Dimfacility AS Fac ON Fac.Facilitykey = HadVLDone.FacilityKey
-LEFT JOIN  Ndwh.Dbo.Dimpartner AS Partner ON Partner.PartnerKey = HadVLDone.Partner
-LEFT JOIN Ndwh.Dbo.Dimagency AS Agency ON Agency.AgencyKey = HadVLDone.Agency
+Left  JOIN  Ndwh.Dim.Dimpatient AS Pat ON Pat.Patientkey = HadVLDone.Patientkey
+LEFT JOIN  Ndwh.Dim.Dimagegroup AS Agegroup ON Agegroup.Agegroupkey = DATEDIFF(YEAR, Pat.Dob, HadVLDone.AsOfDate)
+LEFT JOIN Ndwh.Dim.Dimfacility AS Fac ON Fac.Facilitykey = HadVLDone.FacilityKey
+LEFT JOIN  Ndwh.Dim.Dimpartner AS Partner ON Partner.PartnerKey = HadVLDone.Partner
+LEFT JOIN Ndwh.Dim.Dimagency AS Agency ON Agency.AgencyKey = HadVLDone.Agency
 LEFT JOIN Invalidity_for_vl AS Invalidity ON HadVLDone.Patientkey = Invalidity.Patientkey AND HadVLDone.VisitDate = Invalidity.VisitDate
 LEFT JOIN DueAndDoneVL ON DueAndDoneVL.PatientKey = HadVLDone.PatientKey AND DueAndDoneVL.Visitdate = HadVLDone.Visitdate
-LEFT JOIN Ndwh.Dbo.Dimdate AS Dateconfirmed ON Dateconfirmed.Datekey = Pat.Dateconfirmedhivpositivekey
+LEFT JOIN Ndwh.Dim.Dimdate AS Dateconfirmed ON Dateconfirmed.Datekey = Pat.Dateconfirmedhivpositivekey
