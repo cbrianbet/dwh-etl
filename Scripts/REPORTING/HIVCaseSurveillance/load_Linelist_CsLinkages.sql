@@ -1,0 +1,132 @@
+If Object_id(N'[HIVCaseSurveillance].[dbo].[CsLinkage]', N'U') Is Not Null
+  Drop Table [Hivcasesurveillance].[dbo].[Cslinkage];
+
+With Confirmed_reported_cases_and_art
+     As (Select Ctpatients.Patientkey,
+                Patient.Gender,
+                Ctpatients.Agelastvisit,
+                fac.MFLCode,
+                Partner.PartnerName,
+                Agency.AgencyName,
+                Ctpatients.Agegroupkey,
+                Case
+                  When Confirmed_date.Date Is Not Null Then 1
+                  Else 0
+                End                                              As
+                NewCaseReported,
+                Case
+                  When Art_date.Date Is Not Null Then 1
+                  Else 0
+                End                                              As LinkedToART,
+                Case
+                  When Art_date.Date Is Null Then 1
+                  Else 0
+                End                                              As
+                NotLinkedOnART,
+                Confirmed_date.Date                              As
+                   DateConfirmedPositive,
+                Eomonth(Confirmed_date.Date)                     As
+                CohortYearMonth,
+                Case
+                  When Art_date.Date < Confirmed_date.Date Then
+                  Confirmed_date.Date
+                  Else Art_date.Date
+                End                                              As StartARTDate
+                ,
+                Datediff(Year, Patient.Dob,
+                Confirmed_date.Date) As AgeatDiagnosis,
+                Case
+                  When Datediff(Day, Confirmed_date.Date, Art_date.Date) = 0
+                Then
+                  'Same Day'
+                  When Datediff(Day, Confirmed_date.Date, Art_date.Date) Between
+                       1
+                       And 7
+                   Then
+                  '1 to 7 Days'
+                  When Datediff(Day, Confirmed_date.Date, Art_date.Date) Between
+                       8
+                       And
+                       14 Then
+                  '8 to 14 Days'
+                  When Datediff(Day, Confirmed_date.Date, Art_date.Date) > 14
+                       And Timetoartdiagnosis Is Not Null Then '> 14 Days'
+                  Else 'Missing'
+                End                                              As
+                   TimeToARTDiagnosis_Grp,
+                Case
+                  When Disclosure Is Not Null Then 1
+                  Else 0
+                End                                              As Disclosure,
+                Adherence,
+                Baselinevloutcomes,
+                County,
+                SubCounty
+                
+         From   
+         NDWH.Fact.FactART As Ctpatients
+               
+                Left Join Ndwh.Dim.Dimpatient As Patient
+                       On Patient.Patientkey = Ctpatients.Patientkey
+                Left Join Ndwh.Dim.Dimdate As Confirmed_date
+                       On Confirmed_date.Datekey =
+                          Patient.Dateconfirmedhivpositivekey
+                Left Join Ndwh.Dim.Dimdate As Art_date
+                       On Art_date.Datekey = Ctpatients.Startartdatekey
+                Left Join Ndwh.Dim.Dimagegroup Age
+                       On Age.Agegroupkey = Ctpatients.Agegroupkey
+                Left Join Ndwh.Dim.DimPartner as Partner
+                       On Partner.PartnerKey = Ctpatients.PartnerKey
+                Left Join Ndwh.Dim.DimAgency as Agency
+                       On Agency.AgencyKey = Ctpatients.AgencyKey
+                 Left Join Ndwh.Dim.DimFacility as fac
+                       On fac.FacilityKey = Ctpatients.FacilityKey
+                       
+                       
+                       ),
+     Baselinecd4s
+     As (Select Patientkey,
+                Baselinecd4,
+                Baselinecd4date
+         From   Ndwh.Fact.Factcd4),
+     Baselinewho
+     As (Select Patientkey,
+                Whostageatart,
+                Ageatartstart
+         From   Ndwh.Fact.Factartbaselines)
+Select Confirmed_reported_cases_and_art.Patientkey,
+       Gender,
+       Agelastvisit,
+       MFLCode,
+       PartnerName,
+       AgencyName,
+       County,
+       SubCounty,
+       Newcasereported,
+       Linkedtoart,
+       Notlinkedonart,
+       Dateconfirmedpositive,
+       Cohortyearmonth,
+       Startartdate,
+       Ageatdiagnosis,
+       Timetoartdiagnosis_grp,
+       Disclosure,
+       Case
+         When Baselinecd4 Is Not Null Then 1
+         Else 0
+       End               As WithBaselineCD4,
+       Whostageatart,
+       Ageatartstart,
+       Age.Datimagegroup As AgeGroup,
+       Adherence,
+      Baselinevloutcomes
+Into   [Hivcasesurveillance].[Dbo].[Cslinkage]
+From   Confirmed_reported_cases_and_art
+       Left Join Baselinecd4s
+              On Baselinecd4s.Patientkey =
+Confirmed_reported_cases_and_art.Patientkey
+       Left Join Baselinewho
+              On Baselinewho.Patientkey =
+Confirmed_reported_cases_and_art.Patientkey
+       Left Join Ndwh.Dim.Dimagegroup Age
+              On Age.Agegroupkey = Confirmed_reported_cases_and_art.Agegroupkey 

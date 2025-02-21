@@ -1,11 +1,11 @@
-MERGE [NDWH].[dbo].[DimHTSTraceType] AS a
+MERGE [NDWH].[Dim].[DimHTSTraceType] AS a
 		USING	(	SELECT DISTINCT TracingType AS TraceType 
-					FROM ODS.dbo.HTS_ClientTracing
+					FROM ODS.HTS.HTS_ClientTracing
 					
 					UNION
 
 					SELECT DISTINCT TraceType 
-					FROM ODS.dbo.HTS_PartnerTracings
+					FROM ODS.HTS.HTS_PartnerTracings
 				) AS b 
 						ON(
 							a.TraceType = b.TraceType

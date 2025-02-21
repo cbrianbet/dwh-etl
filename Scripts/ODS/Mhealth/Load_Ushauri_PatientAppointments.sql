@@ -1,6 +1,6 @@
 BEGIN
 
-			MERGE [ODS].[dbo].[Ushauri_PatientAppointments] AS a
+			MERGE [ODS].[Mhealth].[Mhealth_Ushauri_PatientAppointments] AS a
 				USING(SELECT Distinct
 						PatientPK,Null As PatientPKHash,SiteCode,SiteType,PatientID,Null As PatientIDHash, NUPI,PartnerName,FacilityID,FacilityName,
 						DOB_Date As DOB,Gender,MaritalStatus,PatientResidentCounty,PatientResidentLocation,PatientResidentSubCounty,
@@ -13,22 +13,22 @@ BEGIN
 						TwoWeekSMSDeliveryFailureReason,OneWeekSMSSent,OneWeekSMSSendDate_Date As OneWeekSMSSendDate,OneWeekSMSDeliveryStatus,
 						OneWeekSMSDeliveryFailureReason,OneDaySMSSent,OneDaySMSSendDate_Date As OneDaySMSSendDate,OneDaySMSDeliveryStatus,OneDaySMSDeliveryFailureReason,
 						MissedAppointmentSMSSent,MissedAppointmentSMSSendDate_Date As MissedAppointmentSMSSendDate,MissedAppointmentSMSDeliveryStatus,MissedAppointmentSMSDeliveryFailureReason,
-						TracingCalls,TracingSMS,TracingHomeVisits,TracingOutcome,TracingOutcomeDate_Date As TracingOutcomeDate,DateReturnedToCare_Date As DateReturnedToCare,DaysDefaulted
+						TracingCost,TracingOutcome,TracingOutcomeDate_Date As TracingOutcomeDate,DateReturnedToCare_Date As DateReturnedToCare,DaysDefaulted
 					FROM [mhealthCentral].[dbo].[CT_PatientAppointments](NoLock) P
-					) AS b	
+					) AS b
 						ON(
-						 a.SiteCode = b.SiteCode	
+						 a.SiteCode = b.SiteCode
 						and a.[AppointmentID] = b.[AppointmentID]
 						)
-					
-					WHEN NOT MATCHED THEN 
-						INSERT([UshauriPatientPK],PatientPKHash,SiteCode,SiteType,PatientID,PatientIDHash,NUPI,PartnerName,FacilityID,FacilityName,DOB,Gender,MaritalStatus,PatientResidentCounty,PatientResidentLocation,PatientResidentSubCounty,PatientResidentSubLocation,PatientResidentVillage,PatientResidentWard,RegistrationDate,RegistrationAtCCC,RegistrationAtPMTCT,RegistrationAtTBClinic,StatusAtCCC,StatusAtPMTCT,StatusAtTBClinic,AgeAtAppointment,AppointmentID,AppointmentDate,AppointmentType,AppointmentStatus,EntryPoint,VisitType,DateAttended,ConsentForSMS,SMSLanguage,SMSTargetGroup,SMSPreferredSendTime,FourWeekSMSSent,FourWeekSMSSendDate,FourWeekSMSDeliveryStatus,FourWeekSMSDeliveryFailureReason,ThreeWeekSMSSent,ThreeWeekSMSSendDate,ThreeWeekSMSDeliveryStatus,ThreeWeekSMSDeliveryFailureReason,TwoWeekSMSSent,TwoWeekSMSSendDate,TwoWeekSMSDeliveryStatus,TwoWeekSMSDeliveryFailureReason,OneWeekSMSSent,OneWeekSMSSendDate,OneWeekSMSDeliveryStatus,OneWeekSMSDeliveryFailureReason,OneDaySMSSent,OneDaySMSSendDate,OneDaySMSDeliveryStatus,OneDaySMSDeliveryFailureReason,MissedAppointmentSMSSent,MissedAppointmentSMSSendDate,MissedAppointmentSMSDeliveryStatus,MissedAppointmentSMSDeliveryFailureReason,TracingCalls,TracingSMS,TracingHomeVisits,TracingOutcome,TracingOutcomeDate,DateReturnedToCare,DaysDefaulted,LoadDate) 
-						VALUES(PatientPK,PatientPKHash,SiteCode,SiteType,PatientID,PatientIDHash,NUPI,PartnerName,FacilityID,FacilityName,DOB,Gender,MaritalStatus,PatientResidentCounty,PatientResidentLocation,PatientResidentSubCounty,PatientResidentSubLocation,PatientResidentVillage,PatientResidentWard,RegistrationDate,RegistrationAtCCC,RegistrationAtPMTCT,RegistrationAtTBClinic,StatusAtCCC,StatusAtPMTCT,StatusAtTBClinic,AgeAtAppointment,AppointmentID,AppointmentDate,AppointmentType,AppointmentStatus,EntryPoint,VisitType,DateAttended,ConsentForSMS,SMSLanguage,SMSTargetGroup,SMSPreferredSendTime,FourWeekSMSSent,FourWeekSMSSendDate,FourWeekSMSDeliveryStatus,FourWeekSMSDeliveryFailureReason,ThreeWeekSMSSent,ThreeWeekSMSSendDate,ThreeWeekSMSDeliveryStatus,ThreeWeekSMSDeliveryFailureReason,TwoWeekSMSSent,TwoWeekSMSSendDate,TwoWeekSMSDeliveryStatus,TwoWeekSMSDeliveryFailureReason,OneWeekSMSSent,OneWeekSMSSendDate,OneWeekSMSDeliveryStatus,OneWeekSMSDeliveryFailureReason,OneDaySMSSent,OneDaySMSSendDate,OneDaySMSDeliveryStatus,OneDaySMSDeliveryFailureReason,MissedAppointmentSMSSent,MissedAppointmentSMSSendDate,MissedAppointmentSMSDeliveryStatus,MissedAppointmentSMSDeliveryFailureReason,TracingCalls,TracingSMS,TracingHomeVisits,TracingOutcome,TracingOutcomeDate,DateReturnedToCare,DaysDefaulted,Getdate())
-				
+
+					WHEN NOT MATCHED THEN
+						INSERT([UshauriPatientPK],PatientPKHash,SiteCode,SiteType,PatientID,PatientIDHash,NUPI,PartnerName,FacilityID,FacilityName,DOB,Gender,MaritalStatus,PatientResidentCounty,PatientResidentLocation,PatientResidentSubCounty,PatientResidentSubLocation,PatientResidentVillage,PatientResidentWard,RegistrationDate,RegistrationAtCCC,RegistrationAtPMTCT,RegistrationAtTBClinic,StatusAtCCC,StatusAtPMTCT,StatusAtTBClinic,AgeAtAppointment,AppointmentID,AppointmentDate,AppointmentType,AppointmentStatus,EntryPoint,VisitType,DateAttended,ConsentForSMS,SMSLanguage,SMSTargetGroup,SMSPreferredSendTime,FourWeekSMSSent,FourWeekSMSSendDate,FourWeekSMSDeliveryStatus,FourWeekSMSDeliveryFailureReason,ThreeWeekSMSSent,ThreeWeekSMSSendDate,ThreeWeekSMSDeliveryStatus,ThreeWeekSMSDeliveryFailureReason,TwoWeekSMSSent,TwoWeekSMSSendDate,TwoWeekSMSDeliveryStatus,TwoWeekSMSDeliveryFailureReason,OneWeekSMSSent,OneWeekSMSSendDate,OneWeekSMSDeliveryStatus,OneWeekSMSDeliveryFailureReason,OneDaySMSSent,OneDaySMSSendDate,OneDaySMSDeliveryStatus,OneDaySMSDeliveryFailureReason,MissedAppointmentSMSSent,MissedAppointmentSMSSendDate,MissedAppointmentSMSDeliveryStatus,MissedAppointmentSMSDeliveryFailureReason,TracingOutCost,TracingOutcome,TracingOutcomeDate,DateReturnedToCare,DaysDefaulted,LoadDate)
+						VALUES(PatientPK,PatientPKHash,SiteCode,SiteType,PatientID,PatientIDHash,NUPI,PartnerName,FacilityID,FacilityName,DOB,Gender,MaritalStatus,PatientResidentCounty,PatientResidentLocation,PatientResidentSubCounty,PatientResidentSubLocation,PatientResidentVillage,PatientResidentWard,RegistrationDate,RegistrationAtCCC,RegistrationAtPMTCT,RegistrationAtTBClinic,StatusAtCCC,StatusAtPMTCT,StatusAtTBClinic,AgeAtAppointment,AppointmentID,AppointmentDate,AppointmentType,AppointmentStatus,EntryPoint,VisitType,DateAttended,ConsentForSMS,SMSLanguage,SMSTargetGroup,SMSPreferredSendTime,FourWeekSMSSent,FourWeekSMSSendDate,FourWeekSMSDeliveryStatus,FourWeekSMSDeliveryFailureReason,ThreeWeekSMSSent,ThreeWeekSMSSendDate,ThreeWeekSMSDeliveryStatus,ThreeWeekSMSDeliveryFailureReason,TwoWeekSMSSent,TwoWeekSMSSendDate,TwoWeekSMSDeliveryStatus,TwoWeekSMSDeliveryFailureReason,OneWeekSMSSent,OneWeekSMSSendDate,OneWeekSMSDeliveryStatus,OneWeekSMSDeliveryFailureReason,OneDaySMSSent,OneDaySMSSendDate,OneDaySMSDeliveryStatus,OneDaySMSDeliveryFailureReason,MissedAppointmentSMSSent,MissedAppointmentSMSSendDate,MissedAppointmentSMSDeliveryStatus,MissedAppointmentSMSDeliveryFailureReason,TracingCost,TracingOutcome,TracingOutcomeDate,DateReturnedToCare,DaysDefaulted,Getdate())
+
 					WHEN MATCHED THEN
-						UPDATE SET 						
+						UPDATE SET
 						a.[SiteType]									=	b.[SiteType],
-						a.[PatientID]									=	b.[PatientID],					
+						a.[PatientID]									=	b.[PatientID],
 						a.[NUPI]										=	b.[NUPI],
 						a.[PartnerName]									=	b.[PartnerName],
 						a.[FacilityName]								=	b.[FacilityName],
@@ -82,13 +82,11 @@ BEGIN
 						a.[MissedAppointmentSMSSendDate]				=	b.[MissedAppointmentSMSSendDate],
 						a.[MissedAppointmentSMSDeliveryStatus]			=	b.[MissedAppointmentSMSDeliveryStatus],
 						a.[MissedAppointmentSMSDeliveryFailureReason]	=	b.[MissedAppointmentSMSDeliveryFailureReason],
-						a.[TracingCalls]								=	b.[TracingCalls],
-						a.[TracingSMS]									=	b.[TracingSMS],
-						a.[TracingHomeVisits]							=	b.[TracingHomeVisits],
+						a.TracingOutCost								=	b.TracingCost,
 						a.[TracingOutcome]								=	b.[TracingOutcome],
 						a.[TracingOutcomeDate]							=	b.[TracingOutcomeDate],
 						a.[DateReturnedToCare]							=	b.[DateReturnedToCare],
 						a.[DaysDefaulted]								=	b.[DaysDefaulted];
 
-		
+
 	END

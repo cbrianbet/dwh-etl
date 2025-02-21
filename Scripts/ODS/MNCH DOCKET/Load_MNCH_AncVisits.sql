@@ -1,18 +1,82 @@
 
 BEGIN
---truncate table [ODS].[dbo].[MNCH_AncVisits]
-	MERGE [ODS].[dbo].[MNCH_AncVisits] AS a
+--truncate table [ODS].[Mnch].[MNCH_AncVisits]
+	MERGE [ODS].[Mnch].[MNCH_AncVisits] AS a
 		USING(
-				SELECT  Distinct P.[PatientMnchID],[ANCClinicNumber], P.[PatientPk],F.[SiteCode], P.[FacilityName],P.[EMR], P.[Project]
-					  ,[VisitID],cast(p.[VisitDate] as date)[VisitDate],[ANCVisitNo],[GestationWeeks],[Height],[Weight],[Temp],[PulseRate],[RespiratoryRate]
-					  ,[OxygenSaturation],[MUAC],[BP],[BreastExam],[AntenatalExercises],[FGM],[FGMComplications],[Haemoglobin],[DiabetesTest],[TBScreening]
-					  ,[CACxScreen],[CACxScreenMethod],[WHOStaging],[VLSampleTaken],[VLDate],[VLResult],[SyphilisTreatment],[HIVStatusBeforeANC]
-					  ,[HIVTestingDone],[HIVTestType],[HIVTest1],[HIVTest1Result],[HIVTest2],[HIVTest2Result],[HIVTestFinalResult],[SyphilisTestDone]
-					  ,[SyphilisTestType],[SyphilisTestResults],[SyphilisTreated],[MotherProphylaxisGiven],[MotherGivenHAART],[AZTBabyDispense]
-					  ,[NVPBabyDispense],[ChronicIllness],[CounselledOn],[PartnerHIVTestingANC],[PartnerHIVStatusANC],[PostParturmFP],[Deworming]
-					  ,[MalariaProphylaxis],[TetanusDose],[IronSupplementsGiven],[ReceivedMosquitoNet],[PreventiveServices],[UrinalysisVariables]
-					  ,[ReferredFrom],[ReferredTo],[ReferralReasons],cast([NextAppointmentANC] as date)[NextAppointmentANC]
-					  ,[ClinicalNotes] , P.[Date_Last_Modified],RecordUUID
+				SELECT  Distinct P.[PatientMnchID]
+								,[ANCClinicNumber]
+								, P.[PatientPk]
+								,F.[SiteCode]
+								, P.[FacilityName]
+								,P.[EMR]
+								, P.[Project]
+								,[VisitID]
+								,cast(p.[VisitDate] as date)[VisitDate]
+								,[ANCVisitNo]
+								,[GestationWeeks]
+								,[Height]
+								,[Weight]
+								,[Temp]
+								,[PulseRate]
+								,[RespiratoryRate]
+								,[OxygenSaturation]
+								,[MUAC]
+								,[BP]
+								,[BreastExam]
+								,[AntenatalExercises]
+								,[FGM]
+								,[FGMComplications]
+								,[Haemoglobin]
+								,[DiabetesTest]
+								,[TBScreening]
+								,[CACxScreen]
+								,[CACxScreenMethod]
+								,[WHOStaging]
+								,[VLSampleTaken]
+								,[VLDate]
+								,[VLResult]
+								,[SyphilisTreatment]
+								,[HIVStatusBeforeANC]
+								,[HIVTestingDone]
+								,[HIVTestType]
+								,[HIVTest1]
+								,[HIVTest1Result]
+								,[HIVTest2]
+								,[HIVTest2Result]
+								,[HIVTestFinalResult]
+								,[SyphilisTestDone]
+								,[SyphilisTestType]
+								,[SyphilisTestResults]
+								,[SyphilisTreated]
+								,[MotherProphylaxisGiven]
+								,[MotherGivenHAART]
+								,[AZTBabyDispense]
+								,[NVPBabyDispense]
+								,[ChronicIllness]
+								,[CounselledOn]
+								,[PartnerHIVTestingANC]
+								,[PartnerHIVStatusANC]
+								,[PostParturmFP]
+								,[Deworming]
+								,[MalariaProphylaxis]
+								,[TetanusDose]
+								,[IronSupplementsGiven]
+								,[ReceivedMosquitoNet]
+								,[PreventiveServices]
+								,[UrinalysisVariables]
+								,[ReferredFrom]
+								,[ReferredTo]
+								,[ReferralReasons]
+								,cast([NextAppointmentANC] as date)[NextAppointmentANC]
+								,[ClinicalNotes] 
+								, P.[Date_Last_Modified]
+								,RecordUUID
+								,[HepatitisBScreening]
+							  ,[TreatedHepatitisB]
+							  ,[MiminumPackageOfCareReceived]
+							  ,[MiminumPackageOfCareServices]
+							  ,[PresumptiveTreatmentDose]
+							  ,[PresumptiveTreatmentGiven]
 				  FROM [MNCHCentral].[dbo].[AncVisits] (NoLock) P
 					inner join (select tn.PatientPK,tn.SiteCode,tn.VisitDate,Max(ID) As MaxID,max(cast(tn.DateExtracted as date))MaxDateExtracted 
 									FROM [MNCHCentral].[dbo].[AncVisits] (NoLock)tn
@@ -31,8 +95,158 @@ BEGIN
 
 						)
 					WHEN NOT MATCHED THEN 
-						INSERT(PatientMnchID,ANCClinicNumber,PatientPk,SiteCode,FacilityName,EMR,Project,VisitID,VisitDate,ANCVisitNo,GestationWeeks,Height,[Weight],Temp,PulseRate,RespiratoryRate,OxygenSaturation,MUAC,BP,BreastExam,AntenatalExercises,FGM,FGMComplications,Haemoglobin,DiabetesTest,TBScreening,CACxScreen,CACxScreenMethod,WHOStaging,VLSampleTaken,VLDate,VLResult,SyphilisTreatment,HIVStatusBeforeANC,HIVTestingDone,HIVTestType,HIVTest1,HIVTest1Result,HIVTest2,HIVTest2Result,HIVTestFinalResult,SyphilisTestDone,SyphilisTestType,SyphilisTestResults,SyphilisTreated,MotherProphylaxisGiven,MotherGivenHAART,AZTBabyDispense,NVPBabyDispense,ChronicIllness,CounselledOn,PartnerHIVTestingANC,PartnerHIVStatusANC,PostParturmFP,Deworming,MalariaProphylaxis,TetanusDose,IronSupplementsGiven,ReceivedMosquitoNet,PreventiveServices,UrinalysisVariables,ReferredFrom,ReferredTo,ReferralReasons,NextAppointmentANC,ClinicalNotes,Date_Last_Modified,LoadDate,RecordUUID) 
-						VALUES(PatientMnchID,ANCClinicNumber,PatientPk,SiteCode,FacilityName,EMR,Project,VisitID,VisitDate,ANCVisitNo,GestationWeeks,Height,[Weight],Temp,PulseRate,RespiratoryRate,OxygenSaturation,MUAC,BP,BreastExam,AntenatalExercises,FGM,FGMComplications,Haemoglobin,DiabetesTest,TBScreening,CACxScreen,CACxScreenMethod,WHOStaging,VLSampleTaken,VLDate,VLResult,SyphilisTreatment,HIVStatusBeforeANC,HIVTestingDone,HIVTestType,HIVTest1,HIVTest1Result,HIVTest2,HIVTest2Result,HIVTestFinalResult,SyphilisTestDone,SyphilisTestType,SyphilisTestResults,SyphilisTreated,MotherProphylaxisGiven,MotherGivenHAART,AZTBabyDispense,NVPBabyDispense,ChronicIllness,CounselledOn,PartnerHIVTestingANC,PartnerHIVStatusANC,PostParturmFP,Deworming,MalariaProphylaxis,TetanusDose,IronSupplementsGiven,ReceivedMosquitoNet,PreventiveServices,UrinalysisVariables,ReferredFrom,ReferredTo,ReferralReasons,NextAppointmentANC,ClinicalNotes,Date_Last_Modified,Getdate(),RecordUUID)
+						INSERT(	PatientMnchID
+								,ANCClinicNumber
+								,PatientPk
+								,SiteCode
+								,FacilityName
+								,EMR
+								,Project
+								,VisitID
+								,VisitDate
+								,ANCVisitNo
+								,GestationWeeks
+								,Height
+								,[Weight]
+								,Temp
+								,PulseRate
+								,RespiratoryRate
+								,OxygenSaturation
+								,MUAC
+								,BP
+								,BreastExam
+								,AntenatalExercises
+								,FGM
+								,FGMComplications
+								,Haemoglobin
+								,DiabetesTest
+								,TBScreening
+								,CACxScreen
+								,CACxScreenMethod
+								,WHOStaging
+								,VLSampleTaken
+								,VLDate
+								,VLResult
+								,SyphilisTreatment
+								,HIVStatusBeforeANC
+								,HIVTestingDone
+								,HIVTestType
+								,HIVTest1
+								,HIVTest1Result
+								,HIVTest2
+								,HIVTest2Result
+								,HIVTestFinalResult
+								,SyphilisTestDone
+								,SyphilisTestType
+								,SyphilisTestResults
+								,SyphilisTreated
+								,MotherProphylaxisGiven
+								,MotherGivenHAART
+								,AZTBabyDispense
+								,NVPBabyDispense
+								,ChronicIllness
+								,CounselledOn
+								,PartnerHIVTestingANC
+								,PartnerHIVStatusANC
+								,PostParturmFP
+								,Deworming
+								,MalariaProphylaxis
+								,TetanusDose
+								,IronSupplementsGiven
+								,ReceivedMosquitoNet
+								,PreventiveServices
+								,UrinalysisVariables
+								,ReferredFrom
+								,ReferredTo
+								,ReferralReasons
+								,NextAppointmentANC
+								,ClinicalNotes
+								,Date_Last_Modified
+								,LoadDate
+								,RecordUUID
+								,[HepatitisBScreening]
+							  ,[TreatedHepatitisB]
+							  ,[MiminumPackageOfCareReceived]
+							  ,[MiminumPackageOfCareServices]
+							  ,[PresumptiveTreatmentDose]
+							  ,[PresumptiveTreatmentGiven]
+							) 
+						VALUES(	PatientMnchID
+								,ANCClinicNumber
+								,PatientPk
+								,SiteCode
+								,FacilityName
+								,EMR
+								,Project
+								,VisitID
+								,VisitDate
+								,ANCVisitNo
+								,GestationWeeks
+								,Height
+								,[Weight]
+								,Temp
+								,PulseRate
+								,RespiratoryRate
+								,OxygenSaturation
+								,MUAC
+								,BP
+								,BreastExam
+								,AntenatalExercises
+								,FGM
+								,FGMComplications
+								,Haemoglobin
+								,DiabetesTest
+								,TBScreening
+								,CACxScreen
+								,CACxScreenMethod
+								,WHOStaging
+								,VLSampleTaken
+								,VLDate
+								,VLResult
+								,SyphilisTreatment
+								,HIVStatusBeforeANC
+								,HIVTestingDone
+								,HIVTestType
+								,HIVTest1
+								,HIVTest1Result
+								,HIVTest2
+								,HIVTest2Result
+								,HIVTestFinalResult
+								,SyphilisTestDone
+								,SyphilisTestType
+								,SyphilisTestResults
+								,SyphilisTreated
+								,MotherProphylaxisGiven
+								,MotherGivenHAART
+								,AZTBabyDispense
+								,NVPBabyDispense
+								,ChronicIllness
+								,CounselledOn
+								,PartnerHIVTestingANC
+								,PartnerHIVStatusANC
+								,PostParturmFP
+								,Deworming
+								,MalariaProphylaxis
+								,TetanusDose
+								,IronSupplementsGiven
+								,ReceivedMosquitoNet
+								,PreventiveServices
+								,UrinalysisVariables
+								,ReferredFrom
+								,ReferredTo
+								,ReferralReasons
+								,NextAppointmentANC
+								,ClinicalNotes
+								,Date_Last_Modified
+								,Getdate()
+								,RecordUUID
+								,[HepatitisBScreening]
+							  ,[TreatedHepatitisB]
+							  ,[MiminumPackageOfCareReceived]
+							  ,[MiminumPackageOfCareServices]
+							  ,[PresumptiveTreatmentDose]
+							  ,[PresumptiveTreatmentGiven]
+								)
 																																																																																	
 					WHEN MATCHED THEN
 						UPDATE SET 
@@ -91,7 +305,15 @@ BEGIN
 							a.ReferralReasons = b.ReferralReasons,
 							a.NextAppointmentANC = b.NextAppointmentANC,
 							a.ClinicalNotes  = b.ClinicalNotes,
-							a.RecordUUID = b.RecordUUID;
+							a.RecordUUID = b.RecordUUID,
+							a.[HepatitisBScreening]=b.[HepatitisBScreening],
+							a.[TreatedHepatitisB]=b.[TreatedHepatitisB],
+							a.[MiminumPackageOfCareReceived]=b.[MiminumPackageOfCareReceived],
+							a.[MiminumPackageOfCareServices]=b.[MiminumPackageOfCareServices],
+							a.[PresumptiveTreatmentDose]=b.[PresumptiveTreatmentDose],
+							a.[PresumptiveTreatmentGiven]=b.[PresumptiveTreatmentGiven]
+							
+							;
 
 
 					with cte AS (
@@ -103,7 +325,7 @@ BEGIN
 
 						 ROW_NUMBER() OVER (PARTITION BY PatientPK,Sitecode,VisitID,VisitDate ORDER BY
 						PatientPK,Sitecode,VisitDate) Row_Num
-						FROM  [ODS].[dbo].[MNCH_AncVisits](NoLock)
+						FROM  [ODS].[Mnch].[MNCH_AncVisits](NoLock)
 						)
 						delete from cte 
 						Where Row_Num >1 ;

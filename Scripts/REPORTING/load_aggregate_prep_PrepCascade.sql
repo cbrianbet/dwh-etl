@@ -17,13 +17,13 @@ with eligible_screened_data AS  (
         EOMONTH(ass.Date) as AsofDate,
         Sum(EligiblePrep) As EligiblePrep,
         sum(ScreenedPrep) As Screened
-	FROM NDWH.dbo.FactPrepAssessments prep
-	LEFT JOIN NDWH.dbo.DimFacility f on f.FacilityKey = prep.FacilityKey
-	LEFT JOIN NDWH.dbo.DimAgency a on a.AgencyKey = prep.AgencyKey
-	LEFT JOIN NDWH.dbo.DimPatient pat on pat.PatientKey = prep.PatientKey
-	LEFT JOIN NDWH.dbo.DimAgeGroup age on age.AgeGroupKey=prep.AgeGroupKey
-	LEFT JOIN NDWH.dbo.DimPartner p on p.PartnerKey = prep.PartnerKey
-	LEFT JOIN NDWH.dbo.DimDate ass ON ass.DateKey = AssessmentVisitDateKey 
+	FROM NDWH.Fact.FactPrepAssessments prep
+	LEFT JOIN NDWH.Dim.DimFacility f on f.FacilityKey = prep.FacilityKey
+	LEFT JOIN NDWH.Dim.DimAgency a on a.AgencyKey = prep.AgencyKey
+	LEFT JOIN NDWH.Dim.DimPatient pat on pat.PatientKey = prep.PatientKey
+	LEFT JOIN NDWH.Dim.DimAgeGroup age on age.AgeGroupKey=prep.AgeGroupKey
+	LEFT JOIN NDWH.Dim.DimPartner p on p.PartnerKey = prep.PartnerKey
+	LEFT JOIN NDWH.Dim.DimDate ass ON ass.DateKey = AssessmentVisitDateKey 
 	GROUP BY 
             MFLCode,
 			f.FacilityName,
@@ -51,13 +51,13 @@ prepStart AS (
 		enrol.year EnrollmentYear,
         EOMONTH(enrol.Date) as AsofDate,
 		Count (distinct (concat(PrepNumber,PatientPKHash,MFLCode))) As StartedPrep
-	FROM NDWH.dbo.FactPrepAssessments prep
-	LEFT JOIN NDWH.dbo.DimFacility f on f.FacilityKey = prep.FacilityKey
-	LEFT JOIN NDWH.dbo.DimAgency a on a.AgencyKey = prep.AgencyKey
-	LEFT JOIN NDWH.dbo.DimPatient pat on pat.PatientKey = prep.PatientKey
-	LEFT JOIN NDWH.dbo.DimAgeGroup age on age.AgeGroupKey=prep.AgeGroupKey
-	LEFT JOIN NDWH.dbo.DimPartner p on p.PartnerKey = prep.PartnerKey
-	LEFT JOIN NDWH.dbo.DimDate enrol ON enrol.DateKey = prep.PrepEnrollmentDateKey	
+	FROM NDWH.Fact.FactPrepAssessments prep
+	LEFT JOIN NDWH.Dim.DimFacility f on f.FacilityKey = prep.FacilityKey
+	LEFT JOIN NDWH.Dim.DimAgency a on a.AgencyKey = prep.AgencyKey
+	LEFT JOIN NDWH.Dim.DimPatient pat on pat.PatientKey = prep.PatientKey
+	LEFT JOIN NDWH.Dim.DimAgeGroup age on age.AgeGroupKey=prep.AgeGroupKey
+	LEFT JOIN NDWH.Dim.DimPartner p on p.PartnerKey = prep.PartnerKey
+	LEFT JOIN NDWH.Dim.DimDate enrol ON enrol.DateKey = prep.PrepEnrollmentDateKey	
 	WHERE prep.PrepEnrollmentDateKey IS NOT NULL
 	GROUP BY MFLCode,
 			f.FacilityName,
@@ -85,16 +85,16 @@ prep_ct as (
         date_visit.Year, 
         EOMONTH(date_visit.Date) as AsofDate,
         count(distinct(concat(patient.PrepNumber,visits.PatientKey))) As PrepCT
-	from NDWH.dbo.FactPrepVisits as visits
-    left join NDWH.dbo.DimPatient as patient on patient.PatientKey = visits.PatientKey
-    left join NDWH.dbo.DimDate as date_visit on date_visit.DateKey = visits.VisitDateKey
-    left join NDWH.dbo.DimAgency as agency on agency.Agencykey = visits.AgencyKey
-    left join NDWH.dbo.DimPartner as partner on partner.PartnerKey = visits.Partnerkey
-    left join NDWH.dbo.DimAgeGroup as age_group on age_group.AgeGroupKey = visits.AgeGroupKey 
-    left join NDWH.dbo.DimFacility as facility on facility.FacilityKey = visits.FacilityKey
-    left join NDWH.dbo.DimDate as prep_enroll on prep_enroll.Datekey = patient.PrepEnrollmentDatekey
+	from NDWH.Fact.FactPrepVisits as visits
+    left join NDWH.Dim.DimPatient as patient on patient.PatientKey = visits.PatientKey
+    left join NDWH.Dim.DimDate as date_visit on date_visit.DateKey = visits.VisitDateKey
+    left join NDWH.Dim.DimAgency as agency on agency.Agencykey = visits.AgencyKey
+    left join NDWH.Dim.DimPartner as partner on partner.PartnerKey = visits.Partnerkey
+    left join NDWH.Dim.DimAgeGroup as age_group on age_group.AgeGroupKey = visits.AgeGroupKey 
+    left join NDWH.Dim.DimFacility as facility on facility.FacilityKey = visits.FacilityKey
+    left join NDWH.Dim.DimDate as prep_enroll on prep_enroll.Datekey = patient.PrepEnrollmentDatekey
 	where VisitDateKey is not null 
-        and date_visit.Date <> prep_enroll.Date 
+        and date_visit.Date > prep_enroll.Date 
 	group by 
         facility.MFLCode,
         facility.FacilityName,
@@ -179,14 +179,14 @@ prep_turned_positive as (
         date_test.[Year] as TestYear,
         EOMONTH(date_test.Date) as AsofDate,
         count(distinct tests.PatientKey) as CountPositive
-    from NDWH.dbo.FactHTSClientTests as tests
-    inner join NDWH.dbo.FactPrepAssessments as assessments on assessments.PatientKey = tests.PatientKey
-    left join NDWH.dbo.DimPatient as patient on patient.PatientKey = tests.PatientKey
-    left join NDWH.dbo.DimDate as date_test on date_test.DateKey = tests.DateTestedKey
-    left join NDWH.dbo.DimAgency as agency on agency.Agencykey = tests.AgencyKey
-    left join NDWH.dbo.DimPartner as partner on partner.PartnerKey = tests.Partnerkey
-    left join NDWH.dbo.DimAgeGroup as age_group on age_group.AgeGroupKey = tests.AgeGroupKey 
-    left join NDWH.dbo.DimFacility as facility on facility.FacilityKey = tests.FacilityKey
+    from NDWH.Fact.FactHTSClientTests as tests
+    left join NDWH.Fact.FactPrepAssessments as assessments on assessments.PatientKey = tests.PatientKey
+    left join NDWH.Dim.DimPatient as patient on patient.PatientKey = tests.PatientKey
+    left join NDWH.Dim.DimDate as date_test on date_test.DateKey = tests.DateTestedKey
+    left join NDWH.Dim.DimAgency as agency on agency.Agencykey = tests.AgencyKey
+    left join NDWH.Dim.DimPartner as partner on partner.PartnerKey = tests.Partnerkey
+    left join NDWH.Dim.DimAgeGroup as age_group on age_group.AgeGroupKey = tests.AgeGroupKey 
+    left join NDWH.Dim.DimFacility as facility on facility.FacilityKey = tests.FacilityKey
     where FinalTestResult = 'Positive'
         and patient.PrepEnrollmentDateKey is not null
     group by 

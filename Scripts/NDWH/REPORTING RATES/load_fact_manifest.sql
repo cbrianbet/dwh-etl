@@ -1,12 +1,12 @@
-IF OBJECT_ID(N'NDWH.DBO.Fact_manifest ', N'U') IS NOT NULL 
-	DROP TABLE NDWH.DBO.Fact_manifest ;
+IF OBJECT_ID(N'NDWH.Fact.Fact_manifest ', N'U') IS NOT NULL 
+	DROP TABLE NDWH.Fact.Fact_manifest ;
 BEGIN
 	with MFL_partner_agency_combination as (
     select 
         distinct MFL_Code,
         SDP ,
         SDP_Agency  as Agency
-    from ODS.dbo.All_EMRSites 
+    from ODS.Care.All_EMRSites 
     ),
     Fact_manifest  as(
 		Select
@@ -19,8 +19,8 @@ BEGIN
 			[Start],
 			[End],
 			cast(getdate() as date) as LoadDate
-		from ODS.dbo.CT_FacilityManifest m 
-			inner join ODS.dbo.ALL_EMRSites h
+		from ODS.Care.CT_FacilityManifest m 
+			inner join ODS.Care.ALL_EMRSites h
 		on m.SiteCode=h.MFL_Code
 						GROUP BY ID,[start],[end],YEAR(m.DateRecieved), 
 					MONTH(m.DateRecieved), SiteCode 
@@ -36,8 +36,8 @@ BEGIN
 				[Start],
 			    [End],
 				cast(getdate() as date) as LoadDate
-		FROM ODS.DBO.HTS_FacilityManifest m 
-			INNER JOIN ODS.DBO.ALL_EMRSites h ON m.SiteCode = h.MFL_Code 
+		FROM ODS.HTS.HTS_FacilityManifest m 
+			INNER JOIN ODS.Care.ALL_EMRSites h ON m.SiteCode = h.MFL_Code 
 		GROUP BY    ID,[start],[end],
         YEAR(DateArrived), 
 					MONTH(DateArrived), SiteCode 
@@ -53,7 +53,7 @@ BEGIN
 				[Start],
 			    [End],
 				 cast(getdate() as date) as LoadDate
-		FROM ODS.dbo.CBS_FacilityManifest m INNER JOIN ODS.dbo.all_emrsites h ON m.SiteCode = h.MFL_Code 
+		FROM ODS.Care.CBS_FacilityManifest m INNER JOIN ODS.Care.all_emrsites h ON m.SiteCode = h.MFL_Code 
 		GROUP BY ID,[start],[end],
         YEAR(DateArrived), 
 					MONTH(DateArrived), SiteCode
@@ -71,15 +71,15 @@ BEGIN
              started.DateKey as StartDateKey,
              ended.DateKey as EndDateKey,
 			 cast (GETDATE() as date) as Loaddate
-	INTO NDWH.DBO.Fact_manifest
+	INTO NDWH.Fact.Fact_manifest
 	FROM Fact_manifest as  manifest
-	left join NDWH.dbo.DimFacility as facility on facility.MFLCode=manifest.facilityId
+	left join NDWH.Dim.DimFacility as facility on facility.MFLCode=manifest.facilityId
     left join MFL_partner_agency_combination on MFL_partner_agency_combination.MFL_Code=manifest.facilityId
-    left join NDWH.dbo.DimPartner as partner on partner.PartnerName=MFL_partner_agency_combination.SDP collate Latin1_General_CI_AS
-    left join NDWH.dbo.DimAgency as agency on Agency.AgencyName=MFL_partner_agency_combination.Agency collate Latin1_General_CI_AS
-    left join NDWH.dbo.DimDate as UploadDates on UploadDates.Date = manifest.timeId
-    left join NDWH.dbo.DimDate as started on started.Date = manifest.[Start]
-    left join NDWH.dbo.DimDate as ended on ended.Date = manifest.[End]
+    left join NDWH.Dim.DimPartner as partner on partner.PartnerName=MFL_partner_agency_combination.SDP collate Latin1_General_CI_AS
+    left join NDWH.Dim.DimAgency as agency on Agency.AgencyName=MFL_partner_agency_combination.Agency collate Latin1_General_CI_AS
+    left join NDWH.Dim.DimDate as UploadDates on UploadDates.Date = manifest.timeId
+    left join NDWH.Dim.DimDate as started on started.Date = manifest.[Start]
+    left join NDWH.Dim.DimDate as ended on ended.Date = manifest.[End]
 
-    alter table NDWH.dbo.Fact_manifest add primary key(FactKey)
+    alter table NDWH.Fact.Fact_manifest add primary key(FactKey)
 END

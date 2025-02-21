@@ -6,6 +6,7 @@ Select
    PartnerName,
    Agency,
    txcurr.EMR,
+   date.Date as SiteAbstractionDate,
    KHIS_TxCurr,
    DWH_TxCurr,
    EMR_TxCurr,
@@ -19,15 +20,18 @@ Select
    into Reporting.dbo.Aggregate_Concordance_Txcurr
   
 from
-   NDWH.dbo.FACTTxCurrConcordance as txcurr 
+   NDWH.Fact.FACTTxCurrConcordance as txcurr 
    LEFT join
-      NDWH.dbo.DimFacility fac 
+      NDWH.Dim.DimFacility fac 
       on fac.FacilityKey = txcurr.FacilityKey 
    LEFT JOIN
-      NDWH.dbo.DimAgency agency 
+      NDWH.Dim.DimAgency agency 
       on agency.AgencyKey = txcurr.AgencyKey 
    LEFT JOIN
-      NDWH.dbo.DimPartner pat 
-      on pat.PartnerKey = txcurr.PartnerKey 
+      NDWH.Dim.DimPartner pat 
+      on pat.PartnerKey = txcurr.PartnerKey
+   LEFT JOIN 
+      NDWH.Dim.DimDate as date 
+      on date.DateKey =  txcurr.SiteAbstractionDateKey
 ORDER BY
    Proportion_variance_EMR_DWH DESC

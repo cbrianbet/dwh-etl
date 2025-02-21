@@ -23,11 +23,14 @@ WITH ModulesUptake AS (
         fac.Longitude,
         EMR_Status,
         modules.EMR,
+        modules.owner,
+        modules.InfrastructureType,
+        modules.KEPH_Level,
         CAST(GETDATE() AS DATE) AS LoadDate 
-    FROM NDWH.dbo.FactModulesuptake AS modules
-    LEFT JOIN NDWH.dbo.DimFacility fac ON fac.FacilityKey = modules.FacilityKey
-    LEFT JOIN NDWH.dbo.DimPartner pat ON pat.PartnerKey = modules.Partnerkey
-    LEFT JOIN NDWH.dbo.DimAgency agency ON agency.AgencyKey = modules.Agencykey
+    FROM NDWH.Fact.FactModulesuptake AS modules
+    LEFT JOIN NDWH.Dim.DimFacility fac ON fac.FacilityKey = modules.FacilityKey
+    LEFT JOIN NDWH.Dim.DimPartner pat ON pat.PartnerKey = modules.Partnerkey
+    LEFT JOIN NDWH.Dim.DimAgency agency ON agency.AgencyKey = modules.Agencykey
 )
 
 

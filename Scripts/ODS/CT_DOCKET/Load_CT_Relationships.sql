@@ -1,7 +1,7 @@
 BEGIN
 
 	       ---- Refresh [ODS].[dbo].[CT_Relationships]
-			MERGE [ODS].[dbo].[CT_Relationships] AS a
+			MERGE [ODS].[Care].[CT_Relationships] AS a
 				USING(SELECT distinct P.[PatientPID] AS PatientPK
 							,P.[PatientCccNumber] AS PatientID
 							,P.[Emr]
@@ -20,7 +20,11 @@ BEGIN
 							,R.[Created]
 							, R.PersonAPatientPk
   							,R.PersonBPatientPk
-  							,R.PatientRelationshipToOther
+                            ,R.PatientRelationshipToOther
+							,VoidingSource = Case 
+													when R.voided = 1 Then 'Source'
+													Else Null
+											END 
 						FROM [DWAPICentral].[dbo].[PatientExtract](NoLock) P 
 						INNER JOIN [DWAPICentral].[dbo].[RelationshipsExtract](NoLock) R  ON R.[PatientId]= P.ID 
 						INNER JOIN [DWAPICentral].[dbo].[Facility](NoLock) F ON P.[FacilityId] = F.Id  AND F.Voided=0
@@ -45,12 +49,54 @@ BEGIN
 						 a.SiteCode = b.SiteCode
 						and  a.PatientPK  = b.PatientPK 
 						and a.voided   = b.voided
-						and a.ID = b.ID
+						---and a.ID = b.ID
 						)
 
 					WHEN NOT MATCHED THEN 
-						INSERT(SiteCode,PatientPK,PatientID,Emr,Project,Voided,Id,FacilityName,RelationshipToPatient,StartDate,EndDate,RecordUUID,Date_Created,Date_Last_Modified,Created,PersonAPatientPk,PersonBPatientPk,PatientRelationshipToOther,LoadDate)  
-						VALUES(SiteCode,PatientPK,PatientID,Emr,Project,Voided,Id,FacilityName,RelationshipToPatient,StartDate,EndDate,RecordUUID,Date_Created,Date_Last_Modified,Created, PersonAPatientPk,PersonBPatientPk,PatientRelationshipToOther,Getdate())
+						INSERT(
+								SiteCode
+								,PatientPK
+								,PatientID
+								,Emr
+								,Project
+								,Voided
+								,VoidingSource
+								,Id
+								,FacilityName
+								,RelationshipToPatient
+								,StartDate
+								,EndDate
+								,RecordUUID
+								,Date_Created
+								,Date_Last_Modified
+								,Created
+								,PersonAPatientPk
+								,PersonBPatientPk
+								,PatientRelationshipToOther
+								,LoadDate							
+						   )  
+						VALUES(
+								SiteCode
+								,PatientPK
+								,PatientID
+								,Emr
+								,Project
+								,Voided
+								,VoidingSource
+								,Id
+								,FacilityName
+								,RelationshipToPatient
+								,StartDate
+								,EndDate
+								,RecordUUID
+								,Date_Created
+								,Date_Last_Modified
+								,Created
+								, PersonAPatientPk
+								,PersonBPatientPk								
+								,PatientRelationshipToOther
+								,Getdate()
+							)
 				
 					WHEN MATCHED THEN
 						UPDATE SET 						

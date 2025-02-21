@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[ODS].[dbo].[Intermediate_LastPatientEncounterAsAt]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[dbo].[Intermediate_LastPatientEncounterAsAt];
+IF OBJECT_ID(N'[ODS].[Intermediate].[Intermediate_LastPatientEncounterAsAt]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[Intermediate].[Intermediate_LastPatientEncounterAsAt];
 BEGIN
 	--Load_LastPatientEncounterAsAt
 	With LastPatientEncounterAsAt AS ( 
@@ -19,12 +19,12 @@ BEGIN
 			cast(getdate() as date) as LoadDate, 
 			cast( '' as nvarchar(100)) PatientPKHash,
 			cast( '' as nvarchar(100)) PatientIDHash
-	 FROM ODS.dbo.Intermediate_LastVisitAsAt  LastVisit
-	 FULL JOIN ODS.dbo.Intermediate_PharmacyDispenseAsAtDate  LastDispense
+	 FROM ODS.[Intermediate].Intermediate_LastVisitAsAt  LastVisit
+	 FULL JOIN ODS.[Intermediate].Intermediate_PharmacyDispenseAsAtDate  LastDispense
 	 ON   LastVisit.SiteCode=LastDispense.SiteCode AND LastVisit.PatientPK =LastDispense.PatientPK
 
 	)
 	 Select LastPatientEncounterAsAt.* 
-	 INTO [ODS].[dbo].[Intermediate_LastPatientEncounterAsAt]
+	 INTO [ODS].[Intermediate].[Intermediate_LastPatientEncounterAsAt]
 	 from LastPatientEncounterAsAt
 END

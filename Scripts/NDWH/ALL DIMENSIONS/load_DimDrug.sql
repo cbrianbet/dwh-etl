@@ -1,6 +1,6 @@
-MERGE [NDWH].[dbo].[DimDrug] AS a
+MERGE [NDWH].[Dim].[DimDrug] AS a
 		USING	(	SELECT DISTINCT Drug as Drug
-					FROM ODS.dbo.CT_PatientPharmacy
+					FROM ODS.Care.CT_PatientPharmacy
 					WHERE Drug <> 'NULL' AND Drug <>'' AND TreatmentType='ARV'
 				) AS b 
 						ON(

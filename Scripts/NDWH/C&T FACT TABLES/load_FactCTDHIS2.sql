@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[NDWH].[dbo].[FACT_CT_DHIS2]', N'U') IS NOT NULL 
-	DROP TABLE [NDWH].[dbo].[FACT_CT_DHIS2];
+IF OBJECT_ID(N'[NDWH].[Fact].[FACT_CT_DHIS2]', N'U') IS NOT NULL 
+	DROP TABLE [NDWH].[Fact].[FACT_CT_DHIS2];
 
 With Facilityinfo AS (
                 Select
@@ -9,7 +9,7 @@ With Facilityinfo AS (
                     SDP as PartnerName,
                     SDP_Agency as Agency,
                     EMR
-                from ODS.dbo.All_EMRSites
+                from ODS.Care.All_EMRSites
 )
 
 SELECT 
@@ -50,12 +50,12 @@ SELECT
       ,On_ART_20_24_F
       ,On_ART_25_Plus_M
       ,On_ART_25_Plus_F
-      into NDWH.dbo.FACT_CT_DHIS2
-  FROM ODS.dbo.CT_DHIS2 summary 
+      into NDWH.[Fact].FACT_CT_DHIS2
+  FROM ODS.Care.CT_DHIS2 summary 
 
-left join NDWH.dbo.DimFacility as facility on facility.MFLCode = Summary.SiteCode COLLATE SQL_Latin1_General_CP1_CI_AS
+left join NDWH.Dim.DimFacility as facility on facility.MFLCode = Summary.SiteCode COLLATE SQL_Latin1_General_CP1_CI_AS
 left join Facilityinfo on Facilityinfo.MFL_Code=Summary.SiteCode COLLATE SQL_Latin1_General_CP1_CI_AS
-left join NDWH.dbo.DimPartner as partner on partner.PartnerName = Facilityinfo.PartnerName
-left join NDWH.dbo.DimAgency as agency on agency.AgencyName = Facilityinfo.Agency
+left join NDWH.Dim.DimPartner as partner on partner.PartnerName = Facilityinfo.PartnerName
+left join NDWH.Dim.DimAgency as agency on agency.AgencyName = Facilityinfo.Agency
 
-alter table NDWH.dbo.FACT_CT_DHIS2 add primary key(FactKey)
+alter table NDWH.[Fact].FACT_CT_DHIS2 add primary key(FactKey)

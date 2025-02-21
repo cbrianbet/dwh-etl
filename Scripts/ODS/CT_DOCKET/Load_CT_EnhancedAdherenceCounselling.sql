@@ -1,78 +1,244 @@
+
 BEGIN
-				;with cte AS ( Select            
-					P.PatientPID,            
-					EAC.PatientId,            
-					F.code,
-					EAC.VisitID,
-					EAC.VisitDate,
-					EAC.created,  ROW_NUMBER() OVER (PARTITION BY P.PatientPID,F.code ,EAC.VisitID,EAC.VisitDate
-					ORDER BY EAC.created desc) Row_Num
-					FROM [DWAPICentral].[dbo].[PatientExtract](NoLock) P
-					INNER JOIN [DWAPICentral].[dbo].[EnhancedAdherenceCounsellingExtract](NoLock) EAC ON EAC.[PatientId] = P.ID AND EAC.Voided = 0
-					INNER JOIN [DWAPICentral].[dbo].[Facility](NoLock) F ON P.[FacilityId] = F.Id AND F.Voided = 0
-					WHERE P.gender != 'Unknown')      
-		
-				delete EAC from  [DWAPICentral].[dbo].[EnhancedAdherenceCounsellingExtract](NoLock) EAC
-				inner join [DWAPICentral].[dbo].[PatientExtract](NoLock) P ON EAC.[PatientId]= P.ID AND EAC.Voided = 0       
-				inner join [DWAPICentral].[dbo].[Facility](NoLock) F ON P.[FacilityId] = F.Id AND F.Voided=0       
-				inner join cte on EAC.PatientId = cte.PatientId  
-					and cte.Created = EAC.created 
-					and cte.Code =  f.Code     
-					and cte.VisitID = EAC.VisitID
-					and cte.VisitDate = EAC.VisitDate
-				where  Row_Num  > 1;
 
 		  DECLARE	@MaxVisitDate_Hist			DATETIME,
 					@VisitDate					DATETIME
-				
+
 		SELECT @MaxVisitDate_Hist =  MAX(MaxVisitDate) FROM [ODS_logs].[dbo].[CT_EnhancedAdherenceCounselling_Log]  (NoLock)
 		SELECT @VisitDate = MAX(VisitDate) FROM [DWAPICentral].[dbo].[EnhancedAdherenceCounsellingExtract](NoLock)
-							
+
 		INSERT INTO  [ODS_logs].[dbo].[CT_EnhancedAdherenceCounselling_Log](MaxVisitDate,LoadStartDateTime)
 		VALUES(@MaxVisitDate_Hist,GETDATE())
 
 	       ---- Refresh [ODS].[dbo].[CT_EnhancedAdherenceCounselling]
-			MERGE [ODS].[dbo].[CT_EnhancedAdherenceCounselling] AS a
+		   --truncate table[ODS].[dbo].[CT_EnhancedAdherenceCounselling]
+			MERGE [ODS].[Care].[CT_EnhancedAdherenceCounselling] AS a
 				USING(SELECT Distinct
-							P.[PatientCccNumber] AS PatientID,P.[PatientPID] AS PatientPK,F.Code AS SiteCode,F.Name AS FacilityName,
-							EAC.[VisitId] AS VisitID,EAC.[VisitDate] AS VisitDate,P.[Emr] AS Emr,
-							CASE
-								P.[Project]
-								WHEN 'I-TECH' THEN 'Kenya HMIS II'
-								WHEN 'HMIS' THEN 'Kenya HMIS II'
-								ELSE P.[Project]
-							END AS Project,
-							EAC.[SessionNumber],EAC.[DateOfFirstSession],EAC.[PillCountAdherence],EAC.[MMAS4_1],
-							EAC.[MMAS4_2],EAC.[MMAS4_3],EAC.[MMAS4_4],EAC.[MMSA8_1],EAC.[MMSA8_2],EAC.[MMSA8_3],EAC.[MMSA8_4],
-							EAC.[MMSAScore],EAC.[EACRecievedVL],EAC.[EACVL],EAC.[EACVLConcerns],EAC.[EACVLThoughts],EAC.[EACWayForward],
-							EAC.[EACCognitiveBarrier],EAC.[EACBehaviouralBarrier_1],EAC.[EACBehaviouralBarrier_2],EAC.[EACBehaviouralBarrier_3],
-							EAC.[EACBehaviouralBarrier_4],EAC.[EACBehaviouralBarrier_5],EAC.[EACEmotionalBarriers_1],EAC.[EACEmotionalBarriers_2],
-							EAC.[EACEconBarrier_1],EAC.[EACEconBarrier_2],EAC.[EACEconBarrier_3],EAC.[EACEconBarrier_4],EAC.[EACEconBarrier_5],
-							EAC.[EACEconBarrier_6],EAC.[EACEconBarrier_7],EAC.[EACEconBarrier_8],EAC.[EACReviewImprovement],EAC.[EACReviewMissedDoses],
-							EAC.[EACReviewStrategy],EAC.[EACReferral],EAC.[EACReferralApp],EAC.[EACReferralExperience],EAC.[EACHomevisit],
-							EAC.[EACAdherencePlan],EAC.[EACFollowupDate]
-							,EAC.ID ,EAC.[Date_Created],EAC.[Date_Last_Modified]
-							,EAC.RecordUUID,EAC.voided
+							P.[PatientCccNumber] AS PatientID
+							,P.[PatientPID] AS PatientPK
+							,F.Code AS SiteCode
+							,F.Name AS FacilityName
+							,EAC.[VisitId] AS VisitID
+							,EAC.[VisitDate] AS VisitDate
+							,P.[Emr] AS Emr
+							,CASE
+									P.[Project]
+									WHEN 'I-TECH' THEN 'Kenya HMIS II'
+									WHEN 'HMIS' THEN 'Kenya HMIS II'
+									ELSE P.[Project]
+							END AS Project
+							,EAC.[SessionNumber]
+							,EAC.[DateOfFirstSession]
+							,EAC.[PillCountAdherence]
+							,EAC.[MMAS4_1]
+							,EAC.[MMAS4_2]
+							,EAC.[MMAS4_3]
+							,EAC.[MMAS4_4]
+							,EAC.[MMSA8_1]
+							,EAC.[MMSA8_2]
+							,EAC.[MMSA8_3]
+							,EAC.[MMSA8_4]
+							,EAC.[MMSAScore]
+							,EAC.[EACRecievedVL]
+							,EAC.[EACVL]
+							,EAC.[EACVLConcerns]
+							,EAC.[EACVLThoughts]
+							,EAC.[EACWayForward]
+							,EAC.[EACCognitiveBarrier]
+							,EAC.[EACBehaviouralBarrier_1]
+							,EAC.[EACBehaviouralBarrier_2]
+							,EAC.[EACBehaviouralBarrier_3]
+							,EAC.[EACBehaviouralBarrier_4]
+							,EAC.[EACBehaviouralBarrier_5]
+							,EAC.[EACEmotionalBarriers_1]
+							,EAC.[EACEmotionalBarriers_2]
+							,EAC.[EACEconBarrier_1]
+							,EAC.[EACEconBarrier_2]
+							,EAC.[EACEconBarrier_3]
+							,EAC.[EACEconBarrier_4]
+							,EAC.[EACEconBarrier_5]
+							,EAC.[EACEconBarrier_6]
+							,EAC.[EACEconBarrier_7]
+							,EAC.[EACEconBarrier_8]
+							,EAC.[EACReviewImprovement]
+							,EAC.[EACReviewMissedDoses]
+							,EAC.[EACReviewStrategy]
+							,EAC.[EACReferral]
+							,EAC.[EACReferralApp]
+							,EAC.[EACReferralExperience]
+							,EAC.[EACHomevisit]
+							,EAC.[EACAdherencePlan]
+							,EAC.[EACFollowupDate]
+							,EAC.ID
+							,EAC.[Date_Created]
+							,EAC.[Date_Last_Modified]
+							,EAC.RecordUUID
+							,EAC.voided
+							,VoidingSource = Case
+													when EAC.voided = 1 Then 'Source'
+													Else Null
+											END
 						FROM [DWAPICentral].[dbo].[PatientExtract](NoLock) P
-						INNER JOIN [DWAPICentral].[dbo].[EnhancedAdherenceCounsellingExtract](NoLock) EAC ON EAC.[PatientId] = P.ID 
-						INNER JOIN [DWAPICentral].[dbo].[Facility](NoLock) F ON P.[FacilityId] = F.Id AND F.Voided = 0
-						WHERE P.gender != 'Unknown' AND F.code >0) AS b 
+							INNER JOIN [DWAPICentral].[dbo].[EnhancedAdherenceCounsellingExtract](NoLock) EAC ON EAC.[PatientId] = P.ID
+							INNER JOIN [DWAPICentral].[dbo].[Facility](NoLock) F ON P.[FacilityId] = F.Id AND F.Voided = 0
+							INNER JOIN (
+								SELECT distinct F.code as SiteCode
+										,p.[PatientPID] as PatientPK
+										,InnerEAC.visitDate
+										,InnerEAC.VisitID
+										,InnerEAC.voided
+										,max(InnerEAC.ID) As Max_ID
+										,MAX(InnerEAC.created) AS Maxdatecreated
+								FROM [DWAPICentral].[dbo].[PatientExtract](NoLock) P
+									INNER JOIN  [DWAPICentral].[dbo].[EnhancedAdherenceCounsellingExtract](NoLock) InnerEAC ON InnerEAC.[PatientId] = P.ID
+									INNER JOIN [DWAPICentral].[dbo].[Facility](NoLock) F ON P.[FacilityId] = F.Id AND F.Voided = 0
+								GROUP BY F.code
+										,p.[PatientPID]
+										,InnerEAC.visitDate
+										,InnerEAC.VisitID
+										,InnerEAC.voided
+							) tm
+							ON	f.code = tm.[SiteCode] and
+								p.PatientPID=tm.PatientPK and
+								EAC.visitDate = tm.visitDate and
+								EAC.VisitID = tm.VisitID and
+								EAC.voided = tm.voided and
+								EAC.ID = tm.Max_ID and
+								Cast(EAC.created as date) = cast(tm.Maxdatecreated  as date)
+						WHERE P.gender != 'Unknown' AND F.code >0
+				) AS b
 						ON(
-						 a.PatientPK  = b.PatientPK 
-						and a.SiteCode = b.SiteCode
-						and a.VisitID	=b.VisitID
-						and a.VisitDate	=b.VisitDate
-						and a.voided   = b.voided
-						--and a.ID =b.ID
+							 a.PatientPK  = b.PatientPK
+							and a.SiteCode = b.SiteCode
+							and a.VisitID	=b.VisitID
+							and a.VisitDate	=b.VisitDate
+							and a.voided   = b.voided
+
 						)
-					
-					WHEN NOT MATCHED THEN 
-						INSERT(ID,PatientID,PatientPK,SiteCode,FacilityName,VisitID,VisitDate,Emr,Project,SessionNumber,DateOfFirstSession,PillCountAdherence,MMAS4_1,MMAS4_2,MMAS4_3,MMAS4_4,MMSA8_1,MMSA8_2,MMSA8_3,MMSA8_4,MMSAScore,EACRecievedVL,EACVL,EACVLConcerns,EACVLThoughts,EACWayForward,EACCognitiveBarrier,EACBehaviouralBarrier_1,EACBehaviouralBarrier_2,EACBehaviouralBarrier_3,EACBehaviouralBarrier_4,EACBehaviouralBarrier_5,EACEmotionalBarriers_1,EACEmotionalBarriers_2,EACEconBarrier_1,EACEconBarrier_2,EACEconBarrier_3,EACEconBarrier_4,EACEconBarrier_5,EACEconBarrier_6,EACEconBarrier_7,EACEconBarrier_8,EACReviewImprovement,EACReviewMissedDoses,EACReviewStrategy,EACReferral,EACReferralApp,EACReferralExperience,EACHomevisit,EACAdherencePlan,EACFollowupDate,[Date_Created],[Date_Last_Modified],RecordUUID,voided,LoadDate)  
-						VALUES(ID,PatientID,PatientPK,SiteCode,FacilityName,VisitID,VisitDate,Emr,Project,SessionNumber,DateOfFirstSession,PillCountAdherence,MMAS4_1,MMAS4_2,MMAS4_3,MMAS4_4,MMSA8_1,MMSA8_2,MMSA8_3,MMSA8_4,MMSAScore,EACRecievedVL,EACVL,EACVLConcerns,EACVLThoughts,EACWayForward,EACCognitiveBarrier,EACBehaviouralBarrier_1,EACBehaviouralBarrier_2,EACBehaviouralBarrier_3,EACBehaviouralBarrier_4,EACBehaviouralBarrier_5,EACEmotionalBarriers_1,EACEmotionalBarriers_2,EACEconBarrier_1,EACEconBarrier_2,EACEconBarrier_3,EACEconBarrier_4,EACEconBarrier_5,EACEconBarrier_6,EACEconBarrier_7,EACEconBarrier_8,EACReviewImprovement,EACReviewMissedDoses,EACReviewStrategy,EACReferral,EACReferralApp,EACReferralExperience,EACHomevisit,EACAdherencePlan,EACFollowupDate,[Date_Created],[Date_Last_Modified],RecordUUID,voided,Getdate())
-				
+
+					WHEN NOT MATCHED THEN
+						INSERT(
+								ID
+								,PatientID
+								,PatientPK
+								,SiteCode
+								,FacilityName
+								,VisitID
+								,VisitDate
+								,Emr
+								,Project
+								,SessionNumber
+								,DateOfFirstSession
+								,PillCountAdherence
+								,MMAS4_1
+								,MMAS4_2
+								,MMAS4_3
+								,MMAS4_4
+								,MMSA8_1
+								,MMSA8_2
+								,MMSA8_3
+								,MMSA8_4
+								,MMSAScore
+								,EACRecievedVL
+								,EACVL
+								,EACVLConcerns
+								,EACVLThoughts
+								,EACWayForward
+								,EACCognitiveBarrier
+								,EACBehaviouralBarrier_1
+								,EACBehaviouralBarrier_2
+								,EACBehaviouralBarrier_3
+								,EACBehaviouralBarrier_4
+								,EACBehaviouralBarrier_5
+								,EACEmotionalBarriers_1
+								,EACEmotionalBarriers_2
+								,EACEconBarrier_1
+								,EACEconBarrier_2
+								,EACEconBarrier_3
+								,EACEconBarrier_4
+								,EACEconBarrier_5
+								,EACEconBarrier_6
+								,EACEconBarrier_7
+								,EACEconBarrier_8
+								,EACReviewImprovement
+								,EACReviewMissedDoses
+								,EACReviewStrategy
+								,EACReferral
+								,EACReferralApp
+								,EACReferralExperience
+								,EACHomevisit
+								,EACAdherencePlan
+								,EACFollowupDate
+								,[Date_Created]
+								,[Date_Last_Modified]
+								,RecordUUID
+								,voided
+								,VoidingSource
+								,LoadDate
+							)
+						VALUES(
+								ID
+								,PatientID
+								,PatientPK
+								,SiteCode
+								,FacilityName
+								,VisitID
+								,VisitDate
+								,Emr
+								,Project
+								,SessionNumber
+								,DateOfFirstSession
+								,PillCountAdherence
+								,MMAS4_1
+								,MMAS4_2
+								,MMAS4_3
+								,MMAS4_4
+								,MMSA8_1
+								,MMSA8_2
+								,MMSA8_3
+								,MMSA8_4
+								,MMSAScore
+								,EACRecievedVL
+								,EACVL
+								,EACVLConcerns
+								,EACVLThoughts
+								,EACWayForward
+								,EACCognitiveBarrier
+								,EACBehaviouralBarrier_1
+								,EACBehaviouralBarrier_2
+								,EACBehaviouralBarrier_3
+								,EACBehaviouralBarrier_4
+								,EACBehaviouralBarrier_5
+								,EACEmotionalBarriers_1
+								,EACEmotionalBarriers_2
+								,EACEconBarrier_1
+								,EACEconBarrier_2
+								,EACEconBarrier_3
+								,EACEconBarrier_4
+								,EACEconBarrier_5
+								,EACEconBarrier_6
+								,EACEconBarrier_7
+								,EACEconBarrier_8
+								,EACReviewImprovement
+								,EACReviewMissedDoses
+								,EACReviewStrategy
+								,EACReferral
+								,EACReferralApp
+								,EACReferralExperience
+								,EACHomevisit
+								,EACAdherencePlan
+								,EACFollowupDate
+								,[Date_Created]
+								,[Date_Last_Modified]
+								,RecordUUID
+								,voided
+								,VoidingSource
+								,Getdate()
+					)
+
 					WHEN MATCHED THEN
-						UPDATE SET 	
-						a.PatientID					=b.PatientID,					
+						UPDATE SET
+						a.PatientID					=b.PatientID,
 						a.DateOfFirstSession		=b.DateOfFirstSession,
 						a.PillCountAdherence		=b.PillCountAdherence,
 						a.MMAS4_1					=b.MMAS4_1,
@@ -119,11 +285,11 @@ BEGIN
 						 a.RecordUUID				=b.RecordUUID,
 						a.voided					=b.voided
 						;
-						
+
 					UPDATE [ODS_logs].[dbo].[CT_EnhancedAdherenceCounselling_Log]
 						SET LoadEndDateTime = GETDATE()
 					WHERE MaxVisitDate = @MaxVisitDate_Hist;
 
 
+
 	END
- 

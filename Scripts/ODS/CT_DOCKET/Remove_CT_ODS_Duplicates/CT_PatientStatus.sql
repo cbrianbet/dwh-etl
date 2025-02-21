@@ -6,7 +6,7 @@ with cte AS (
 
 									 ROW_NUMBER() OVER (PARTITION BY SiteCode,PatientPK,ExitDate ORDER BY
 									EffectiveDiscontinuationDate,ReEnrollmentDate desc) Row_Num
-									FROM [ODS].[dbo].[CT_PatientStatus]PS WITH (NoLock)
+									FROM [ODS].[Care].[CT_PatientStatus]PS WITH (NoLock)
 									)
 								delete  from cte 
 									Where Row_Num >1;
@@ -18,5 +18,5 @@ with cte AS (
     SELECT sitecode,
            Getdate(),
            Count(Concat(sitecode, patientpk)) AS PatientStatusCount
-    FROM   [ODS].[dbo].[ct_patientstatus]
+    FROM   [ODS].[Care].[ct_patientstatus]
     GROUP  BY sitecode;

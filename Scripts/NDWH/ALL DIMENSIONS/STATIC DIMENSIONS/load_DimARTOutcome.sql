@@ -20,6 +20,8 @@ BEGIN
 		select'uL' as ARTOutcome
 			union all
 		select'FV' as ARTOutcome
+      	union all
+		select'LIHMIS' as ARTOutcome
 	)
 	select 
 		ARTOutcomeKey = IDENTITY(INT, 1, 1),
@@ -34,6 +36,7 @@ BEGIN
 			WHEN [ARTOutcome] ='NP' THEN 'NEW PATIENT'
 			WHEN [ARTOutcome] ='UL' THEN 'UNDOCUMENTED LOSS'
 			WHEN [ARTOutcome] = 'FV'  THEN 'FUTURE VISIT'
+         WHEN [ARTOutcome] = 'LIHMIS'  THEN 'LOST IN HMIS'
 
 
 		end as ARTOutcomeDescription,

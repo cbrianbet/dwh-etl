@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[NDWH].[dbo].[FACT_HTS_DHIS2]', N'U') IS NOT NULL 
-	DROP TABLE [NDWH].[dbo].[FACT_HTS_DHIS2];
+IF OBJECT_ID(N'[NDWH].[Fact].[FACT_HTS_DHIS2]', N'U') IS NOT NULL 
+	DROP TABLE [NDWH].[Fact].[FACT_HTS_DHIS2];
 BEGIN
 With Facilityinfo AS (
                 Select
@@ -9,7 +9,7 @@ With Facilityinfo AS (
                     SDP as PartnerName,
                     SDP_Agency as Agency,
                     EMR
-                from ODS.dbo.All_EMRSites
+                from ODS.Care.All_EMRSites
 )
 
 		SELECT
@@ -43,15 +43,15 @@ With Facilityinfo AS (
 			,Sites.SDP PartnerName
 			,Sites.SDP_Agency AgencyName
 			,CAST(GETDATE() AS DATE) AS LoadDate
-            Into NDWH.dbo.FACT_HTS_DHIS2 
-		FROM ODS.dbo.HTS_DHIS2 summary
-		LEFT JOIN ODS.dbo.ALL_EMRSites Sites on summary.SiteCode=Sites.MFL_Code
-        left join NDWH.dbo.DimFacility as facility on facility.MFLCode = Summary.SiteCode COLLATE SQL_Latin1_General_CP1_CI_AS
+            Into NDWH.[Fact].FACT_HTS_DHIS2 
+		FROM ODS.HTS.HTS_DHIS2 summary
+		LEFT JOIN ODS.Care.ALL_EMRSites Sites on summary.SiteCode=Sites.MFL_Code
+        left join NDWH.Dim.DimFacility as facility on facility.MFLCode = Summary.SiteCode COLLATE SQL_Latin1_General_CP1_CI_AS
         left join Facilityinfo on Facilityinfo.MFL_Code=Summary.SiteCode COLLATE SQL_Latin1_General_CP1_CI_AS
-        left join NDWH.dbo.DimPartner as partner on partner.PartnerName = Facilityinfo.PartnerName
-        left join NDWH.dbo.DimAgency as agency on agency.AgencyName = Facilityinfo.Agency
+        left join NDWH.Dim.DimPartner as partner on partner.PartnerName = Facilityinfo.PartnerName
+        left join NDWH.Dim.DimAgency as agency on agency.AgencyName = Facilityinfo.Agency
        where MFLCode is not null
-         alter table NDWH.dbo.FACT_HTS_DHIS2 add primary key(FactKey)
+         alter table NDWH.Fact.FACT_HTS_DHIS2 add primary key(FactKey)
          END
 
 

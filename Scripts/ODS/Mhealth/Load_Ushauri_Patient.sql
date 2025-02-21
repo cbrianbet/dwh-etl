@@ -1,7 +1,7 @@
 
 BEGIN
 
-			MERGE [ODS].[dbo].[Ushauri_Patient] AS a
+			MERGE [ODS].[Mhealth].[Mhealth_Ushauri_Patient] AS a
 				USING(SELECT Distinct
 						PatientPK,MPIPKV,null PatientPKHash,PartnerName,SiteCode,SiteType,PatientID,null PatientIDHash,FacilityID,Emr,Project,FacilityName,
 						Gender,DOB_Date AS DOB,RegistrationDate_Date As RegistrationDate,RegistrationAtCCC_Date As RegistrationAtCCC,RegistrationAtPMTCT_Date As RegistrationAtPMTCT,RegistrationAtTBClinic,PatientSource,Region,District,
@@ -11,18 +11,18 @@ BEGIN
 						PatientResidentWard,PatientType,PopulationType,TransferInDate,Occupation,DateCreated_Date As DateCreated,DateModified_Date As DateModified,StatelitteName,
 						Date_Created_Date As Date_Created,Date_Modified_Date As Date_Modified,PKV,NUPI
 					FROM [mhealthCentral].[dbo].[CT_Patient](NoLock) P
-					) AS b	
+					) AS b
 						ON(
-						 a.[UshauriPatientPK]  = b.PatientPK 
-						and a.SiteCode = b.SiteCode						
+						 a.[UshauriPatientPK]  = b.PatientPK
+						and a.SiteCode = b.SiteCode
 						)
-					
-					WHEN NOT MATCHED THEN 
-						INSERT([UshauriPatientPK],MPIPKV,PatientPKHash,PartnerName,SiteCode,SiteType,PatientID,PatientIDHash,FacilityID,Emr,Project,FacilityName,Gender,DOB,RegistrationDate,RegistrationAtCCC,RegistrationAtPMTCT,RegistrationAtTBClinic,PatientSource,Region,District,Village,ContactRelation,LastVisit,MaritalStatus,EducationLevel,DateConfirmedHIVPositive,PreviousARTExposure,PreviousARTStartDate,StatusAtCCC,StatusAtPMTCT,StatusAtTBClinic,Inschool,KeyPopulationType,Orphan,County,PatientResidentLocation,PatientResidentSubCounty,PatientResidentSubLocation,PatientResidentVillage,PatientResidentWard,PatientType,PopulationType,TransferInDate,Occupation,DateCreated,DateModified,StatelitteName,Date_Created,Date_Modified,PKV,NUPI,LoadDate) 
+
+					WHEN NOT MATCHED THEN
+						INSERT([UshauriPatientPK],MPIPKV,PatientPKHash,PartnerName,SiteCode,SiteType,PatientID,PatientIDHash,FacilityID,Emr,Project,FacilityName,Gender,DOB,RegistrationDate,RegistrationAtCCC,RegistrationAtPMTCT,RegistrationAtTBClinic,PatientSource,Region,District,Village,ContactRelation,LastVisit,MaritalStatus,EducationLevel,DateConfirmedHIVPositive,PreviousARTExposure,PreviousARTStartDate,StatusAtCCC,StatusAtPMTCT,StatusAtTBClinic,Inschool,KeyPopulationType,Orphan,County,PatientResidentLocation,PatientResidentSubCounty,PatientResidentSubLocation,PatientResidentVillage,PatientResidentWard,PatientType,PopulationType,TransferInDate,Occupation,DateCreated,DateModified,StatelitteName,Date_Created,Date_Modified,PKV,NUPI,LoadDate)
 						VALUES(PatientPK,MPIPKV,PatientPKHash,PartnerName,SiteCode,SiteType,PatientID,PatientIDHash,FacilityID,Emr,Project,FacilityName,Gender,DOB,RegistrationDate,RegistrationAtCCC,RegistrationAtPMTCT,RegistrationAtTBClinic,PatientSource,Region,District,Village,ContactRelation,LastVisit,MaritalStatus,EducationLevel,DateConfirmedHIVPositive,PreviousARTExposure,PreviousARTStartDate,StatusAtCCC,StatusAtPMTCT,StatusAtTBClinic,Inschool,KeyPopulationType,Orphan,County,PatientResidentLocation,PatientResidentSubCounty,PatientResidentSubLocation,PatientResidentVillage,PatientResidentWard,PatientType,PopulationType,TransferInDate,Occupation,DateCreated,DateModified,StatelitteName,Date_Created,Date_Modified,PKV,NUPI,Getdate())
-				
+
 					WHEN MATCHED THEN
-						UPDATE SET 						
+						UPDATE SET
 						a.[MPIPKV]						=	b.[MPIPKV],
 						a.[PartnerName]					=	b.[PartnerName],
 						a.[SiteType]						=	b.[SiteType],
@@ -77,13 +77,13 @@ BEGIN
 						Select
 						Sitecode,
 						UshauriPatientPK,
-						
+
 						 ROW_NUMBER() OVER (PARTITION BY UshauriPatientPK,Sitecode ORDER BY
 						UshauriPatientPK) Row_Num
-						FROM [ODS].[dbo].[Ushauri_Patient](NoLock)
+						FROM [ODS].[Mhealth].[Mhealth_Ushauri_Patient](NoLock)
 						)
-						delete from cte 
+						delete from cte
 						Where Row_Num >1 ;
 
-		
+
 	END

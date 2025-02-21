@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[NDWH].[dbo].[FactPrepVisits]', N'U') IS NOT NULL 
-DROP TABLE [NDWH].[dbo].[FactPrepVisits];
+IF OBJECT_ID(N'[NDWH].[Fact].[FactPrepVisits]', N'U') IS NOT NULL 
+DROP TABLE [NDWH].[Fact].[FactPrepVisits];
 
 BEGIN
 
@@ -8,21 +8,22 @@ BEGIN
             distinct MFL_Code,
             SDP,
         SDP_Agency  as Agency
-        from ODS.dbo.All_EMRSites 
+        from ODS.Care.All_EMRSites 
     ),
     prep_patients as
     (
         select
             distinct convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK as nvarchar(36))), 2) as PatientPK,
-            SiteCode
-        from ODS.dbo.PrEP_Patient
-        where ODS.dbo.PrEP_Patient.PrepNumber is not null
+            SiteCode,
+            PrepEnrollmentDate
+        from ODS.PrEP.PrEP_Patient
+        where ODS.PrEP.PrEP_Patient.PrepNumber is not null
     ),
 
 PrepVisits as (
         select 
-            convert(nvarchar(64), hashbytes('SHA2_256', cast(PatientPK as nvarchar(36))), 2) as PatientPK,
-            SiteCode,    
+            convert(nvarchar(64), hashbytes('SHA2_256', cast(prepvisits.PatientPK as nvarchar(36))), 2) as PatientPK,
+            prepvisits.SiteCode,    
             VisitID,
             VisitDate,
             BloodPressure,
@@ -68,7 +69,7 @@ PrepVisits as (
             TreatedForHepC,
             NextAppointment,
             ClinicalNotes
-        from ODS.DBO.PrEP_Visits
+        from ODS.PrEP.PrEP_Visits as prepvisits
         where VisitDate is not null
 
     )
@@ -129,24 +130,25 @@ PrepVisits as (
         PrepVisits.TreatedForHepC,
         PrepVisits.NextAppointment,
         PrepVisits.ClinicalNotes,
+        patient.PrepEnrollmentDateKey,
         cast(getdate() as date) as LoadDate
-    into NDWH.dbo.FactPrepVisits
+    into NDWH.Fact.FactPrepVisits
     from prep_patients
     left join PrepVisits as  PrepVisits on PrepVisits.PatientPK = prep_patients.PatientPK
         and PrepVisits.SiteCode = prep_patients.SiteCode
-    left join NDWH.dbo.DimPatient as patient on patient.PatientPKHash = prep_patients.PatientPK
+    left join NDWH.Dim.DimPatient as patient on patient.PatientPKHash = prep_patients.PatientPK
         and patient.SiteCode = prep_patients.SiteCode
     left join MFL_partner_agency_combination on MFL_partner_agency_combination.MFL_Code = prep_patients.SiteCode
-    left join NDWH.dbo.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP 
-    left join NDWH.dbo.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
-    left join NDWH.dbo.DimFacility as facility on facility.MFLCode = prep_patients.SiteCode
-    left join NDWH.dbo.DimAgeGroup as age_group on age_group.Age = datediff(yy, patient.DOB, coalesce(PrepVisits.VisitDate, getdate()))
-    left join NDWH.dbo.DimDate as visit on visit.Date = PrepVisits.VisitDate
-    left join NDWH.dbo.DimDate as pregnancy on pregnancy.Date = PrepVisits.PregnancyEndDate
-    left join NDWH.dbo.DimDate as appointment on appointment.Date= PrepVisits.NextAppointment
+    left join NDWH.Dim.DimPartner as partner on partner.PartnerName = MFL_partner_agency_combination.SDP 
+    left join NDWH.Dim.DimAgency as agency on agency.AgencyName = MFL_partner_agency_combination.Agency
+    left join NDWH.Dim.DimFacility as facility on facility.MFLCode = prep_patients.SiteCode
+    left join NDWH.Dim.DimAgeGroup as age_group on age_group.Age = datediff(yy, patient.DOB, coalesce(PrepVisits.VisitDate, getdate()))
+    left join NDWH.Dim.DimDate as visit on visit.Date = PrepVisits.VisitDate
+    left join NDWH.Dim.DimDate as pregnancy on pregnancy.Date = PrepVisits.PregnancyEndDate
+    left join NDWH.Dim.DimDate as appointment on appointment.Date= PrepVisits.NextAppointment
+   
 	WHERE patient.voided =0;
     
-    alter table NDWH.dbo.FactPrepVisits add primary key(FactKey);
+    alter table NDWH.Fact.FactPrepVisits add primary key(FactKey);
 
 END
-

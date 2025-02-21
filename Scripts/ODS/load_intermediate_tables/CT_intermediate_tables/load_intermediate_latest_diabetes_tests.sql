@@ -1,5 +1,5 @@
-IF OBJECT_ID(N'[ODS].[dbo].[Intermediate_LatestDiabetesTests]', N'U') IS NOT NULL 
-	DROP TABLE [ODS].[dbo].[Intermediate_LatestDiabetesTests];
+IF OBJECT_ID(N'[ODS].[Intermediate].[Intermediate_LatestDiabetesTests]', N'U') IS NOT NULL 
+	DROP TABLE [ODS].[Intermediate].[Intermediate_LatestDiabetesTests];
 BEGIN
 
 with diabetes_tests_ordering as (
@@ -7,10 +7,11 @@ with diabetes_tests_ordering as (
     select 
         ROW_NUMBER() OVER (PARTITION BY PatientPKHash, Sitecode ORDER BY OrderedbyDate DESC) AS RowNum,
         PatientPKHash,
+        OrderedbyDate,
         SiteCode,
         TestName,
         TRY_CAST(TestResult AS NUMERIC(18, 2)) AS NumericTestResult
-    from ODS.dbo.CT_PatientLabs
+    from ODS.Care.CT_PatientLabs
     where 
         (TestName in ('HgB', 'HbsAg', 'HBA1C') 
             or TestName in ('FBS', 'Blood Sugar')
@@ -35,9 +36,9 @@ select
     latest_diabetes_test.SiteCode,
     latest_diabetes_test.NumericTestResult,
     latest_diabetes_test.TestName,
-    case when latest_diabetes_test.PatientPKHash is not null then 1 else 0 end as ScreenedDiabetes,
-    case when latest_diabetes_test_controlled.PatientPKHash is not null then 1 else 0 end as IsDiabetesControlledAtLastTest
-into ODS.dbo.Intermediate_LatestDiabetesTests
+    latest_diabetes_test.OrderedbyDate,
+    case when latest_diabetes_test.PatientPKHash is not null then 1 else 0 end as ScreenedDiabetes
+into ODS.[Intermediate].Intermediate_LatestDiabetesTests
 from  latest_diabetes_test
 left join latest_diabetes_test_controlled on latest_diabetes_test_controlled.PatientPKHash = latest_diabetes_test.PatientPKHash
     and latest_diabetes_test_controlled.SiteCode = latest_diabetes_test.SiteCode

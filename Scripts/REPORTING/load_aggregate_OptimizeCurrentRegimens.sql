@@ -103,15 +103,15 @@ from (
 			WHEN CurrentRegimen in ('(FTC300mg)+(TDF300mg)','(FTC200mg)+(TDF300mg)')THEN 'TDF+FTC'
 			ELSE CurrentRegimen 
 		END As LastRegimenClean
-	from NDWH.dbo.FACTART ART
-    INNER JOIN NDWH.dbo.DimAgeGroup b on ART.AgeGroupKey=b.AgeGroupKey
-    INNER JOIN NDWH.dbo.DimPartner part ON art.PartnerKey = part.PartnerKey
-    INNER JOIN NDWH.dbo.DimAgency a ON art.AgencyKey = a.AgencyKey
-    INNER JOIN NDWH.dbo.DimFacility fac ON art.FacilityKey = fac.FacilityKey
-    INNER JOIN NDWH.dbo.DimPatient pat ON art.PatientKey = pat.PatientKey
-    LEFT JOIN NDWH.dbo.FactLatestObs obs ON obs.PatientKey = pat.PatientKey
-    LEFT JOIN NDWH.dbo.FactViralLoads vl ON vl.PatientKey = pat.PatientKey 
-    LEFT JOIN NDWH.dbo.DimDate as date on date.DateKey = art.StartARTDateKey 
+	from NDWH.Fact.FACTART ART
+    INNER JOIN NDWH.Dim.DimAgeGroup b on ART.AgeGroupKey=b.AgeGroupKey
+    INNER JOIN NDWH.Dim.DimPartner part ON art.PartnerKey = part.PartnerKey
+    INNER JOIN NDWH.Dim.DimAgency a ON art.AgencyKey = a.AgencyKey
+    INNER JOIN NDWH.Dim.DimFacility fac ON art.FacilityKey = fac.FacilityKey
+    INNER JOIN NDWH.Dim.DimPatient pat ON art.PatientKey = pat.PatientKey
+    LEFT JOIN NDWH.Fact.FactLatestObs obs ON obs.PatientKey = pat.PatientKey
+    LEFT JOIN NDWH.Fact.FactViralLoads vl ON vl.PatientKey = pat.PatientKey 
+    LEFT JOIN NDWH.Dim.DimDate as date on date.DateKey = art.StartARTDateKey 
 	where IsTXCurr = 1
 ) H 
 Group By 

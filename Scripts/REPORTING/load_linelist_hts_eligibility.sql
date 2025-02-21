@@ -9,6 +9,8 @@ SELECT
 	SubCounty,
 	p.PartnerName,
 	a.AgencyName,
+    pat.PatientPKHash,
+    pat.NUPI,
 	pat.Gender,
 	age_group.Age,
 	age_group.DATIMAgeGroup AgeGroup,
@@ -30,10 +32,10 @@ SELECT
 	ReasonRefferredForTesting
 	ReasonNotReffered
 INTO LinelistHTSEligibilty
-FROM NDWH.dbo.FactHTSEligibilityextract ex
-LEFT join NDWH.dbo.DimFacility f on f.FacilityKey = ex.FacilityKey
-LEFT JOIN NDWH.dbo.DimAgency a on a.AgencyKey = ex.AgencyKey
-LEFT JOIN NDWH.dbo.DimPatient pat on pat.PatientKey = ex.PatientKey
-LEFT JOIN NDWH.dbo.DimPartner p on p.PartnerKey = ex.PartnerKey
-LEFT JOIN NDWH.dbo.DimDate visit on visit.DateKey = ex.VisitDateKey
-LEFT JOIN NDWH.dbo.DimAgeGroup as age_group on age_group.AgeGroupKey = DATEDIFF(YY,pat.DOB,visit.Date)
+FROM NDWH.Fact.FactHTSEligibilityextract ex
+LEFT join NDWH.Dim.DimFacility f on f.FacilityKey = ex.FacilityKey
+LEFT JOIN NDWH.Dim.DimAgency a on a.AgencyKey = ex.AgencyKey
+LEFT JOIN NDWH.Dim.DimPatient pat on pat.PatientKey = ex.PatientKey
+LEFT JOIN NDWH.Dim.DimPartner p on p.PartnerKey = ex.PartnerKey
+LEFT JOIN NDWH.Dim.DimDate visit on visit.DateKey = ex.VisitDateKey
+LEFT JOIN NDWH.Dim.DimAgeGroup as age_group on age_group.AgeGroupKey = DATEDIFF(YY,pat.DOB,visit.Date)

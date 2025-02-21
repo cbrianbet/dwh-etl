@@ -33,10 +33,10 @@ Begin
 			,Agency as AgencyName
 			,CAST(GETDATE() AS DATE) AS LoadDate
 	INTO REPORTING.dbo.AggregateFACT_HTS_DHIS2
-		FROM NDWH.dbo.FACT_HTS_DHIS2 CT  
-		LEFT join NDWH.dbo.DimFacility facility on facility.FacilityKey=CT.facilitykey 
-        left join NDWH.dbo.DimPartner partner on partner.PartnerKey=CT.PartnerKey
-        left join NDWH.dbo.DimAgency agency on agency.AgencyKey=CT.Agencykey
+		FROM NDWH.Fact.FACT_HTS_DHIS2 CT  
+		LEFT join NDWH.Dim.DimFacility facility on facility.FacilityKey=CT.facilitykey 
+        left join NDWH.Dim.DimPartner partner on partner.PartnerKey=CT.PartnerKey
+        left join NDWH.Dim.DimAgency agency on agency.AgencyKey=CT.Agencykey
         WHERE MFLCode IS NOT NULL
 	
 End

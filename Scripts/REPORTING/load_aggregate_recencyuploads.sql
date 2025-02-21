@@ -38,9 +38,9 @@ BEGIN
 				a.SDP_Agency AS agency,
 				a.SDP AS partner
 			FROM
-				NDWH.dbo.fact_manifest fm
-				JOIN NDWH.dbo.DimFacility f ON fm.facilityId = f.MFLCode
-				JOIN ODS.dbo.All_EMRSites a on a.MFL_Code = fm.facilityId
+				NDWH.Fact.fact_manifest fm
+				JOIN NDWH.Dim.DimFacility f ON fm.facilityId = f.MFLCode
+				JOIN ODS.Care.All_EMRSites a on a.MFL_Code = fm.facilityId
 			) g
 		WHERE
 			g.docket IS NOT NULL

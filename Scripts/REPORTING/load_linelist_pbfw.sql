@@ -14,7 +14,7 @@ with viral_load_metrics as (
         RepeatVls,
         RepeatSuppressed,
         RepeatUnSuppressed      
-    from NDWH.dbo.FactViralLoads
+    from NDWH.Fact.FactViralLoads
 )
 select 
     patient.PatientPKHash,
@@ -73,14 +73,14 @@ select
     case when viral_load_metrics.RepeatUnSuppressed = 1 then 1 else 0 end as HasRepeatVLUnSuppressed,
     case when viral_load_metrics.RepeatUnSuppressed = 1 and pbfw.PBFWRegLineSwitch =1 and Knownpositive=1  and viral_load_metrics.PBFW_ValidVL=1 Then 1 else 0 end as HasRegLineSwitch
 into [REPORTING].[dbo].LineListPBFW
-from NDWH.dbo.FactPBFW as pbfw
-left join NDWH.dbo.DimPatient as patient on patient.PatientKey = pbfw.PatientKey
-left join NDWH.dbo.DimFacility as facility on facility.FacilityKey = pbfw.FacilityKey
-left join NDWH.dbo.DimPartner as partner on partner.Partnerkey = pbfw.PartnerKey 
-left join NDWH.dbo.DimAgency as agency on agency.AgencyKey = pbfw.AgencyKey 
-left join NDWH.dbo.DimAgeGroup as agegroup on agegroup.AgeGroupKey = pbfw.AgeGroupKey
-left join NDWH.dbo.DimDate as anc1 on anc1.DateKey = ANCDate1Key
-left join NDWH.dbo.DimDate as anc2 on anc2.DateKey = ANCDate2Key
-left join NDWH.dbo.DimDate as anc3 on anc3.DateKey = ANCDate3Key
-left join NDWH.dbo.DimDate as anc4 on anc4.DateKey = ANCDate4Key
+from NDWH.Fact.FactPBFW as pbfw
+left join NDWH.Dim.DimPatient as patient on patient.PatientKey = pbfw.PatientKey
+left join NDWH.Dim.DimFacility as facility on facility.FacilityKey = pbfw.FacilityKey
+left join NDWH.Dim.DimPartner as partner on partner.Partnerkey = pbfw.PartnerKey 
+left join NDWH.Dim.DimAgency as agency on agency.AgencyKey = pbfw.AgencyKey 
+left join NDWH.Dim.DimAgeGroup as agegroup on agegroup.AgeGroupKey = pbfw.AgeGroupKey
+left join NDWH.Dim.DimDate as anc1 on anc1.DateKey = ANCDate1Key
+left join NDWH.Dim.DimDate as anc2 on anc2.DateKey = ANCDate2Key
+left join NDWH.Dim.DimDate as anc3 on anc3.DateKey = ANCDate3Key
+left join NDWH.Dim.DimDate as anc4 on anc4.DateKey = ANCDate4Key
 left join viral_load_metrics on viral_load_metrics.PatientKey = pbfw.patientkey;
