@@ -1,3 +1,0 @@
-[submodule "SSIS"]
-	path = SSIS
-	url = https://github.com/palladiumkenya/dwh-etl-ssis.git
