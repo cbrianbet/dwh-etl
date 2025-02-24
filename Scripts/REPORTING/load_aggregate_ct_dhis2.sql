@@ -53,6 +53,6 @@ BEGIN
 		LEFT JOIN NDWH.Dim.DimFacility fac on dhis.FacilityKey=fac.FacilityKey
 		LEFT JOIN NDWH.Dim.DimAgency agency on dhis.AgencyKey=agency.AgencyKey
 		LEFT JOIN NDWH.Dim.DimPartner part on dhis.PartnerKey=part.PartnerKey
-	WHERE PartnerName IS NOT NULL
+	WHERE MFLCode IS NOT NULL
 
 END
